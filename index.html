@@ -1,0 +1,1537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A calendar that remembers each day the way it felt — photos, video, voice notes, mood colors, and a memory-reel playback.">
+<meta name="theme-color" content="#d9652f">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<title>I Remember</title>
+<style>
+  :root {
+    --bg: #faf6f0;
+    --surface: #ffffff;
+    --surface-raised: #fffdf9;
+    --ink: #2b2420;
+    --ink-soft: #6b5f55;
+    --ink-faint: #a89c8c;
+    --border: #e7ddcf;
+    --border-soft: #f0e8db;
+    --accent: #d9652f;
+    --accent-ink: #ffffff;
+    --accent-soft: #f3c97a;
+    --accent-wash: #fbe9d4;
+    --shadow: 220 25% 30%;
+
+    --mood-joyful: #d99a2b;
+    --mood-calm: #4f8285;
+    --mood-sad: #4c5b7a;
+    --mood-anxious: #7c5a9c;
+    --mood-excited: #d6597a;
+    --mood-angry: #b23a2e;
+    --mood-neutral: #8a8172;
+    --mood-grateful: #5f8a52;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171310;
+      --surface: #211b16;
+      --surface-raised: #271f19;
+      --ink: #f3ece1;
+      --ink-soft: #bcae9c;
+      --ink-faint: #7d7263;
+      --border: #382d23;
+      --border-soft: #2b231c;
+      --accent: #f0865a;
+      --accent-ink: #201209;
+      --accent-soft: #f4c765;
+      --accent-wash: #3a2a1a;
+      --shadow: 20 30% 2%;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #171310;
+    --surface: #211b16;
+    --surface-raised: #271f19;
+    --ink: #f3ece1;
+    --ink-soft: #bcae9c;
+    --ink-faint: #7d7263;
+    --border: #382d23;
+    --border-soft: #2b231c;
+    --accent: #f0865a;
+    --accent-ink: #201209;
+    --accent-soft: #f4c765;
+    --accent-wash: #3a2a1a;
+    --shadow: 20 30% 2%;
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  h1, h2, h3, .display {
+    font-family: "Fraunces", ui-serif, Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  button { font-family: inherit; }
+
+  a { color: inherit; }
+
+  /* ---------- App shell ---------- */
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 32px) 80px;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .wordmark {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .wordmark .glyph {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.9rem;
+    color: var(--accent);
+  }
+
+  .wordmark h1 {
+    font-size: 1.9rem;
+    font-style: italic;
+  }
+
+  .tagline {
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    margin-top: 2px;
+  }
+
+  .month-nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .month-nav .month-label {
+    font-family: "Fraunces", serif;
+    font-size: 1.15rem;
+    min-width: 168px;
+    text-align: center;
+  }
+
+  .nav-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .nav-btn:hover { background: var(--accent-wash); border-color: var(--accent-soft); }
+  .nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Calendar ---------- */
+  .weekday-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .weekday-row span {
+    text-align: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  .day {
+    position: relative;
+    aspect-ratio: 0.86;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    overflow: hidden;
+    padding: 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  }
+  .day:hover { transform: translateY(-2px); border-color: var(--accent-soft); box-shadow: 0 6px 16px -10px hsl(var(--shadow) / 0.5); }
+  .day:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .day.empty { visibility: hidden; pointer-events: none; }
+  .day.today { border-color: var(--accent); }
+
+  .day .thumb {
+    flex: 1;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+  .day .thumb.no-photo {
+    background: var(--surface-raised);
+  }
+
+  .day .num {
+    position: absolute;
+    top: 6px;
+    left: 7px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    background: color-mix(in srgb, var(--surface) 78%, transparent);
+    padding: 1px 5px;
+    border-radius: 6px;
+  }
+  .day.has-photo .num {
+    color: #fff;
+    background: rgba(20, 14, 8, 0.45);
+  }
+
+  .day .mood-bar {
+    height: 6px;
+    width: 100%;
+  }
+
+  .day .badges {
+    position: absolute;
+    bottom: 10px;
+    right: 6px;
+    display: flex;
+    gap: 3px;
+  }
+  .day .badges .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+  }
+  .day:not(.has-photo) .badges .dot { background: var(--accent); }
+
+  /* ---------- Backdrop + panel ---------- */
+  .backdrop {
+    position: fixed; inset: 0;
+    background: hsl(var(--shadow) / 0.45);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+    z-index: 40;
+  }
+  .backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .panel {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: min(440px, 100vw);
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(.22,.9,.32,1);
+    z-index: 41;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel.open { transform: translateX(0); }
+
+  .panel-scroll {
+    overflow-y: auto;
+    padding: 22px 22px 40px;
+    flex: 1;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 22px 14px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .panel-head h2 { font-size: 1.4rem; }
+  .panel-head .weekday { color: var(--ink-soft); font-size: 0.85rem; margin-top: 3px; }
+
+  .close-btn {
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .close-btn:hover { border-color: var(--accent-soft); color: var(--ink); }
+  .close-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .section { margin-top: 26px; }
+  .section:first-child { margin-top: 0; }
+  .section-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Mood picker */
+  .mood-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .mood-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 11px 6px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  .mood-chip .swatch {
+    width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+  }
+  .mood-chip:hover { border-color: var(--accent-soft); }
+  .mood-chip.active {
+    border-color: var(--mood-c);
+    background: color-mix(in srgb, var(--mood-c) 16%, var(--surface-raised));
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .mood-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Photo strip */
+  .strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .strip::-webkit-scrollbar { height: 6px; }
+  .strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .thumb-tile {
+    position: relative;
+    flex: 0 0 auto;
+    width: 84px; height: 84px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+  }
+  .thumb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-tile .remove {
+    position: absolute; top: 3px; right: 3px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(20,14,8,0.55);
+    color: #fff;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .thumb-tile .tag {
+    position: absolute; left: 4px; bottom: 3px;
+    font-size: 0.58rem;
+    background: rgba(20,14,8,0.55);
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+  }
+
+  .add-tile {
+    flex: 0 0 auto;
+    width: 84px; height: 84px;
+    border-radius: 10px;
+    border: 1.5px dashed var(--border);
+    background: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px;
+    font-size: 0.66rem;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .add-tile:hover { border-color: var(--accent); color: var(--accent); }
+  .add-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .add-tile svg { width: 18px; height: 18px; }
+
+  /* Moments (front/back) */
+  .moment-hint {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    line-height: 1.45;
+    margin-bottom: 10px;
+  }
+  .moment-row { display: flex; gap: 10px; align-items: center; }
+  .moment-pair {
+    display: flex; gap: 6px;
+  }
+  .moment-pair .thumb-tile { width: 60px; height: 60px; }
+  .capture-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    white-space: nowrap;
+  }
+  .capture-btn:hover { border-color: var(--accent); }
+  .capture-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .capture-btn svg { width: 15px; height: 15px; }
+  .capture-btn.recording { border-color: var(--mood-angry); color: var(--mood-angry); }
+
+  /* Video recording */
+  .video-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+  .video-item {
+    border-radius: 12px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-soft);
+    overflow: hidden;
+  }
+  .video-item video { width: 100%; max-height: 220px; display: block; background: #000; }
+  .video-item .video-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  .video-item .del {
+    border: none; background: none; color: var(--ink-faint);
+    cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 4px;
+  }
+  .video-item .del:hover { color: var(--mood-angry); }
+
+  /* Voice notes */
+  .voice-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .voice-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-soft);
+  }
+  .voice-item .play {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .voice-item .play svg { width: 12px; height: 12px; }
+  .voice-item .wave {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 20px;
+  }
+  .voice-item .wave span {
+    width: 2.5px;
+    background: var(--border);
+    border-radius: 2px;
+  }
+  .voice-item .dur {
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    flex-shrink: 0;
+  }
+  .voice-item .del {
+    border: none; background: none; color: var(--ink-faint);
+    cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px;
+    flex-shrink: 0;
+  }
+  .voice-item .del:hover { color: var(--mood-angry); }
+
+  .empty-note {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    font-style: italic;
+    padding: 4px 0;
+  }
+
+  /* Text note */
+  textarea {
+    width: 100%;
+    min-height: 90px;
+    resize: vertical;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-family: "Work Sans", sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    padding: 10px 12px;
+  }
+  textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  textarea::placeholder { color: var(--ink-faint); }
+
+  /* Reel button */
+  .reel-btn {
+    width: 100%;
+    margin-top: 28px;
+    padding: 13px;
+    border-radius: 12px;
+    border: none;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: filter 0.15s ease;
+  }
+  .reel-btn:hover { filter: brightness(1.06); }
+  .reel-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .reel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .reel-btn svg { width: 16px; height: 16px; }
+
+  .toast {
+    position: fixed;
+    bottom: 22px; left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 60;
+    max-width: 88vw;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- Reel overlay ---------- */
+  .reel-overlay {
+    position: fixed; inset: 0;
+    z-index: 70;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: #fdf8ef;
+    overflow: hidden;
+  }
+  .reel-overlay.open { display: flex; }
+  .reel-bg {
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: saturate(0.9) brightness(0.6);
+    transform: scale(1.06);
+    transition: opacity 0.9s ease;
+  }
+  .reel-bg.no-image {
+    background: linear-gradient(160deg, var(--mood-c, #4f8285), #171310);
+  }
+  .reel-tint {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, hsl(20 30% 3% / 0.15), hsl(20 30% 3% / 0.75));
+  }
+  .reel-content {
+    position: relative;
+    text-align: center;
+    padding: 0 24px;
+    max-width: 480px;
+  }
+  .reel-content .date {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 10px;
+  }
+  .reel-content .mood-label {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 1.9rem;
+    margin-bottom: 14px;
+  }
+  .reel-content .note {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    opacity: 0.92;
+  }
+  .reel-content .caption {
+    margin-top: 16px;
+    font-size: 0.78rem;
+    opacity: 0.7;
+  }
+  .reel-close {
+    position: absolute; top: 20px; right: 20px;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(0,0,0,0.25);
+    color: #fff;
+    cursor: pointer;
+    display: grid; place-items: center;
+    z-index: 2;
+  }
+  .reel-close:hover { background: rgba(0,0,0,0.45); }
+  .reel-progress {
+    position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px;
+    z-index: 2;
+  }
+  .reel-progress span {
+    width: 22px; height: 3px; border-radius: 2px;
+    background: rgba(255,255,255,0.3);
+    overflow: hidden;
+  }
+  .reel-progress span i {
+    display: block; height: 100%; width: 0%;
+    background: #fff;
+  }
+  .reel-progress span.done i { width: 100%; transition: none; }
+  .reel-progress span.active i { width: 100%; transition: width linear; }
+
+  @media (max-width: 520px) {
+    .panel { width: 100vw; }
+    .month-nav .month-label { min-width: 130px; }
+  }
+</style>
+
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="wordmark">
+        <span class="glyph">✦</span>
+        <h1>I Remember</h1>
+      </div>
+      <p class="tagline">A calendar that remembers each day the way it felt.</p>
+    </div>
+    <div class="month-nav">
+      <button class="nav-btn" id="prevMonth" aria-label="Previous month">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="month-label mono" id="monthLabel"></span>
+      <button class="nav-btn" id="nextMonth" aria-label="Next month">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="weekday-row">
+    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<aside class="panel" id="panel" aria-hidden="true">
+  <div class="panel-head">
+    <div>
+      <h2 id="panelDate"></h2>
+      <div class="weekday mono" id="panelWeekday"></div>
+    </div>
+    <button class="close-btn" id="closePanel" aria-label="Close">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="panel-scroll">
+
+    <div class="section">
+      <div class="section-label">Mood</div>
+      <div class="mood-row" id="moodRow"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Photos <span class="mono" data-photo-count style="text-transform:none; letter-spacing:0; font-size:0.68rem;">0 / 50</span></div>
+      <div class="strip" id="photoStrip"></div>
+      <input type="file" id="photoInput" accept="image/*" multiple capture="environment" hidden>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Moments <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">front + back</span></div>
+      <p class="moment-hint">Captured while the app is open — a phone can't film in the background, so a moment is a quick front-and-back pair you take on purpose.</p>
+      <div class="moment-row">
+        <button class="capture-btn" id="captureMoment">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="9" height="8" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 6.5l3.4-1.8v6.6l-3.4-1.8" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Capture moment
+        </button>
+        <div class="moment-pair" id="momentPreview"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">this session</span></div>
+      <p class="moment-hint">Records video + audio for as long as this tab stays open and in front — press stop whenever you're done. Closing the tab, locking the phone, or switching apps ends it, same limit as the moments above.</p>
+      <div class="video-list" id="videoList"></div>
+      <button class="capture-btn" id="recordVideo">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="9" height="8" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 6.5l3.4-1.8v6.6l-3.4-1.8" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        <span id="videoRecordLabel">Start recording</span>
+      </button>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Voice notes <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">this session</span></div>
+      <div class="voice-list" id="voiceList"></div>
+      <button class="capture-btn" id="recordVoice">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 8a5 5 0 0010 0M8 13v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span id="recordLabel">Record a voice note</span>
+      </button>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Notes</div>
+      <textarea id="textNote" placeholder="What happened today?"></textarea>
+    </div>
+
+    <button class="reel-btn" id="playReel">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M4 2.5v11l10-5.5-10-5.5z" fill="currentColor"/></svg>
+      Play memory reel
+    </button>
+  </div>
+</aside>
+
+<div class="reel-overlay" id="reelOverlay">
+  <button class="reel-close" id="closeReel" aria-label="Close reel">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+  </button>
+  <div class="reel-bg" id="reelBg"></div>
+  <div class="reel-tint"></div>
+  <div class="reel-content">
+    <div class="date mono" id="reelDate"></div>
+    <div class="mood-label" id="reelMood"></div>
+    <div class="note" id="reelNote"></div>
+    <div class="caption" id="reelCaption"></div>
+  </div>
+  <div class="reel-progress" id="reelProgress"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var MOODS = [
+    { id: "joyful",   label: "Joyful",   var: "--mood-joyful" },
+    { id: "calm",      label: "Calm",     var: "--mood-calm" },
+    { id: "grateful",  label: "Grateful", var: "--mood-grateful" },
+    { id: "excited",   label: "Excited",  var: "--mood-excited" },
+    { id: "neutral",   label: "Neutral",  var: "--mood-neutral" },
+    { id: "anxious",   label: "Anxious",  var: "--mood-anxious" },
+    { id: "sad",       label: "Sad",      var: "--mood-sad" },
+    { id: "angry",     label: "Angry",    var: "--mood-angry" }
+  ];
+  var moodMap = {};
+  MOODS.forEach(function (m) { moodMap[m.id] = m; });
+
+  var MAX_PHOTOS_PER_DAY = 50;
+
+  // ---------- Storage: IndexedDB (photos as Blobs, not localStorage) ----------
+  // localStorage caps out around 5-10MB per origin as text, which a single day
+  // of 50 photos would blow through fast. IndexedDB stores binary Blobs directly
+  // and has a far larger, browser-managed quota, so it's the right store here.
+  var DB_NAME = "iremember-db";
+  var STORE = "days";
+  var dbPromise = null;
+
+  function getDB() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve) {
+      if (!window.indexedDB) { resolve(null); return; }
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "date" });
+      };
+      req.onsuccess = function (e) { resolve(e.target.result); };
+      req.onerror = function () { resolve(null); };
+    });
+    return dbPromise;
+  }
+
+  function dbGet(key) {
+    return getDB().then(function (db) {
+      if (!db) return null;
+      return new Promise(function (resolve) {
+        var tx = db.transaction(STORE, "readonly");
+        var req = tx.objectStore(STORE).get(key);
+        req.onsuccess = function () { resolve(req.result || null); };
+        req.onerror = function () { resolve(null); };
+      });
+    });
+  }
+
+  function dbPut(record) {
+    return getDB().then(function (db) {
+      if (!db) { showToast("This browser doesn't support on-device storage — entries won't be saved."); return; }
+      return new Promise(function (resolve) {
+        var tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).put(record);
+        tx.oncomplete = function () { resolve(); };
+        tx.onerror = function () { showToast("Couldn't save that — storage may be full."); resolve(); };
+      });
+    });
+  }
+
+  // Lightweight per-day summary (mood, note, photo count, cover thumbnail) built
+  // once at startup via a cursor, so the calendar grid doesn't have to load every
+  // full-resolution photo for every day just to paint 30-odd cells.
+  function dbLoadSummaries() {
+    return getDB().then(function (db) {
+      if (!db) return {};
+      return new Promise(function (resolve) {
+        var out = {};
+        var tx = db.transaction(STORE, "readonly");
+        var req = tx.objectStore(STORE).openCursor();
+        req.onsuccess = function (e) {
+          var cursor = e.target.result;
+          if (cursor) {
+            var rec = cursor.value;
+            var cover = rec.photos && rec.photos[0] ? rec.photos[0].blob : null;
+            out[rec.date] = {
+              mood: rec.mood,
+              note: rec.note,
+              count: (rec.photos || []).length,
+              coverUrl: cover ? URL.createObjectURL(cover) : null
+            };
+            cursor.continue();
+          } else {
+            resolve(out);
+          }
+        };
+        req.onerror = function () { resolve(out); };
+      });
+    });
+  }
+
+  var calendarIndex = {};   // dateKey -> { mood, note, count, coverUrl } — drives the grid
+  var activeEntry = null;   // full record for the open day, incl. photo Blobs
+  var activePhotoUrls = []; // object URLs created for the open day, revoked on close
+
+  function summaryFor(key) {
+    return calendarIndex[key] || { mood: null, note: "", count: 0, coverUrl: null };
+  }
+
+  function persistActiveEntry() {
+    if (!activeEntry) return Promise.resolve();
+    return dbPut(activeEntry).then(function () {
+      var cover = activeEntry.photos[0] ? activeEntry.photos[0].blob : null;
+      var prevCover = calendarIndex[activeEntry.date] && calendarIndex[activeEntry.date].coverUrl;
+      calendarIndex[activeEntry.date] = {
+        mood: activeEntry.mood,
+        note: activeEntry.note,
+        count: activeEntry.photos.length,
+        coverUrl: cover ? URL.createObjectURL(cover) : null
+      };
+      if (prevCover) URL.revokeObjectURL(prevCover);
+      renderCalendar();
+    });
+  }
+
+  // session-only stores (not persisted): voice notes + moment captures, keyed by dateKey
+  var sessionVoices = {};
+  var sessionMoments = {};
+
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function keyFor(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
+
+  var today = new Date();
+  var viewYear = today.getFullYear();
+  var viewMonth = today.getMonth();
+  var activeKey = null;
+
+  var grid = document.getElementById("grid");
+  var monthLabel = document.getElementById("monthLabel");
+  var MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var WEEKDAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  function renderCalendar() {
+    monthLabel.textContent = MONTH_NAMES[viewMonth] + " " + viewYear;
+    grid.innerHTML = "";
+    var firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+    for (var i = 0; i < firstDay; i++) {
+      var filler = document.createElement("div");
+      filler.className = "day empty";
+      grid.appendChild(filler);
+    }
+
+    for (var d = 1; d <= daysInMonth; d++) {
+      var key = keyFor(viewYear, viewMonth, d);
+      var entry = summaryFor(key);
+      var btn = document.createElement("button");
+      btn.className = "day";
+      btn.setAttribute("data-key", key);
+
+      var isToday = viewYear === today.getFullYear() && viewMonth === today.getMonth() && d === today.getDate();
+      if (isToday) btn.classList.add("today");
+
+      var hasPhoto = entry.count > 0;
+      if (hasPhoto) btn.classList.add("has-photo");
+
+      var thumb = document.createElement("div");
+      thumb.className = "thumb" + (hasPhoto ? "" : " no-photo");
+      if (hasPhoto) thumb.style.backgroundImage = "url('" + entry.coverUrl + "')";
+
+      var num = document.createElement("span");
+      num.className = "num";
+      num.textContent = d;
+      thumb.appendChild(num);
+
+      if (entry.mood) {
+        var badges = document.createElement("div");
+        badges.className = "badges";
+        var dot = document.createElement("span");
+        dot.className = "dot";
+        badges.appendChild(dot);
+        thumb.appendChild(badges);
+      }
+
+      btn.appendChild(thumb);
+
+      var bar = document.createElement("div");
+      bar.className = "mood-bar";
+      bar.style.background = entry.mood ? "var(" + moodMap[entry.mood].var + ")" : "var(--border-soft)";
+      btn.appendChild(bar);
+
+      btn.addEventListener("click", function () { openPanel(this.getAttribute("data-key")); });
+      grid.appendChild(btn);
+    }
+  }
+
+  document.getElementById("prevMonth").addEventListener("click", function () {
+    viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    renderCalendar();
+  });
+  document.getElementById("nextMonth").addEventListener("click", function () {
+    viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    renderCalendar();
+  });
+
+  // ---------- Panel ----------
+  var backdrop = document.getElementById("backdrop");
+  var panel = document.getElementById("panel");
+  var moodRow = document.getElementById("moodRow");
+
+  MOODS.forEach(function (m) {
+    var chip = document.createElement("button");
+    chip.className = "mood-chip";
+    chip.style.setProperty("--mood-c", "var(" + m.var + ")");
+    chip.setAttribute("data-mood", m.id);
+    var sw = document.createElement("span");
+    sw.className = "swatch";
+    sw.style.background = "var(" + m.var + ")";
+    chip.appendChild(sw);
+    chip.appendChild(document.createTextNode(m.label));
+    chip.addEventListener("click", function () {
+      if (!activeEntry) return;
+      activeEntry.mood = activeEntry.mood === m.id ? null : m.id;
+      persistActiveEntry();
+      refreshMoodRow();
+    });
+    moodRow.appendChild(chip);
+  });
+
+  function refreshMoodRow() {
+    var mood = activeEntry ? activeEntry.mood : null;
+    Array.prototype.forEach.call(moodRow.children, function (chip) {
+      chip.classList.toggle("active", chip.getAttribute("data-mood") === mood);
+    });
+  }
+
+  function openPanel(key) {
+    activeKey = key;
+    activeEntry = null;
+    activePhotoUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    activePhotoUrls = [];
+
+    var parts = key.split("-").map(Number);
+    var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    document.getElementById("panelDate").textContent = MONTH_NAMES[parts[1]-1] + " " + parts[2] + ", " + parts[0];
+    document.getElementById("panelWeekday").textContent = WEEKDAY_NAMES[dateObj.getDay()];
+    document.getElementById("textNote").value = "";
+    photoStrip.innerHTML = "";
+
+    backdrop.classList.add("open");
+    panel.classList.add("open");
+    panel.setAttribute("aria-hidden", "false");
+
+    dbGet(key).then(function (rec) {
+      activeEntry = rec || { date: key, mood: null, note: "", photos: [] };
+      if (activeKey !== key) return; // user already moved to another day
+      document.getElementById("textNote").value = activeEntry.note || "";
+      refreshMoodRow();
+      refreshPhotoStrip();
+      refreshVoiceList();
+      refreshMomentPreview();
+      refreshVideoList();
+    });
+  }
+
+  function closePanel() {
+    stopRecordingIfActive();
+    stopVideoRecordingIfActive();
+    backdrop.classList.remove("open");
+    panel.classList.remove("open");
+    panel.setAttribute("aria-hidden", "true");
+  }
+  document.getElementById("closePanel").addEventListener("click", closePanel);
+  backdrop.addEventListener("click", closePanel);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      if (reelOverlay.classList.contains("open")) closeReel();
+      else if (panel.classList.contains("open")) closePanel();
+    }
+  });
+
+  var noteDebounce = null;
+  document.getElementById("textNote").addEventListener("input", function (e) {
+    if (!activeEntry) return;
+    activeEntry.note = e.target.value;
+    clearTimeout(noteDebounce);
+    noteDebounce = setTimeout(persistActiveEntry, 400);
+  });
+
+  // ---------- Photos ----------
+  var photoStrip = document.getElementById("photoStrip");
+  var photoInput = document.getElementById("photoInput");
+
+  function refreshPhotoStrip() {
+    if (!activeEntry) return;
+    photoStrip.innerHTML = "";
+    activePhotoUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    activePhotoUrls = [];
+
+    var label = document.querySelector('[data-photo-count]');
+    if (label) label.textContent = activeEntry.photos.length + " / " + MAX_PHOTOS_PER_DAY;
+
+    activeEntry.photos.forEach(function (item, idx) {
+      var url = URL.createObjectURL(item.blob);
+      activePhotoUrls.push(url);
+
+      var tile = document.createElement("div");
+      tile.className = "thumb-tile";
+      var img = document.createElement("img");
+      img.src = url;
+      img.alt = "Photo from " + activeKey;
+      tile.appendChild(img);
+      var rm = document.createElement("button");
+      rm.className = "remove";
+      rm.setAttribute("aria-label", "Remove photo");
+      rm.textContent = "✕";
+      rm.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        activeEntry.photos.splice(idx, 1);
+        persistActiveEntry().then(refreshPhotoStrip);
+      });
+      tile.appendChild(rm);
+      photoStrip.appendChild(tile);
+    });
+
+    if (activeEntry.photos.length < MAX_PHOTOS_PER_DAY) {
+      var addTile = document.createElement("button");
+      addTile.className = "add-tile";
+      addTile.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Add photo</span>';
+      addTile.addEventListener("click", function () { photoInput.click(); });
+      photoStrip.appendChild(addTile);
+    }
+  }
+
+  photoInput.addEventListener("change", function (e) {
+    var files = Array.prototype.slice.call(e.target.files || []);
+    var room = MAX_PHOTOS_PER_DAY - (activeEntry ? activeEntry.photos.length : 0);
+    if (files.length > room) {
+      showToast(room <= 0
+        ? "This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day."
+        : "Only room for " + room + " more today (" + MAX_PHOTOS_PER_DAY + " max) — adding the first " + room + ".");
+      files = files.slice(0, Math.max(0, room));
+    }
+    files.forEach(function (file) { compressAndStore(file); });
+    photoInput.value = "";
+  });
+
+  function compressAndStore(file) {
+    if (!activeEntry) return;
+    if (activeEntry.photos.length >= MAX_PHOTOS_PER_DAY) {
+      showToast("This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day.");
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      var img = new Image();
+      img.onload = function () {
+        var maxW = 900;
+        var scale = Math.min(1, maxW / img.width);
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) {
+          if (!blob) { showToast("Couldn't process that image."); return; }
+          if (activeEntry.photos.length >= MAX_PHOTOS_PER_DAY) {
+            showToast("This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day.");
+            return;
+          }
+          activeEntry.photos.push({ id: Date.now() + "-" + Math.random().toString(36).slice(2), blob: blob });
+          persistActiveEntry().then(refreshPhotoStrip);
+        }, "image/jpeg", 0.75);
+      };
+      img.onerror = function () { showToast("Couldn't read that image."); };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ---------- Moments (front / back capture) ----------
+  var momentPreview = document.getElementById("momentPreview");
+  var captureBtn = document.getElementById("captureMoment");
+
+  function refreshMomentPreview() {
+    momentPreview.innerHTML = "";
+    var pair = sessionMoments[activeKey];
+    if (!pair) return;
+    ["front", "back"].forEach(function (side) {
+      if (!pair[side]) return;
+      var tile = document.createElement("div");
+      tile.className = "thumb-tile";
+      var img = document.createElement("img");
+      img.src = pair[side];
+      tile.appendChild(img);
+      var tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = side;
+      tile.appendChild(tag);
+      momentPreview.appendChild(tile);
+    });
+  }
+
+  captureBtn.addEventListener("click", function () {
+    captureFacing("user", "front");
+  });
+
+  function captureFacing(facingMode, label) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast("Camera isn't available in this preview.");
+      return;
+    }
+    captureBtn.disabled = true;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } })
+      .then(function (stream) {
+        var video = document.createElement("video");
+        video.srcObject = stream;
+        video.playsInline = true;
+        video.muted = true;
+        video.play();
+        video.addEventListener("loadeddata", function () {
+          setTimeout(function () {
+            var canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth || 480;
+            canvas.height = video.videoHeight || 360;
+            var ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            var shot = canvas.toDataURL("image/jpeg", 0.75);
+            stream.getTracks().forEach(function (t) { t.stop(); });
+
+            if (!sessionMoments[activeKey]) sessionMoments[activeKey] = {};
+            sessionMoments[activeKey][label] = shot;
+            refreshMomentPreview();
+
+            if (label === "front") {
+              showToast("Front captured — trying the back camera…");
+              captureFacing("environment", "back");
+            } else {
+              captureBtn.disabled = false;
+              showToast("Moment saved for this session.");
+            }
+          }, 260);
+        });
+      })
+      .catch(function () {
+        captureBtn.disabled = false;
+        if (label === "back") {
+          showToast("Only a front-facing camera is available here — front shot saved.");
+        } else {
+          showToast("Camera access was declined or isn't available.");
+        }
+      });
+  }
+
+  // ---------- Video recording (video + audio, foreground-only, run until stopped) ----------
+  var sessionVideos = {};
+  var videoList = document.getElementById("videoList");
+  var recordVideoBtn = document.getElementById("recordVideo");
+  var videoRecordLabel = document.getElementById("videoRecordLabel");
+  var videoRecorder = null;
+  var videoChunks = [];
+  var videoStream = null;
+  var videoStart = 0;
+  var videoTimer = null;
+
+  function fmtDuration(secs) {
+    var m = Math.floor(secs / 60), s = secs % 60;
+    return m + ":" + pad(s);
+  }
+
+  function refreshVideoList() {
+    videoList.innerHTML = "";
+    var list = sessionVideos[activeKey] || [];
+    if (list.length === 0) return;
+    list.forEach(function (clip, idx) {
+      var item = document.createElement("div");
+      item.className = "video-item";
+      var video = document.createElement("video");
+      video.src = clip.url;
+      video.controls = true;
+      video.playsInline = true;
+      item.appendChild(video);
+      var meta = document.createElement("div");
+      meta.className = "video-meta";
+      var dur = document.createElement("span");
+      dur.className = "mono";
+      dur.textContent = clip.duration;
+      meta.appendChild(dur);
+      var del = document.createElement("button");
+      del.className = "del";
+      del.setAttribute("aria-label", "Delete recording");
+      del.textContent = "✕ remove";
+      del.addEventListener("click", function () {
+        list.splice(idx, 1);
+        refreshVideoList();
+      });
+      meta.appendChild(del);
+      item.appendChild(meta);
+      videoList.appendChild(item);
+    });
+  }
+
+  recordVideoBtn.addEventListener("click", function () {
+    if (videoRecorder && videoRecorder.state === "recording") {
+      videoRecorder.stop();
+      return;
+    }
+    startVideoRecording();
+  });
+
+  function startVideoRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast("Camera and mic aren't available in this preview.");
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true })
+      .then(function (stream) {
+        videoStream = stream;
+        videoChunks = [];
+        var mimeType = "video/webm";
+        try {
+          videoRecorder = new MediaRecorder(stream, { mimeType: mimeType });
+        } catch (e) {
+          videoRecorder = new MediaRecorder(stream);
+        }
+        videoRecorder.ondataavailable = function (e) { if (e.data.size > 0) videoChunks.push(e.data); };
+        videoRecorder.onstop = function () {
+          var blob = new Blob(videoChunks, { type: videoRecorder.mimeType || mimeType });
+          var url = URL.createObjectURL(blob);
+          var secs = Math.max(1, Math.round((Date.now() - videoStart) / 1000));
+          if (!sessionVideos[activeKey]) sessionVideos[activeKey] = [];
+          sessionVideos[activeKey].push({ url: url, duration: fmtDuration(secs) });
+          videoStream.getTracks().forEach(function (t) { t.stop(); });
+          recordVideoBtn.classList.remove("recording");
+          videoRecordLabel.textContent = "Start recording";
+          clearInterval(videoTimer);
+          refreshVideoList();
+        };
+        videoRecorder.start(1000); // gather chunks every second so nothing is lost if the tab is killed
+        videoStart = Date.now();
+        recordVideoBtn.classList.add("recording");
+        videoTimer = setInterval(function () {
+          var secs = Math.round((Date.now() - videoStart) / 1000);
+          videoRecordLabel.textContent = "Recording… " + fmtDuration(secs);
+        }, 500);
+        showToast("Recording — press Stop whenever you're done.");
+      })
+      .catch(function () {
+        showToast("Camera/mic access was declined or isn't available.");
+      });
+  }
+
+  function stopVideoRecordingIfActive() {
+    if (videoRecorder && videoRecorder.state === "recording") videoRecorder.stop();
+  }
+
+  // ---------- Voice notes ----------
+  var voiceList = document.getElementById("voiceList");
+  var recordBtn = document.getElementById("recordVoice");
+  var recordLabel = document.getElementById("recordLabel");
+  var mediaRecorder = null;
+  var recordChunks = [];
+  var recordStream = null;
+  var recordStart = 0;
+  var recordTimer = null;
+
+  function refreshVoiceList() {
+    voiceList.innerHTML = "";
+    var list = sessionVoices[activeKey] || [];
+    if (list.length === 0) {
+      var empty = document.createElement("div");
+      empty.className = "empty-note";
+      empty.textContent = "No voice notes yet — record one to hear this day back later.";
+      voiceList.appendChild(empty);
+      return;
+    }
+    list.forEach(function (note, idx) {
+      var row = document.createElement("div");
+      row.className = "voice-item";
+
+      var playBtn = document.createElement("button");
+      playBtn.className = "play";
+      playBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l10-5.5-10-5.5z"/></svg>';
+      var audio = new Audio(note.url);
+      playBtn.addEventListener("click", function () {
+        audio.currentTime = 0;
+        audio.play().catch(function () { showToast("Playback isn't available in this preview."); });
+      });
+      row.appendChild(playBtn);
+
+      var wave = document.createElement("div");
+      wave.className = "wave";
+      for (var i = 0; i < 26; i++) {
+        var bar = document.createElement("span");
+        var h = 4 + Math.round(Math.abs(Math.sin(i * (note.seed || 1))) * 14);
+        bar.style.height = h + "px";
+        wave.appendChild(bar);
+      }
+      row.appendChild(wave);
+
+      var dur = document.createElement("span");
+      dur.className = "dur mono";
+      dur.textContent = note.duration;
+      row.appendChild(dur);
+
+      var del = document.createElement("button");
+      del.className = "del";
+      del.setAttribute("aria-label", "Delete voice note");
+      del.textContent = "✕";
+      del.addEventListener("click", function () {
+        list.splice(idx, 1);
+        refreshVoiceList();
+      });
+      row.appendChild(del);
+
+      voiceList.appendChild(row);
+    });
+  }
+
+  recordBtn.addEventListener("click", function () {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+      return;
+    }
+    startRecording();
+  });
+
+  function startRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast("Microphone isn't available in this preview.");
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(function (stream) {
+        recordStream = stream;
+        recordChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) recordChunks.push(e.data); };
+        mediaRecorder.onstop = function () {
+          var blob = new Blob(recordChunks, { type: "audio/webm" });
+          var url = URL.createObjectURL(blob);
+          var secs = Math.max(1, Math.round((Date.now() - recordStart) / 1000));
+          if (!sessionVoices[activeKey]) sessionVoices[activeKey] = [];
+          sessionVoices[activeKey].push({
+            url: url,
+            duration: "0:" + pad(secs),
+            seed: 1 + Math.random() * 2
+          });
+          recordStream.getTracks().forEach(function (t) { t.stop(); });
+          recordBtn.classList.remove("recording");
+          recordLabel.textContent = "Record a voice note";
+          clearInterval(recordTimer);
+          refreshVoiceList();
+        };
+        mediaRecorder.start();
+        recordStart = Date.now();
+        recordBtn.classList.add("recording");
+        recordTimer = setInterval(function () {
+          var secs = Math.round((Date.now() - recordStart) / 1000);
+          recordLabel.textContent = "Recording… 0:" + pad(secs);
+          if (secs >= 60) mediaRecorder.stop();
+        }, 300);
+      })
+      .catch(function () {
+        showToast("Microphone access was declined or isn't available.");
+      });
+  }
+
+  function stopRecordingIfActive() {
+    if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+  }
+
+  // ---------- Reel ----------
+  var reelOverlay = document.getElementById("reelOverlay");
+  var reelBg = document.getElementById("reelBg");
+  var reelDate = document.getElementById("reelDate");
+  var reelMood = document.getElementById("reelMood");
+  var reelNote = document.getElementById("reelNote");
+  var reelCaption = document.getElementById("reelCaption");
+  var reelProgress = document.getElementById("reelProgress");
+  var reelTimer = null;
+  var reelStep = 0;
+  var reelPhotos = [];
+
+  document.getElementById("playReel").addEventListener("click", function () {
+    if (!activeEntry) return;
+    reelPhotos = activePhotoUrls.length ? activePhotoUrls.slice() : [null];
+    reelStep = 0;
+
+    reelDate.textContent = document.getElementById("panelDate").textContent;
+    reelMood.textContent = activeEntry.mood ? moodMap[activeEntry.mood].label : "No mood set";
+    reelNote.textContent = activeEntry.note || "";
+    var voiceCount = (sessionVoices[activeKey] || []).length;
+    reelCaption.textContent = voiceCount
+      ? voiceCount + " voice note" + (voiceCount > 1 ? "s" : "") + " from this day"
+      : "";
+
+    var moodVar = activeEntry.mood ? "var(" + moodMap[activeEntry.mood].var + ")" : "var(--mood-neutral)";
+    reelBg.style.setProperty("--mood-c", moodVar);
+
+    reelProgress.innerHTML = "";
+    reelPhotos.forEach(function () {
+      var s = document.createElement("span");
+      s.innerHTML = "<i></i>";
+      reelProgress.appendChild(s);
+    });
+
+    reelOverlay.classList.add("open");
+    showReelStep(0);
+  });
+
+  function showReelStep(i) {
+    clearTimeout(reelTimer);
+    if (i >= reelPhotos.length) i = 0;
+    reelStep = i;
+    var src = reelPhotos[i];
+    if (src) {
+      reelBg.style.backgroundImage = "url('" + src + "')";
+      reelBg.classList.remove("no-image");
+    } else {
+      reelBg.style.backgroundImage = "none";
+      reelBg.classList.add("no-image");
+    }
+
+    Array.prototype.forEach.call(reelProgress.children, function (el, idx) {
+      el.classList.toggle("done", idx < i);
+      el.classList.toggle("active", idx === i);
+      var bar = el.querySelector("i");
+      bar.style.transition = "none";
+      bar.style.width = idx < i ? "100%" : "0%";
+      if (idx === i) {
+        void bar.offsetWidth;
+        bar.style.transition = "width 3.4s linear";
+        bar.style.width = "100%";
+      }
+    });
+
+    reelTimer = setTimeout(function () { showReelStep(i + 1); }, 3500);
+  }
+
+  function closeReel() {
+    clearTimeout(reelTimer);
+    reelOverlay.classList.remove("open");
+  }
+  document.getElementById("closeReel").addEventListener("click", closeReel);
+
+  // ---------- Toast ----------
+  var toast = document.getElementById("toast");
+  var toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2600);
+  }
+
+  renderCalendar();
+  dbLoadSummaries().then(function (summaries) {
+    calendarIndex = summaries;
+    renderCalendar();
+  });
+})();
+</script>
+</body>
+</html>

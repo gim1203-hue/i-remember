@@ -1,0 +1,17 @@
+<!--
+  After running `npx cap add ios`, open ios/App/App/Info.plist in Xcode
+  (or a text editor) and add these keys inside the outer <dict> tag.
+  Apple requires a plain-language reason for each permission, or the
+  build is rejected — these are ready to use, edit the wording if you like.
+-->
+<key>NSCameraUsageDescription</key>
+<string>I Remember uses your camera to add a photo or a quick moment to today's entry.</string>
+
+<key>NSMicrophoneUsageDescription</key>
+<string>I Remember uses your microphone to record a voice note or the audio for a video moment.</string>
+
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>I Remember can save a copy of your recordings to your Photos library.</string>
+
+<key>NSPhotoLibraryUsageDescription</key>
+<string>I Remember lets you attach an existing photo from your library to today's entry.</string>
