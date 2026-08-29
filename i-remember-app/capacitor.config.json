@@ -1,0 +1,13 @@
+{
+  "appId": "com.yourname.iremember",
+  "appName": "I Remember",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#171310",
+  "ios": {
+    "contentInset": "always"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

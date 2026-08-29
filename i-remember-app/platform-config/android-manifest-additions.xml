@@ -1,0 +1,16 @@
+<!--
+  After running `npx cap add android`, open
+  android/app/src/main/AndroidManifest.xml and confirm these permissions
+  are present just inside the outer <manifest> tag, above <application>.
+  Capacitor's camera/mic plugins usually add CAMERA and RECORD_AUDIO
+  automatically when you install them — this is the full list this app
+  needs, so use it to double check nothing is missing.
+-->
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+<uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+<!-- Declares the app can function without a physical camera (e.g. tablets) -->
+<uses-feature android:name="android.hardware.camera" android:required="false" />
+<uses-feature android:name="android.hardware.camera.front" android:required="false" />
