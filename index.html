@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="A calendar that remembers each day the way it felt — photos, video, voice notes, mood colors, and a memory-reel playback.">
+<meta name="description" content="A calendar that remembers each day the way it felt — photos, video, voice notes, mood colors, email sharing, and a memory-reel playback.">
 <meta name="theme-color" content="#d9652f">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <title>I Remember</title>
@@ -548,6 +548,13 @@
   .reel-btn:hover { filter: brightness(1.06); }
   .reel-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   .reel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .reel-btn.secondary {
+    background: var(--surface-raised);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    margin-top: 10px;
+  }
+  .reel-btn.secondary:hover { border-color: var(--accent-soft); }
   .reel-btn svg { width: 16px; height: 16px; }
 
   .toast {
@@ -726,7 +733,7 @@
     </div>
 
     <div class="section">
-      <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">this session</span></div>
+      <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to this device</span></div>
       <p class="moment-hint">Records video + audio for as long as this tab stays open and in front — press stop whenever you're done. While recording, the screen is held awake automatically so it won't auto-lock mid-clip; pressing the physical lock button, switching apps, or closing the tab still ends it immediately (iOS and Android both cut camera/mic access the instant the screen locks — no app can override that), but whatever was captured up to that point is saved automatically.</p>
       <div class="video-list" id="videoList"></div>
       <button class="capture-btn" id="recordVideo">
@@ -736,7 +743,7 @@
     </div>
 
     <div class="section">
-      <div class="section-label">Voice notes <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">this session</span></div>
+      <div class="section-label">Voice notes <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to this device</span></div>
       <div class="voice-list" id="voiceList"></div>
       <button class="capture-btn" id="recordVoice">
         <svg viewBox="0 0 16 16" fill="none"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 8a5 5 0 0010 0M8 13v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -752,6 +759,10 @@
     <button class="reel-btn" id="playReel">
       <svg viewBox="0 0 16 16" fill="none"><path d="M4 2.5v11l10-5.5-10-5.5z" fill="currentColor"/></svg>
       Play memory reel
+    </button>
+    <button class="reel-btn secondary" id="emailDay">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 4.5h12v7a1 1 0 01-1 1H3a1 1 0 01-1-1v-7z" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 4.8l5.5 4 5.5-4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      Email this day
     </button>
   </div>
 </aside>
@@ -873,6 +884,22 @@
   var calendarIndex = {};   // dateKey -> { mood, note, count, coverUrl } — drives the grid
   var activeEntry = null;   // full record for the open day, incl. photo Blobs
   var activePhotoUrls = []; // object URLs created for the open day, revoked on close
+  var activeVoiceUrls = [];
+  var activeVideoUrls = [];
+  var activeMomentUrls = [];
+
+  // Older saved days won't have these fields yet (they were session-only before
+  // this update) — backfill them so the rest of the code can assume they exist.
+  function normalizeEntry(rec, key) {
+    rec = rec || { date: key };
+    if (!rec.photos) rec.photos = [];
+    if (!rec.voices) rec.voices = [];
+    if (!rec.videos) rec.videos = [];
+    if (!rec.moments) rec.moments = {};
+    if (typeof rec.mood === "undefined") rec.mood = null;
+    if (typeof rec.note === "undefined") rec.note = "";
+    return rec;
+  }
 
   function summaryFor(key) {
     return calendarIndex[key] || { mood: null, note: "", count: 0, coverUrl: null };
@@ -893,10 +920,6 @@
       renderCalendar();
     });
   }
-
-  // session-only stores (not persisted): voice notes + moment captures, keyed by dateKey
-  var sessionVoices = {};
-  var sessionMoments = {};
 
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
   function keyFor(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
@@ -1011,6 +1034,12 @@
     activeEntry = null;
     activePhotoUrls.forEach(function (u) { URL.revokeObjectURL(u); });
     activePhotoUrls = [];
+    activeVoiceUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    activeVoiceUrls = [];
+    activeVideoUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    activeVideoUrls = [];
+    activeMomentUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    activeMomentUrls = [];
 
     var parts = key.split("-").map(Number);
     var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -1018,13 +1047,16 @@
     document.getElementById("panelWeekday").textContent = WEEKDAY_NAMES[dateObj.getDay()];
     document.getElementById("textNote").value = "";
     photoStrip.innerHTML = "";
+    voiceList.innerHTML = "";
+    videoList.innerHTML = "";
+    momentPreview.innerHTML = "";
 
     backdrop.classList.add("open");
     panel.classList.add("open");
     panel.setAttribute("aria-hidden", "false");
 
     dbGet(key).then(function (rec) {
-      activeEntry = rec || { date: key, mood: null, note: "", photos: [] };
+      activeEntry = normalizeEntry(rec, key);
       if (activeKey !== key) return; // user already moved to another day
       document.getElementById("textNote").value = activeEntry.note || "";
       refreshMoodRow();
@@ -1156,14 +1188,18 @@
 
   function refreshMomentPreview() {
     momentPreview.innerHTML = "";
-    var pair = sessionMoments[activeKey];
+    activeMomentUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    activeMomentUrls = [];
+    var pair = activeEntry ? activeEntry.moments : null;
     if (!pair) return;
     ["front", "back"].forEach(function (side) {
       if (!pair[side]) return;
+      var url = URL.createObjectURL(pair[side]);
+      activeMomentUrls.push(url);
       var tile = document.createElement("div");
       tile.className = "thumb-tile";
       var img = document.createElement("img");
-      img.src = pair[side];
+      img.src = url;
       tile.appendChild(img);
       var tag = document.createElement("span");
       tag.className = "tag";
@@ -1197,19 +1233,20 @@
             canvas.height = video.videoHeight || 360;
             var ctx = canvas.getContext("2d");
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            var shot = canvas.toDataURL("image/jpeg", 0.75);
             stream.getTracks().forEach(function (t) { t.stop(); });
 
-            if (!sessionMoments[activeKey]) sessionMoments[activeKey] = {};
-            sessionMoments[activeKey][label] = shot;
-            refreshMomentPreview();
+            canvas.toBlob(function (blob) {
+              if (!blob || !activeEntry) return;
+              activeEntry.moments[label] = blob;
+              persistActiveEntry().then(refreshMomentPreview);
+            }, "image/jpeg", 0.8);
 
             if (label === "front") {
               showToast("Front captured — trying the back camera…");
               captureFacing("environment", "back");
             } else {
               captureBtn.disabled = false;
-              showToast("Moment saved for this session.");
+              showToast("Moment saved.");
             }
           }, 260);
         });
@@ -1225,7 +1262,6 @@
   }
 
   // ---------- Video recording (video + audio, foreground-only, run until stopped) ----------
-  var sessionVideos = {};
   var videoList = document.getElementById("videoList");
   var recordVideoBtn = document.getElementById("recordVideo");
   var videoRecordLabel = document.getElementById("videoRecordLabel");
@@ -1288,16 +1324,20 @@
 
   function refreshVideoList() {
     videoList.innerHTML = "";
-    var list = sessionVideos[activeKey] || [];
-    if (list.length === 0) return;
+    activeVideoUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    activeVideoUrls = [];
+    var list = activeEntry ? activeEntry.videos : [];
+    if (!list || list.length === 0) return;
     list.forEach(function (clip, idx) {
+      var url = URL.createObjectURL(clip.blob);
+      activeVideoUrls.push(url);
       var item = document.createElement("div");
       item.className = "video-item";
       var video = document.createElement("video");
       video.controls = true;
       video.playsInline = true;
       video.preload = "metadata";
-      video.src = clip.url;
+      video.src = url;
       video.load();
       video.addEventListener("error", function () {
         showToast("This clip didn't save correctly — try recording it again.");
@@ -1315,7 +1355,7 @@
       del.textContent = "✕ remove";
       del.addEventListener("click", function () {
         list.splice(idx, 1);
-        refreshVideoList();
+        persistActiveEntry().then(refreshVideoList);
       });
       meta.appendChild(del);
       item.appendChild(meta);
@@ -1352,13 +1392,11 @@
         videoRecorder.onstop = function () {
           if (videoChunks.length === 0) {
             showToast(lockCutVideo ? "Screen locked before anything was captured — nothing to save." : "That recording came out empty — try again.");
-          } else {
+          } else if (activeEntry) {
             if (lockCutVideo) showToast("Screen locked, so the recording stopped there — saved what was captured.");
             var blob = new Blob(videoChunks, { type: videoRecorder.mimeType || mimeType || "video/webm" });
-            var url = URL.createObjectURL(blob);
             var secs = Math.max(1, Math.round((Date.now() - videoStart) / 1000));
-            if (!sessionVideos[activeKey]) sessionVideos[activeKey] = [];
-            sessionVideos[activeKey].push({ url: url, duration: fmtDuration(secs) });
+            activeEntry.videos.push({ id: Date.now() + "-" + Math.random().toString(36).slice(2), blob: blob, duration: fmtDuration(secs) });
           }
           videoStream.getTracks().forEach(function (t) { t.stop(); });
           recordVideoBtn.classList.remove("recording");
@@ -1366,7 +1404,7 @@
           clearInterval(videoTimer);
           lockCutVideo = false;
           if (!anyRecordingActive()) releaseWakeLock();
-          refreshVideoList();
+          persistActiveEntry().then(refreshVideoList);
         };
         // No timeslice argument — a single continuous recording, finalized whole
         // on stop(). Periodic timesliced chunks are what produce the webm files
@@ -1403,8 +1441,10 @@
 
   function refreshVoiceList() {
     voiceList.innerHTML = "";
-    var list = sessionVoices[activeKey] || [];
-    if (list.length === 0) {
+    activeVoiceUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    activeVoiceUrls = [];
+    var list = activeEntry ? activeEntry.voices : [];
+    if (!list || list.length === 0) {
       var empty = document.createElement("div");
       empty.className = "empty-note";
       empty.textContent = "No voice notes yet — record one to hear this day back later.";
@@ -1418,9 +1458,11 @@
       var playBtn = document.createElement("button");
       playBtn.className = "play";
       playBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l10-5.5-10-5.5z"/></svg>';
+      var noteUrl = URL.createObjectURL(note.blob);
+      activeVoiceUrls.push(noteUrl);
       var audio = new Audio();
       audio.preload = "metadata";
-      audio.src = note.url;
+      audio.src = noteUrl;
       audio.addEventListener("error", function () { showToast("This voice note didn't save correctly."); });
       playBtn.addEventListener("click", function () {
         audio.currentTime = 0;
@@ -1449,7 +1491,7 @@
       del.textContent = "✕";
       del.addEventListener("click", function () {
         list.splice(idx, 1);
-        refreshVoiceList();
+        persistActiveEntry().then(refreshVoiceList);
       });
       row.appendChild(del);
 
@@ -1486,15 +1528,14 @@
         mediaRecorder.onstop = function () {
           if (recordChunks.length === 0) {
             if (lockCutAudio) showToast("Screen locked before anything was captured — nothing to save.");
-          } else {
+          } else if (activeEntry) {
             if (lockCutAudio) showToast("Screen locked, so the recording stopped there — saved what was captured.");
             var blob = new Blob(recordChunks, { type: mediaRecorder.mimeType || audioMime || "audio/webm" });
-            var url = URL.createObjectURL(blob);
             var secs = Math.max(1, Math.round((Date.now() - recordStart) / 1000));
-            if (!sessionVoices[activeKey]) sessionVoices[activeKey] = [];
-            sessionVoices[activeKey].push({
-              url: url,
-              duration: "0:" + pad(secs),
+            activeEntry.voices.push({
+              id: Date.now() + "-" + Math.random().toString(36).slice(2),
+              blob: blob,
+              duration: fmtDuration(secs),
               seed: 1 + Math.random() * 2
             });
           }
@@ -1504,16 +1545,16 @@
           clearInterval(recordTimer);
           lockCutAudio = false;
           if (!anyRecordingActive()) releaseWakeLock();
-          refreshVoiceList();
+          persistActiveEntry().then(refreshVoiceList);
         };
+        // No duration cap — records until you press stop, same as video.
         mediaRecorder.start();
         requestWakeLock();
         recordStart = Date.now();
         recordBtn.classList.add("recording");
         recordTimer = setInterval(function () {
           var secs = Math.round((Date.now() - recordStart) / 1000);
-          recordLabel.textContent = "Recording… 0:" + pad(secs);
-          if (secs >= 60) mediaRecorder.stop();
+          recordLabel.textContent = "Recording… " + fmtDuration(secs);
         }, 300);
       })
       .catch(function () {
@@ -1545,7 +1586,7 @@
     reelDate.textContent = document.getElementById("panelDate").textContent;
     reelMood.textContent = activeEntry.mood ? moodMap[activeEntry.mood].label : "No mood set";
     reelNote.textContent = activeEntry.note || "";
-    var voiceCount = (sessionVoices[activeKey] || []).length;
+    var voiceCount = activeEntry.voices.length;
     reelCaption.textContent = voiceCount
       ? voiceCount + " voice note" + (voiceCount > 1 ? "s" : "") + " from this day"
       : "";
@@ -1599,6 +1640,50 @@
   }
   document.getElementById("closeReel").addEventListener("click", closeReel);
 
+  // ---------- Email this day ----------
+  // A webpage can't send email itself — there's no SMTP access in a browser —
+  // so this hands off to whatever the phone/computer already uses for mail.
+  // Where the Web Share API supports file attachments (most mobile browsers),
+  // photos go along as real attachments through the native share sheet, where
+  // Mail is one of the apps offered. Where it doesn't (most desktop browsers),
+  // this falls back to a mailto: link with the mood/note as text — mailto has
+  // no way to attach files at all, so photos would need to be attached by hand
+  // in that case.
+  document.getElementById("emailDay").addEventListener("click", function () {
+    if (!activeEntry) return;
+    var dateLabel = document.getElementById("panelDate").textContent;
+    var moodLabel = activeEntry.mood ? moodMap[activeEntry.mood].label : "no mood set";
+    var bodyLines = [
+      "Mood: " + moodLabel,
+      "",
+      activeEntry.note || "(no notes written)",
+      "",
+      "— sent from I Remember"
+    ];
+    var subject = "I Remember — " + dateLabel;
+    var bodyText = bodyLines.join("\n");
+
+    var photoFiles = activeEntry.photos.slice(0, 10).map(function (p, i) {
+      return new File([p.blob], "photo-" + (i + 1) + ".jpg", { type: p.blob.type || "image/jpeg" });
+    });
+
+    if (navigator.share && navigator.canShare && photoFiles.length && navigator.canShare({ files: photoFiles })) {
+      navigator.share({ title: subject, text: bodyText, files: photoFiles }).catch(function (err) {
+        if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet.");
+      });
+    } else if (navigator.share) {
+      navigator.share({ title: subject, text: bodyText }).catch(function (err) {
+        if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet.");
+      });
+    } else {
+      var mailto = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(bodyText);
+      window.location.href = mailto;
+      if (activeEntry.photos.length) {
+        showToast("Opening your mail app — attach photos yourself, email links can't include them automatically.");
+      }
+    }
+  });
+
   // ---------- Toast ----------
   var toast = document.getElementById("toast");
   var toastTimer = null;
@@ -1623,6 +1708,15 @@
       stopVideoRecordingIfActive();
     }
   });
+
+  // Ask the browser to treat this site's storage as persistent rather than
+  // "best effort" — without this, iOS/Android can quietly evict IndexedDB
+  // data (oldest first) if the device runs low on space. This doesn't
+  // guarantee anything is kept forever, but it's the one thing a webpage can
+  // do to make months-old entries far less likely to get silently cleared.
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(function () {});
+  }
 
   renderCalendar();
   dbLoadSummaries().then(function (summaries) {
