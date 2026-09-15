@@ -296,6 +296,17 @@
   }
   .panel-head h2 { font-size: 1.4rem; }
   .panel-head .weekday { color: var(--ink-soft); font-size: 0.85rem; margin-top: 3px; }
+  .holiday-note { color: var(--accent); font-size: 0.78rem; margin-top: 4px; }
+
+  /* Holiday badge on the calendar grid — additive only, mirrors .num's corner */
+  .day .holiday-tag {
+    position: absolute;
+    top: 6px;
+    right: 7px;
+    font-size: 0.78rem;
+    line-height: 1;
+    filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.35));
+  }
 
   .close-btn {
     width: 32px; height: 32px;
@@ -702,6 +713,7 @@
     <div>
       <h2 id="panelDate"></h2>
       <div class="weekday mono" id="panelWeekday"></div>
+      <div class="holiday-note mono" id="panelHoliday" hidden></div>
     </div>
     <button class="close-btn" id="closePanel" aria-label="Close">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -924,6 +936,40 @@
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
   function keyFor(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
 
+  // ---------- US federal holidays (additive — display only, doesn't touch storage) ----------
+  var FEDERAL_HOLIDAYS_FIXED = [
+    { month: 0, day: 1, name: "New Year's Day" },
+    { month: 5, day: 19, name: "Juneteenth" },
+    { month: 6, day: 4, name: "Independence Day" },
+    { month: 10, day: 11, name: "Veterans Day" },
+    { month: 11, day: 25, name: "Christmas Day" }
+  ];
+
+  function nthWeekdayOfMonth(year, month, weekday, n) {
+    var firstWeekday = new Date(year, month, 1).getDay();
+    var offset = (weekday - firstWeekday + 7) % 7;
+    return 1 + offset + (n - 1) * 7;
+  }
+  function lastWeekdayOfMonth(year, month, weekday) {
+    var lastDate = new Date(year, month + 1, 0);
+    var offset = (lastDate.getDay() - weekday + 7) % 7;
+    return lastDate.getDate() - offset;
+  }
+
+  function getHolidayName(year, month, day) {
+    for (var i = 0; i < FEDERAL_HOLIDAYS_FIXED.length; i++) {
+      var h = FEDERAL_HOLIDAYS_FIXED[i];
+      if (h.month === month && h.day === day) return h.name;
+    }
+    if (month === 0 && day === nthWeekdayOfMonth(year, 0, 1, 3)) return "Martin Luther King Jr. Day";
+    if (month === 1 && day === nthWeekdayOfMonth(year, 1, 1, 3)) return "Presidents' Day";
+    if (month === 4 && day === lastWeekdayOfMonth(year, 4, 1)) return "Memorial Day";
+    if (month === 8 && day === nthWeekdayOfMonth(year, 8, 1, 1)) return "Labor Day";
+    if (month === 9 && day === nthWeekdayOfMonth(year, 9, 1, 2)) return "Columbus Day";
+    if (month === 10 && day === nthWeekdayOfMonth(year, 10, 4, 4)) return "Thanksgiving Day";
+    return null;
+  }
+
   var today = new Date();
   var viewYear = today.getFullYear();
   var viewMonth = today.getMonth();
@@ -967,6 +1013,15 @@
       num.className = "num";
       num.textContent = d;
       thumb.appendChild(num);
+
+      var holidayName = getHolidayName(viewYear, viewMonth, d);
+      if (holidayName) {
+        var holidayTag = document.createElement("span");
+        holidayTag.className = "holiday-tag";
+        holidayTag.textContent = "🎉";
+        holidayTag.title = holidayName;
+        thumb.appendChild(holidayTag);
+      }
 
       if (entry.mood) {
         var badges = document.createElement("div");
@@ -1045,6 +1100,14 @@
     var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
     document.getElementById("panelDate").textContent = MONTH_NAMES[parts[1]-1] + " " + parts[2] + ", " + parts[0];
     document.getElementById("panelWeekday").textContent = WEEKDAY_NAMES[dateObj.getDay()];
+    var panelHoliday = document.getElementById("panelHoliday");
+    var openedHolidayName = getHolidayName(parts[0], parts[1] - 1, parts[2]);
+    if (openedHolidayName) {
+      panelHoliday.textContent = "🎉 " + openedHolidayName;
+      panelHoliday.hidden = false;
+    } else {
+      panelHoliday.hidden = true;
+    }
     document.getElementById("textNote").value = "";
     photoStrip.innerHTML = "";
     voiceList.innerHTML = "";
