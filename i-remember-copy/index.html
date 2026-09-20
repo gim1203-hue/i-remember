@@ -22,7 +22,6 @@
     --accent-soft: #f3c97a;
     --accent-wash: #fbe9d4;
     --shadow: 220 25% 30%;
-
     --mood-joyful: #d99a2b;
     --mood-calm: #4f8285;
     --mood-sad: #4c5b7a;
@@ -32,737 +31,214 @@
     --mood-neutral: #8a8172;
     --mood-grateful: #5f8a52;
   }
-
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #171310;
-      --surface: #211b16;
-      --surface-raised: #271f19;
-      --ink: #f3ece1;
-      --ink-soft: #bcae9c;
-      --ink-faint: #7d7263;
-      --border: #382d23;
-      --border-soft: #2b231c;
-      --accent: #f0865a;
-      --accent-ink: #201209;
-      --accent-soft: #f4c765;
-      --accent-wash: #3a2a1a;
+      --bg: #171310; --surface: #211b16; --surface-raised: #271f19;
+      --ink: #f3ece1; --ink-soft: #bcae9c; --ink-faint: #7d7263;
+      --border: #382d23; --border-soft: #2b231c; --accent: #f0865a;
+      --accent-ink: #201209; --accent-soft: #f4c765; --accent-wash: #3a2a1a;
       --shadow: 20 30% 2%;
     }
   }
-
   :root[data-theme="dark"] {
-    --bg: #171310;
-    --surface: #211b16;
-    --surface-raised: #271f19;
-    --ink: #f3ece1;
-    --ink-soft: #bcae9c;
-    --ink-faint: #7d7263;
-    --border: #382d23;
-    --border-soft: #2b231c;
-    --accent: #f0865a;
-    --accent-ink: #201209;
-    --accent-soft: #f4c765;
-    --accent-wash: #3a2a1a;
+    --bg: #171310; --surface: #211b16; --surface-raised: #271f19;
+    --ink: #f3ece1; --ink-soft: #bcae9c; --ink-faint: #7d7263;
+    --border: #382d23; --border-soft: #2b231c; --accent: #f0865a;
+    --accent-ink: #201209; --accent-soft: #f4c765; --accent-wash: #3a2a1a;
     --shadow: 20 30% 2%;
   }
-
   * { box-sizing: border-box; }
   html { color-scheme: light dark; }
-
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
-  }
-
-  h1, h2, h3, .display {
-    font-family: "Fraunces", ui-serif, Georgia, serif;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    text-wrap: balance;
-    margin: 0;
-  }
-
-  .mono {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-variant-numeric: tabular-nums;
-  }
-
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  h1, h2, h3, .display { font-family: "Fraunces", ui-serif, Georgia, serif; font-weight: 500; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
   button { font-family: inherit; }
-
   a { color: inherit; }
-
-  /* ---------- App shell ---------- */
-  .app {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 32px) 80px;
-  }
-
-  .topbar {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-
-  .wordmark {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
-
-  .wordmark .glyph {
-    font-family: "Fraunces", serif;
-    font-style: italic;
-    font-weight: 600;
-    font-size: 1.9rem;
-    color: var(--accent);
-  }
-
-  .wordmark h1 {
-    font-size: 1.9rem;
-    font-style: italic;
-  }
-
-  .tagline {
-    color: var(--ink-soft);
-    font-size: 0.88rem;
-    margin-top: 2px;
-  }
-
-  .month-nav {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .month-nav .month-label {
-    font-family: "Fraunces", serif;
-    font-size: 1.15rem;
-    min-width: 168px;
-    text-align: center;
-  }
-
-  .nav-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--ink);
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    transition: background 0.15s ease, border-color 0.15s ease;
-  }
+  .app { max-width: 900px; margin: 0 auto; padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 32px) 80px; }
+  .topbar { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+  .wordmark { display: flex; align-items: baseline; gap: 10px; }
+  .wordmark .glyph { font-family: "Fraunces", serif; font-style: italic; font-weight: 600; font-size: 1.9rem; color: var(--accent); }
+  .wordmark h1 { font-size: 1.9rem; font-style: italic; }
+  .tagline { color: var(--ink-soft); font-size: 0.88rem; margin-top: 2px; }
+  .month-nav { display: flex; align-items: center; gap: 14px; }
+  .month-nav .month-label { font-family: "Fraunces", serif; font-size: 1.15rem; min-width: 168px; text-align: center; }
+  .nav-btn { width: 34px; height: 34px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; display: grid; place-items: center; transition: background 0.15s ease, border-color 0.15s ease; }
   .nav-btn:hover { background: var(--accent-wash); border-color: var(--accent-soft); }
   .nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  /* ---------- Account bar ---------- */
-  .account-bar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .account-bar .email {
-    font-size: 0.74rem;
-    color: var(--ink-faint);
-  }
-  .account-bar .signout-btn {
-    border: none;
-    background: none;
-    color: var(--ink-soft);
-    font-size: 0.74rem;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    padding: 2px 0;
-  }
+  .account-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 20px; }
+  .account-bar .email { font-size: 0.74rem; color: var(--ink-faint); }
+  .account-bar .signout-btn { border: none; background: none; color: var(--ink-soft); font-size: 0.74rem; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; padding: 2px 0; }
   .account-bar .signout-btn:hover { color: var(--accent); }
-
-  /* ---------- Calendar ---------- */
-  .weekday-row {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .weekday-row span {
-    text-align: center;
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-  }
-
-  .day {
-    position: relative;
-    aspect-ratio: 0.86;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    cursor: pointer;
-    overflow: hidden;
-    padding: 0;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
-  }
+  .weekday-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; }
+  .weekday-row span { text-align: center; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .day { position: relative; aspect-ratio: 0.86; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; overflow: hidden; padding: 0; text-align: left; display: flex; flex-direction: column; transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease; }
   .day:hover { transform: translateY(-2px); border-color: var(--accent-soft); box-shadow: 0 6px 16px -10px hsl(var(--shadow) / 0.5); }
   .day:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .day.empty { visibility: hidden; pointer-events: none; }
   .day.today { border-color: var(--accent); }
-
-  .day .thumb {
-    flex: 1;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-  }
-  .day .thumb.no-photo {
-    background: var(--surface-raised);
-  }
-
-  .day .num {
-    position: absolute;
-    top: 6px;
-    left: 7px;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 0.72rem;
-    color: var(--ink-soft);
-    background: color-mix(in srgb, var(--surface) 78%, transparent);
-    padding: 1px 5px;
-    border-radius: 6px;
-  }
-  .day.has-photo .num {
-    color: #fff;
-    background: rgba(20, 14, 8, 0.45);
-  }
-
-  .day .mood-bar {
-    height: 6px;
-    width: 100%;
-  }
-
-  .day .badges {
-    position: absolute;
-    bottom: 10px;
-    right: 6px;
-    display: flex;
-    gap: 3px;
-  }
-  .day .badges .dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    background: rgba(255,255,255,0.9);
-  }
+  .day .thumb { flex: 1; background-size: cover; background-position: center; position: relative; }
+  .day .thumb.no-photo { background: var(--surface-raised); }
+  .day .num { position: absolute; top: 6px; left: 7px; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; color: var(--ink-soft); background: color-mix(in srgb, var(--surface) 78%, transparent); padding: 1px 5px; border-radius: 6px; }
+  .day.has-photo .num { color: #fff; background: rgba(20, 14, 8, 0.45); }
+  .day .mood-bar { height: 6px; width: 100%; }
+  .day .badges { position: absolute; bottom: 10px; right: 6px; display: flex; gap: 3px; }
+  .day .badges .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.9); }
   .day:not(.has-photo) .badges .dot { background: var(--accent); }
-
-  /* ---------- Backdrop + panel ---------- */
-  .backdrop {
-    position: fixed; inset: 0;
-    background: hsl(var(--shadow) / 0.45);
-    backdrop-filter: blur(2px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.22s ease;
-    z-index: 40;
-  }
+  .backdrop { position: fixed; inset: 0; background: hsl(var(--shadow) / 0.45); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity 0.22s ease; z-index: 40; }
   .backdrop.open { opacity: 1; pointer-events: auto; }
-
-  .panel {
-    position: fixed;
-    top: 0; right: 0; bottom: 0;
-    width: min(440px, 100vw);
-    background: var(--surface);
-    border-left: 1px solid var(--border);
-    transform: translateX(100%);
-    transition: transform 0.28s cubic-bezier(.22,.9,.32,1);
-    z-index: 41;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+  .panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); background: var(--surface); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform 0.28s cubic-bezier(.22,.9,.32,1); z-index: 41; display: flex; flex-direction: column; overflow: hidden; }
   .panel.open { transform: translateX(0); }
-
-  .panel-scroll {
-    overflow-y: auto;
-    padding: 22px 22px 40px;
-    flex: 1;
-  }
-
-  .panel-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 20px 22px 14px;
-    border-bottom: 1px solid var(--border-soft);
-  }
+  .panel-scroll { overflow-y: auto; padding: 22px 22px 40px; flex: 1; }
+  .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 22px 14px; border-bottom: 1px solid var(--border-soft); }
   .panel-head h2 { font-size: 1.4rem; }
   .panel-head .weekday { color: var(--ink-soft); font-size: 0.85rem; margin-top: 3px; }
   .holiday-note { color: var(--accent); font-size: 0.78rem; margin-top: 4px; }
-
-  /* Holiday badge on the calendar grid — additive only, mirrors .num's corner */
-  .day .holiday-tag {
-    position: absolute;
-    top: 6px;
-    right: 7px;
-    font-size: 0.78rem;
-    line-height: 1;
-    filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.35));
-  }
-
-  .close-btn {
-    width: 32px; height: 32px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface-raised);
-    color: var(--ink-soft);
-    cursor: pointer;
-    display: grid; place-items: center;
-    flex-shrink: 0;
-  }
+  .day .holiday-tag { position: absolute; top: 6px; right: 7px; font-size: 0.78rem; line-height: 1; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.35)); }
+  .close-btn { width: 32px; height: 32px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
   .close-btn:hover { border-color: var(--accent-soft); color: var(--ink); }
   .close-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
   .section { margin-top: 26px; }
   .section:first-child { margin-top: 0; }
-  .section-label {
-    font-size: 0.72rem;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  /* Mood picker */
-  .mood-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .mood-chip {
-    display: flex; align-items: center; gap: 6px;
-    padding: 6px 11px 6px 8px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface-raised);
-    color: var(--ink-soft);
-    font-size: 0.82rem;
-    cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
-  }
-  .mood-chip .swatch {
-    width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
-  }
+  .section-label { font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .mood-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mood-chip { display: flex; align-items: center; gap: 6px; padding: 6px 11px 6px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink-soft); font-size: 0.82rem; cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease; }
+  .mood-chip .swatch { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
   .mood-chip:hover { border-color: var(--accent-soft); }
-  .mood-chip.active {
-    border-color: var(--mood-c);
-    background: color-mix(in srgb, var(--mood-c) 16%, var(--surface-raised));
-    color: var(--ink);
-    font-weight: 500;
-  }
+  .mood-chip.active { border-color: var(--mood-c); background: color-mix(in srgb, var(--mood-c) 16%, var(--surface-raised)); color: var(--ink); font-weight: 500; }
   .mood-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  /* Photo strip */
-  .strip {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-  }
+  .strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
   .strip::-webkit-scrollbar { height: 6px; }
   .strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  .thumb-tile {
-    position: relative;
-    flex: 0 0 auto;
-    width: 84px; height: 84px;
-    border-radius: 10px;
-    overflow: hidden;
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-  }
+  .thumb-tile { position: relative; flex: 0 0 auto; width: 84px; height: 84px; border-radius: 10px; overflow: hidden; background: var(--surface-raised); border: 1px solid var(--border); }
   .thumb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .thumb-tile .remove {
-    position: absolute; top: 3px; right: 3px;
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(20,14,8,0.55);
-    color: #fff;
-    font-size: 11px;
-    line-height: 1;
-    cursor: pointer;
-    display: grid; place-items: center;
-  }
-  .thumb-tile .tag {
-    position: absolute; left: 4px; bottom: 3px;
-    font-size: 0.58rem;
-    background: rgba(20,14,8,0.55);
-    color: #fff;
-    padding: 1px 4px;
-    border-radius: 4px;
-    letter-spacing: 0.03em;
-  }
-
-  .add-tile {
-    flex: 0 0 auto;
-    width: 84px; height: 84px;
-    border-radius: 10px;
-    border: 1.5px dashed var(--border);
-    background: none;
-    color: var(--ink-faint);
-    cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px;
-    font-size: 0.66rem;
-    transition: border-color 0.15s ease, color 0.15s ease;
-  }
+  .thumb-tile .remove { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(20,14,8,0.55); color: #fff; font-size: 11px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+  .thumb-tile .tag { position: absolute; left: 4px; bottom: 3px; font-size: 0.58rem; background: rgba(20,14,8,0.55); color: #fff; padding: 1px 4px; border-radius: 4px; letter-spacing: 0.03em; }
+  .add-tile { flex: 0 0 auto; width: 84px; height: 84px; border-radius: 10px; border: 1.5px dashed var(--border); background: none; color: var(--ink-faint); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.66rem; transition: border-color 0.15s ease, color 0.15s ease; }
   .add-tile:hover { border-color: var(--accent); color: var(--accent); }
   .add-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .add-tile svg { width: 18px; height: 18px; }
-
-  /* Moments (front/back) */
-  .moment-hint {
-    font-size: 0.78rem;
-    color: var(--ink-soft);
-    line-height: 1.45;
-    margin-bottom: 10px;
-  }
+  .moment-hint { font-size: 0.78rem; color: var(--ink-soft); line-height: 1.45; margin-bottom: 10px; }
   .moment-row { display: flex; gap: 10px; align-items: center; }
-  .moment-pair {
-    display: flex; gap: 6px;
-  }
+  .moment-pair { display: flex; gap: 6px; }
   .moment-pair .thumb-tile { width: 60px; height: 60px; }
-  .capture-btn {
-    display: flex; align-items: center; gap: 7px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface-raised);
-    color: var(--ink);
-    font-size: 0.82rem;
-    cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease;
-    white-space: nowrap;
-  }
+  .capture-btn { display: flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font-size: 0.82rem; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; white-space: nowrap; }
   .capture-btn:hover { border-color: var(--accent); }
   .capture-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .capture-btn svg { width: 15px; height: 15px; }
   .capture-btn.recording { border-color: var(--mood-angry); color: var(--mood-angry); }
   .capture-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-
-  /* Video recording */
   .video-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
-  .video-item {
-    border-radius: 12px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border-soft);
-    overflow: hidden;
-  }
+  .video-item { border-radius: 12px; background: var(--surface-raised); border: 1px solid var(--border-soft); overflow: hidden; }
   .video-item video { width: 100%; max-height: 220px; display: block; background: #000; }
-  .video-item .video-meta {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 7px 10px;
-    font-size: 0.72rem;
-    color: var(--ink-faint);
-  }
-  .video-item .del {
-    border: none; background: none; color: var(--ink-faint);
-    cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 4px;
-  }
+  .video-item .video-meta { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; font-size: 0.72rem; color: var(--ink-faint); }
+  .video-item .del { border: none; background: none; color: var(--ink-faint); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 4px; }
   .video-item .del:hover { color: var(--mood-angry); }
-
-  /* Voice notes */
   .voice-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-  .voice-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 10px;
-    border-radius: 10px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border-soft);
-  }
-  .voice-item .play {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent);
-    color: var(--accent-ink);
-    cursor: pointer;
-    display: grid; place-items: center;
-    flex-shrink: 0;
-  }
+  .voice-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; background: var(--surface-raised); border: 1px solid var(--border-soft); }
+  .voice-item .play { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--accent); color: var(--accent-ink); cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
   .voice-item .play svg { width: 12px; height: 12px; }
-  .voice-item .wave {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    height: 20px;
-  }
-  .voice-item .wave span {
-    width: 2.5px;
-    background: var(--border);
-    border-radius: 2px;
-  }
-  .voice-item .dur {
-    font-size: 0.72rem;
-    color: var(--ink-faint);
-    flex-shrink: 0;
-  }
-  .voice-item .del {
-    border: none; background: none; color: var(--ink-faint);
-    cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px;
-    flex-shrink: 0;
-  }
+  .voice-item .wave { flex: 1; display: flex; align-items: center; gap: 2px; height: 20px; }
+  .voice-item .wave span { width: 2.5px; background: var(--border); border-radius: 2px; }
+  .voice-item .dur { font-size: 0.72rem; color: var(--ink-faint); flex-shrink: 0; }
+  .voice-item .del { border: none; background: none; color: var(--ink-faint); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px; flex-shrink: 0; }
   .voice-item .del:hover { color: var(--mood-angry); }
-
-  .empty-note {
-    font-size: 0.8rem;
-    color: var(--ink-faint);
-    font-style: italic;
-    padding: 4px 0;
-  }
-
-  /* Text note */
-  textarea {
-    width: 100%;
-    min-height: 90px;
-    resize: vertical;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--surface-raised);
-    color: var(--ink);
-    font-family: "Work Sans", sans-serif;
-    font-size: 0.9rem;
-    line-height: 1.55;
-    padding: 10px 12px;
-  }
+  .empty-note { font-size: 0.8rem; color: var(--ink-faint); font-style: italic; padding: 4px 0; }
+  textarea { width: 100%; min-height: 90px; resize: vertical; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font-family: "Work Sans", sans-serif; font-size: 0.9rem; line-height: 1.55; padding: 10px 12px; }
   textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   textarea::placeholder { color: var(--ink-faint); }
-
-  /* Reel button */
-  .reel-btn {
-    width: 100%;
-    margin-top: 28px;
-    padding: 13px;
-    border-radius: 12px;
-    border: none;
-    background: var(--accent);
-    color: var(--accent-ink);
-    font-size: 0.92rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: filter 0.15s ease;
-  }
+  .reel-btn { width: 100%; margin-top: 28px; padding: 13px; border-radius: 12px; border: none; background: var(--accent); color: var(--accent-ink); font-size: 0.92rem; font-weight: 600; letter-spacing: 0.01em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: filter 0.15s ease; }
   .reel-btn:hover { filter: brightness(1.06); }
   .reel-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   .reel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .reel-btn.secondary {
-    background: var(--surface-raised);
-    color: var(--ink);
-    border: 1px solid var(--border);
-    margin-top: 10px;
-  }
+  .reel-btn.secondary { background: var(--surface-raised); color: var(--ink); border: 1px solid var(--border); margin-top: 10px; }
   .reel-btn.secondary:hover { border-color: var(--accent-soft); }
   .reel-btn svg { width: 16px; height: 16px; }
-
-  .toast {
-    position: fixed;
-    bottom: 22px; left: 50%;
-    transform: translateX(-50%) translateY(12px);
-    background: var(--ink);
-    color: var(--bg);
-    padding: 10px 18px;
-    border-radius: 999px;
-    font-size: 0.82rem;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: 60;
-    max-width: 88vw;
-    text-align: center;
-  }
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 0.82rem; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 60; max-width: 88vw; text-align: center; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ---------- Reel overlay ---------- */
-  .reel-overlay {
-    position: fixed; inset: 0;
-    z-index: 70;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    color: #fdf8ef;
-    overflow: hidden;
-  }
+  .reel-overlay { position: fixed; inset: 0; z-index: 70; display: none; align-items: center; justify-content: center; flex-direction: column; color: #fdf8ef; overflow: hidden; }
   .reel-overlay.open { display: flex; }
-  .reel-bg {
-    position: absolute; inset: 0;
-    background-size: cover;
-    background-position: center;
-    filter: saturate(0.9) brightness(0.6);
-    transform: scale(1.06);
-    transition: opacity 0.9s ease;
-  }
-  .reel-bg.no-image {
-    background: linear-gradient(160deg, var(--mood-c, #4f8285), #171310);
-  }
-  .reel-tint {
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, hsl(20 30% 3% / 0.15), hsl(20 30% 3% / 0.75));
-  }
-  .reel-content {
-    position: relative;
-    text-align: center;
-    padding: 0 24px;
-    max-width: 480px;
-  }
-  .reel-content .date {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    opacity: 0.8;
-    margin-bottom: 10px;
-  }
-  .reel-content .mood-label {
-    font-family: "Fraunces", serif;
-    font-style: italic;
-    font-size: 1.9rem;
-    margin-bottom: 14px;
-  }
-  .reel-content .note {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    opacity: 0.92;
-  }
-  .reel-content .caption {
-    margin-top: 16px;
-    font-size: 0.78rem;
-    opacity: 0.7;
-  }
-  .reel-close {
-    position: absolute; top: 20px; right: 20px;
-    width: 38px; height: 38px;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.35);
-    background: rgba(0,0,0,0.25);
-    color: #fff;
-    cursor: pointer;
-    display: grid; place-items: center;
-    z-index: 2;
-  }
+  .reel-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: saturate(0.9) brightness(0.6); transform: scale(1.06); transition: opacity 0.9s ease; }
+  .reel-bg.no-image { background: linear-gradient(160deg, var(--mood-c, #4f8285), #171310); }
+  .reel-tint { position: absolute; inset: 0; background: linear-gradient(180deg, hsl(20 30% 3% / 0.15), hsl(20 30% 3% / 0.75)); }
+  .reel-content { position: relative; text-align: center; padding: 0 24px; max-width: 480px; }
+  .reel-content .date { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; margin-bottom: 10px; }
+  .reel-content .mood-label { font-family: "Fraunces", serif; font-style: italic; font-size: 1.9rem; margin-bottom: 14px; }
+  .reel-content .note { font-size: 0.95rem; line-height: 1.6; opacity: 0.92; }
+  .reel-content .caption { margin-top: 16px; font-size: 0.78rem; opacity: 0.7; }
+  .reel-close { position: absolute; top: 20px; right: 20px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); background: rgba(0,0,0,0.25); color: #fff; cursor: pointer; display: grid; place-items: center; z-index: 2; }
   .reel-close:hover { background: rgba(0,0,0,0.45); }
-  .reel-progress {
-    position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 5px;
-    z-index: 2;
-  }
-  .reel-progress span {
-    width: 22px; height: 3px; border-radius: 2px;
-    background: rgba(255,255,255,0.3);
-    overflow: hidden;
-  }
-  .reel-progress span i {
-    display: block; height: 100%; width: 0%;
-    background: #fff;
-  }
+  .reel-progress { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 2; }
+  .reel-progress span { width: 22px; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.3); overflow: hidden; }
+  .reel-progress span i { display: block; height: 100%; width: 0%; background: #fff; }
   .reel-progress span.done i { width: 100%; transition: none; }
   .reel-progress span.active i { width: 100%; transition: width linear; }
-
-  /* ---------- Sign-in screen ---------- */
-  .auth-overlay {
-    position: fixed; inset: 0;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    z-index: 90;
-  }
-  .auth-card {
-    max-width: 360px;
-    width: 100%;
-    text-align: center;
-  }
+  .auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 90; }
+  .auth-card { max-width: 360px; width: 100%; text-align: center; }
   .auth-card .wordmark { justify-content: center; }
   .auth-card .tagline { margin: 10px 0 28px; }
-  .auth-card .auth-note {
-    margin-top: 18px;
-    font-size: 0.76rem;
-    color: var(--ink-faint);
-    line-height: 1.5;
-  }
-  .google-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 12px 20px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--ink);
-    font-size: 0.92rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease;
-  }
+  .auth-card .auth-note { margin-top: 18px; font-size: 0.76rem; color: var(--ink-faint); line-height: 1.5; }
+  .google-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px 20px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 0.92rem; font-weight: 500; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; }
   .google-btn:hover { border-color: var(--accent-soft); background: var(--accent-wash); }
   .google-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
-  .auth-error {
-    margin-top: 14px;
-    font-size: 0.8rem;
-    color: var(--mood-angry);
-  }
-
+  .auth-error { margin-top: 14px; font-size: 0.8rem; color: var(--mood-angry); }
   [hidden] { display: none !important; }
+  @media (max-width: 520px) { .panel { width: 100vw; } .month-nav .month-label { min-width: 130px; } }
 
-  @media (max-width: 520px) {
-    .panel { width: 100vw; }
-    .month-nav .month-label { min-width: 130px; }
-  }
+  /* ---- Weather ---- */
+  .weather-card { background: var(--surface-raised); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+  .weather-main-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; }
+  .weather-icon-big { font-size: 2.2rem; line-height: 1; flex-shrink: 0; }
+  .weather-temp { font-size: 1.5rem; font-weight: 500; color: var(--ink); }
+  .weather-hi-lo { font-size: 0.75rem; color: var(--ink-soft); margin-top: 1px; }
+  .weather-desc { font-size: 0.8rem; color: var(--ink-soft); margin-top: 1px; }
+  .weather-meta { font-size: 0.72rem; color: var(--ink-faint); margin-top: 3px; }
+  .forecast-strip { display: flex; gap: 6px; overflow-x: auto; padding: 4px 14px 12px; border-top: 1px solid var(--border-soft); }
+  .forecast-strip::-webkit-scrollbar { height: 4px; }
+  .forecast-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .fc-day { flex: 0 0 auto; text-align: center; padding: 8px 6px 4px; min-width: 48px; }
+  .fc-name { font-size: 0.66rem; color: var(--ink-faint); margin-bottom: 4px; }
+  .fc-icon { font-size: 1.1rem; line-height: 1; margin-bottom: 4px; }
+  .fc-hi { font-size: 0.78rem; font-weight: 500; color: var(--ink); }
+  .fc-lo { font-size: 0.68rem; color: var(--ink-faint); }
+  .weather-past-note { font-size: 0.7rem; color: var(--accent); padding: 6px 14px 10px; }
+  .weather-loading { font-size: 0.78rem; color: var(--ink-faint); font-style: italic; padding: 4px 0; }
+  .weather-error { font-size: 0.78rem; color: var(--ink-faint); font-style: italic; padding: 4px 0; }
+
+  /* ---- Prayer times ---- */
+  .prayer-list { display: flex; flex-direction: column; gap: 5px; }
+  .prayer-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; background: var(--surface-raised); border: 1px solid var(--border-soft); border-radius: 8px; }
+  .prayer-row.prayer-next { border-color: var(--accent-soft); background: var(--accent-wash); }
+  .prayer-name { font-size: 0.84rem; font-weight: 500; color: var(--ink); }
+  .prayer-row.prayer-next .prayer-name { color: var(--accent); }
+  .prayer-time { font-size: 0.82rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .prayer-row.prayer-next .prayer-time { color: var(--accent); font-weight: 500; }
+  .next-badge { display: inline-block; font-size: 0.6rem; background: var(--accent); color: var(--accent-ink); padding: 2px 6px; border-radius: 999px; vertical-align: middle; margin-left: 4px; }
+  .prayer-source { font-size: 0.67rem; color: var(--ink-faint); margin-top: 6px; }
+
+  /* ---- Prayer popup ---- */
+  .prayer-popup-overlay { position: fixed; inset: 0; background: hsl(var(--shadow) / 0.55); backdrop-filter: blur(3px); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+  .prayer-popup-overlay.open { opacity: 1; pointer-events: auto; }
+  .prayer-popup { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 28px 28px 22px; max-width: 320px; width: 90%; text-align: center; }
+  .prayer-popup .pp-icon { font-size: 2.4rem; margin-bottom: 10px; }
+  .prayer-popup .pp-title { font-family: "Fraunces", serif; font-size: 1.3rem; font-style: italic; color: var(--ink); margin-bottom: 6px; }
+  .prayer-popup .pp-time { font-size: 2rem; font-weight: 500; color: var(--accent); font-family: "IBM Plex Mono", monospace; margin-bottom: 6px; }
+  .prayer-popup .pp-sub { font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 20px; }
+  .prayer-popup .pp-dismiss { width: 100%; padding: 11px; border-radius: 10px; border: none; background: var(--accent); color: var(--accent-ink); font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+  .prayer-popup .pp-dismiss:hover { filter: brightness(1.06); }
+
+  /* ---- PiP button ---- */
+  .pip-btn { position: fixed; bottom: 22px; right: 22px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; z-index: 50; transition: border-color 0.15s ease, color 0.15s ease; }
+  .pip-btn:hover { border-color: var(--accent); color: var(--accent); }
 </style>
-
 </head>
 <body>
 
-<!-- Shown until we know whether someone is signed in, then whichever of these two applies. -->
 <div class="auth-overlay" id="authOverlay" hidden>
   <div class="auth-card">
-    <div class="wordmark">
-      <span class="glyph">✦</span>
-      <h1>I Remember</h1>
-    </div>
+    <div class="wordmark"><span class="glyph">✦</span><h1>I Remember</h1></div>
     <p class="tagline">Sign in with Google to keep your calendar private to you, and synced across every device.</p>
     <button class="google-btn" id="googleSignIn">
       <svg viewBox="0 0 18 18" aria-hidden="true">
@@ -781,10 +257,7 @@
 <div class="app" id="appRoot" hidden>
   <header class="topbar">
     <div>
-      <div class="wordmark">
-        <span class="glyph">✦</span>
-        <h1>I Remember</h1>
-      </div>
+      <div class="wordmark"><span class="glyph">✦</span><h1>I Remember</h1></div>
       <p class="tagline">A calendar that remembers each day the way it felt.</p>
     </div>
     <div class="month-nav">
@@ -797,12 +270,10 @@
       </button>
     </div>
   </header>
-
   <div class="account-bar">
     <span class="mono email" id="accountEmail"></span>
     <button class="signout-btn" id="signOutBtn">Sign out</button>
   </div>
-
   <div class="weekday-row">
     <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
   </div>
@@ -823,13 +294,23 @@
   </div>
   <div class="panel-scroll">
 
+    <div class="section" id="weatherSection">
+      <div class="section-label">Weather</div>
+      <div id="weatherContent"><div class="weather-loading">Open a day to see weather.</div></div>
+    </div>
+
+    <div class="section" id="prayerSection">
+      <div class="section-label">Prayer times</div>
+      <div id="prayerContent"><div class="weather-loading">Open a day to see prayer times.</div></div>
+    </div>
+
     <div class="section">
       <div class="section-label">Mood</div>
       <div class="mood-row" id="moodRow"></div>
     </div>
 
     <div class="section">
-      <div class="section-label">Photos <span class="mono" data-photo-count style="text-transform:none; letter-spacing:0; font-size:0.68rem;">0 / 50</span></div>
+      <div class="section-label">Photos <span class="mono" data-photo-count style="text-transform:none; letter-spacing:0; font-size:0.68rem;">0 / 100</span></div>
       <div class="strip" id="photoStrip"></div>
       <input type="file" id="photoInput" accept="image/*" multiple capture="environment" hidden>
     </div>
@@ -848,7 +329,7 @@
 
     <div class="section">
       <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
-      <p class="moment-hint">Records video + audio for as long as this tab stays open and in front — press stop whenever you're done. While recording, the screen is held awake automatically so it won't auto-lock mid-clip; pressing the physical lock button, switching apps, or closing the tab still ends it immediately (iOS and Android both cut camera/mic access the instant the screen locks — no app can override that), but whatever was captured up to that point is saved automatically.</p>
+      <p class="moment-hint">Records video + audio for as long as this tab stays open and in front — press stop whenever you're done. While recording, the screen is held awake automatically so it won't auto-lock mid-clip.</p>
       <div class="video-list" id="videoList"></div>
       <button class="capture-btn" id="recordVideo">
         <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="9" height="8" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 6.5l3.4-1.8v6.6l-3.4-1.8" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
@@ -896,38 +377,49 @@
   <div class="reel-progress" id="reelProgress"></div>
 </div>
 
+<!-- Prayer popup -->
+<div class="prayer-popup-overlay" id="prayerPopupOverlay">
+  <div class="prayer-popup">
+    <div class="pp-icon">🕌</div>
+    <div class="pp-title" id="ppTitle">Prayer</div>
+    <div class="pp-time" id="ppTime"></div>
+    <div class="pp-sub">It's time for prayer</div>
+    <button class="pp-dismiss" id="ppDismiss">Dismiss</button>
+  </div>
+</div>
+
+<!-- Picture-in-Picture float button -->
+<button class="pip-btn" id="pipBtn" title="Float on top">
+  <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="7" width="6" height="4" rx="1" fill="currentColor"/></svg>
+</button>
+
 <div class="toast" id="toast"></div>
 
-<!-- Supabase client — talks to your own project's public API. The publishable key below
-     is safe to expose in client-side code (it's meant to be); real protection comes from
-     the Row Level Security policies on the project, not from hiding this key. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function () {
   "use strict";
 
-  // ---------- Your Supabase project ----------
   var SUPABASE_URL = "https://kfpzouisepillpokcfin.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmcHpvdWlzZXBpbGxwb2tjZmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3OTAyNTUsImV4cCI6MjEwNTM2NjI1NX0.1hHsUNnhiExzBnfkzcw0L3xDirHwVlMmEeH3MDee8rU";
   var MEDIA_BUCKET = "media";
-  var SIGNED_URL_TTL = 3600; // seconds — plenty for one open session; refreshed each time a day/calendar loads
-
+  var SIGNED_URL_TTL = 3600;
   var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   var MOODS = [
-    { id: "joyful",   label: "Joyful",   var: "--mood-joyful" },
-    { id: "calm",      label: "Calm",     var: "--mood-calm" },
-    { id: "grateful",  label: "Grateful", var: "--mood-grateful" },
-    { id: "excited",   label: "Excited",  var: "--mood-excited" },
-    { id: "neutral",   label: "Neutral",  var: "--mood-neutral" },
-    { id: "anxious",   label: "Anxious",  var: "--mood-anxious" },
-    { id: "sad",       label: "Sad",      var: "--mood-sad" },
-    { id: "angry",     label: "Angry",    var: "--mood-angry" }
+    { id: "joyful",  label: "Joyful",   var: "--mood-joyful" },
+    { id: "calm",    label: "Calm",      var: "--mood-calm" },
+    { id: "grateful",label: "Grateful",  var: "--mood-grateful" },
+    { id: "excited", label: "Excited",   var: "--mood-excited" },
+    { id: "neutral", label: "Neutral",   var: "--mood-neutral" },
+    { id: "anxious", label: "Anxious",   var: "--mood-anxious" },
+    { id: "sad",     label: "Sad",       var: "--mood-sad" },
+    { id: "angry",   label: "Angry",     var: "--mood-angry" }
   ];
   var moodMap = {};
-  MOODS.forEach(function (m) { moodMap[m.id] = m; });
+  MOODS.forEach(function(m) { moodMap[m.id] = m; });
 
-  var MAX_PHOTOS_PER_DAY = 50;
+  var MAX_PHOTOS_PER_DAY = 100;
 
   function newId() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -943,12 +435,8 @@
   function showAuthScreen(message) {
     appRoot.hidden = true;
     authOverlay.hidden = false;
-    if (message) {
-      authError.textContent = message;
-      authError.hidden = false;
-    } else {
-      authError.hidden = true;
-    }
+    if (message) { authError.textContent = message; authError.hidden = false; }
+    else { authError.hidden = true; }
   }
 
   function showApp() {
@@ -956,57 +444,33 @@
     appRoot.hidden = false;
     document.getElementById("accountEmail").textContent = currentUser.email || "";
     renderCalendar();
-    loadCalendarIndex().then(function (index) {
-      calendarIndex = index;
-      renderCalendar();
-    });
+    startPrayerReminder();
+    loadCalendarIndex().then(function(index) { calendarIndex = index; renderCalendar(); });
   }
 
-  document.getElementById("googleSignIn").addEventListener("click", function () {
-    supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin + window.location.pathname }
-    }).then(function (res) {
-      if (res.error) showAuthScreen("Couldn't start Google sign-in — try again.");
-    });
+  document.getElementById("googleSignIn").addEventListener("click", function() {
+    supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } })
+      .then(function(res) { if (res.error) showAuthScreen("Couldn't start Google sign-in — try again."); });
   });
-
-  document.getElementById("signOutBtn").addEventListener("click", function () {
-    closePanel();
-    supabase.auth.signOut();
-  });
-
-  supabase.auth.onAuthStateChange(function (_event, session) {
+  document.getElementById("signOutBtn").addEventListener("click", function() { closePanel(); supabase.auth.signOut(); });
+  supabase.auth.onAuthStateChange(function(_event, session) {
     currentUser = session ? session.user : null;
     if (currentUser) showApp(); else showAuthScreen();
   });
-
-  supabase.auth.getSession().then(function (res) {
+  supabase.auth.getSession().then(function(res) {
     currentUser = res.data.session ? res.data.session.user : null;
     if (currentUser) showApp(); else showAuthScreen();
   });
 
-  // ---------- Storage: Supabase (Postgres rows + Storage bucket), not local ----------
-  // Every read/write below is automatically scoped to the signed-in user by the
-  // project's Row Level Security policies — the app never has to filter by user
-  // itself, and it's not possible (even with a bug here) for one account to read
-  // or overwrite another account's rows or files.
+  // ---------- Supabase helpers ----------
+  function entryDateFilter(dateKey) { return { entry_date: dateKey }; }
 
-  function entryDateFilter(dateKey) {
-    return { entry_date: dateKey };
-  }
-
-  // Returns the entries.id for a day, creating the row the first time something
-  // is actually saved for that day. Cheap to call repeatedly — does nothing once
-  // activeEntry.id is already known.
   function ensureEntryRow(entry) {
     if (entry.id) return Promise.resolve(entry.id);
-    return supabase
-      .from("entries")
+    return supabase.from("entries")
       .upsert({ user_id: currentUser.id, entry_date: entry.date }, { onConflict: "user_id,entry_date" })
-      .select("id")
-      .single()
-      .then(function (res) {
+      .select("id").single()
+      .then(function(res) {
         if (res.error) { showToast("Couldn't save — try again."); throw res.error; }
         entry.id = res.data.id;
         return entry.id;
@@ -1015,77 +479,78 @@
 
   function signedUrlsFor(paths) {
     if (!paths.length) return Promise.resolve({});
-    return supabase.storage.from(MEDIA_BUCKET).createSignedUrls(paths, SIGNED_URL_TTL).then(function (res) {
+    return supabase.storage.from(MEDIA_BUCKET).createSignedUrls(paths, SIGNED_URL_TTL).then(function(res) {
       var map = {};
-      (res.data || []).forEach(function (row) { if (row.signedUrl) map[row.path] = row.signedUrl; });
+      (res.data || []).forEach(function(row) { if (row.signedUrl) map[row.path] = row.signedUrl; });
       return map;
     });
   }
 
   function loadEntry(dateKey) {
-    var entry = { date: dateKey, id: null, mood: null, note: "", photos: [], videos: [], voices: [], moments: {} };
-    return supabase.from("entries").select("id, mood, note").match(entryDateFilter(dateKey)).maybeSingle().then(function (res) {
-      if (!res.data) return entry;
-      entry.id = res.data.id;
-      entry.mood = res.data.mood;
-      entry.note = res.data.note || "";
-      return supabase.from("media").select("id, kind, storage_path, duration, seed, position")
-        .eq("entry_id", entry.id).order("position", { ascending: true }).then(function (mediaRes) {
-          var rows = mediaRes.data || [];
-          return signedUrlsFor(rows.map(function (r) { return r.storage_path; })).then(function (urlByPath) {
-            rows.forEach(function (r) {
-              var url = urlByPath[r.storage_path] || null;
-              if (r.kind === "photo") entry.photos.push({ id: r.id, path: r.storage_path, url: url });
-              else if (r.kind === "video") entry.videos.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration });
-              else if (r.kind === "voice") entry.voices.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration, seed: r.seed });
-              else if (r.kind === "moment_front") entry.moments.front = { id: r.id, path: r.storage_path, url: url };
-              else if (r.kind === "moment_back") entry.moments.back = { id: r.id, path: r.storage_path, url: url };
+    var entry = { date: dateKey, id: null, mood: null, note: "", weather: null, photos: [], videos: [], voices: [], moments: {} };
+    return supabase.from("entries").select("id, mood, note, weather").match(entryDateFilter(dateKey)).maybeSingle()
+      .then(function(res) {
+        if (!res.data) return entry;
+        entry.id = res.data.id;
+        entry.mood = res.data.mood;
+        entry.note = res.data.note || "";
+        entry.weather = res.data.weather || null;
+        return supabase.from("media").select("id, kind, storage_path, duration, seed, position")
+          .eq("entry_id", entry.id).order("position", { ascending: true })
+          .then(function(mediaRes) {
+            var rows = mediaRes.data || [];
+            return signedUrlsFor(rows.map(function(r) { return r.storage_path; })).then(function(urlByPath) {
+              rows.forEach(function(r) {
+                var url = urlByPath[r.storage_path] || null;
+                if (r.kind === "photo") entry.photos.push({ id: r.id, path: r.storage_path, url: url });
+                else if (r.kind === "video") entry.videos.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration });
+                else if (r.kind === "voice") entry.voices.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration, seed: r.seed });
+                else if (r.kind === "moment_front") entry.moments.front = { id: r.id, path: r.storage_path, url: url };
+                else if (r.kind === "moment_back") entry.moments.back = { id: r.id, path: r.storage_path, url: url };
+              });
+              return entry;
             });
-            return entry;
           });
-        });
-    });
+      });
   }
 
-  // Builds the whole-calendar summary (every day that has a mood/note/photo) in
-  // two queries total, no matter how many months you've filled in.
   function loadCalendarIndex() {
-    return supabase.from("entries").select("id, entry_date, mood, note").then(function (entriesRes) {
+    return supabase.from("entries").select("id, entry_date, mood, note").then(function(entriesRes) {
       var index = {};
       var entries = entriesRes.data || [];
       var dateByEntryId = {};
-      entries.forEach(function (e) {
+      entries.forEach(function(e) {
         index[e.entry_date] = { id: e.id, mood: e.mood, note: e.note || "", count: 0, coverUrl: null };
         dateByEntryId[e.id] = e.entry_date;
       });
-      return supabase.from("media").select("entry_id, storage_path, position").eq("kind", "photo").order("position", { ascending: true }).then(function (photosRes) {
-        var photos = photosRes.data || [];
-        var countByEntry = {};
-        var coverPathByEntry = {};
-        photos.forEach(function (p) {
-          countByEntry[p.entry_id] = (countByEntry[p.entry_id] || 0) + 1;
-          if (!(p.entry_id in coverPathByEntry)) coverPathByEntry[p.entry_id] = p.storage_path;
-        });
-        var coverPaths = Object.keys(coverPathByEntry).map(function (k) { return coverPathByEntry[k]; });
-        return signedUrlsFor(coverPaths).then(function (urlByPath) {
-          Object.keys(countByEntry).forEach(function (entryId) {
-            var dateKey = dateByEntryId[entryId];
-            if (!dateKey || !index[dateKey]) return;
-            index[dateKey].count = countByEntry[entryId];
-            var coverPath = coverPathByEntry[entryId];
-            index[dateKey].coverUrl = coverPath ? (urlByPath[coverPath] || null) : null;
+      return supabase.from("media").select("entry_id, storage_path, position").eq("kind", "photo").order("position", { ascending: true })
+        .then(function(photosRes) {
+          var photos = photosRes.data || [];
+          var countByEntry = {}, coverPathByEntry = {};
+          photos.forEach(function(p) {
+            countByEntry[p.entry_id] = (countByEntry[p.entry_id] || 0) + 1;
+            if (!(p.entry_id in coverPathByEntry)) coverPathByEntry[p.entry_id] = p.storage_path;
           });
-          return index;
+          var coverPaths = Object.keys(coverPathByEntry).map(function(k) { return coverPathByEntry[k]; });
+          return signedUrlsFor(coverPaths).then(function(urlByPath) {
+            Object.keys(countByEntry).forEach(function(entryId) {
+              var dateKey = dateByEntryId[entryId];
+              if (!dateKey || !index[dateKey]) return;
+              index[dateKey].count = countByEntry[entryId];
+              var coverPath = coverPathByEntry[entryId];
+              index[dateKey].coverUrl = coverPath ? (urlByPath[coverPath] || null) : null;
+            });
+            return index;
+          });
         });
-      });
     });
   }
 
   function touchCalendarIndex(dateKey, patch) {
     var existing = calendarIndex[dateKey] || { id: null, mood: null, note: "", count: 0, coverUrl: null };
     var merged = {};
-    Object.keys(existing).forEach(function (k) { merged[k] = existing[k]; });
-    Object.keys(patch).forEach(function (k) { merged[k] = patch[k]; });
+    Object.keys(existing).forEach(function(k) { merged[k] = existing[k]; });
+    Object.keys(patch).forEach(function(k) { merged[k] = patch[k]; });
     calendarIndex[dateKey] = merged;
     renderCalendar();
   }
@@ -1104,19 +569,289 @@
   }
 
   function deleteMedia(item) {
-    return supabase.storage.from(MEDIA_BUCKET).remove([item.path]).then(function () {
+    return supabase.storage.from(MEDIA_BUCKET).remove([item.path]).then(function() {
       return supabase.from("media").delete().eq("id", item.id);
     });
   }
 
-  var calendarIndex = {};   // dateKey -> { id, mood, note, count, coverUrl } — drives the grid
-  var activeEntry = null;   // full record for the open day
+  // ---------- Location ----------
+  var userLat = null;
+  var userLon = null;
+
+  function getLocation() {
+    return new Promise(function(resolve) {
+      if (userLat !== null) { resolve({ lat: userLat, lon: userLon }); return; }
+      if (!navigator.geolocation) { resolve(null); return; }
+      navigator.geolocation.getCurrentPosition(
+        function(pos) { userLat = pos.coords.latitude; userLon = pos.coords.longitude; resolve({ lat: userLat, lon: userLon }); },
+        function() { resolve(null); },
+        { timeout: 8000 }
+      );
+    });
+  }
+
+  // ---------- Weather (Open-Meteo, free, no API key) ----------
+  var WMO_ICONS = {
+    0:'☀️',1:'🌤️',2:'⛅',3:'🌥️',45:'🌫️',48:'🌫️',
+    51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',
+    71:'🌨️',73:'🌨️',75:'🌨️',77:'🌨️',80:'🌧️',81:'🌧️',82:'⛈️',
+    85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️'
+  };
+  var WMO_DESC = {
+    0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',
+    45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
+    61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',
+    75:'Heavy snow',77:'Snow grains',80:'Rain showers',81:'Rain showers',
+    82:'Heavy showers',85:'Snow showers',86:'Heavy snow showers',
+    95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'
+  };
+
+  function displaySavedWeather(el, w, dateKey) {
+    var icon = WMO_ICONS[w.code] || '🌡️';
+    var html = '<div class="weather-card"><div class="weather-main-row">';
+    html += '<span class="weather-icon-big">' + icon + '</span><div>';
+    if (w.temp !== null && w.temp !== undefined) {
+      html += '<div class="weather-temp">' + w.temp + '°F</div>';
+      html += '<div class="weather-hi-lo">High ' + w.hi + '° · Low ' + w.lo + '°</div>';
+    } else {
+      html += '<div class="weather-temp">' + w.hi + '°F</div>';
+      html += '<div class="weather-hi-lo">Low ' + w.lo + '°F</div>';
+    }
+    html += '<div class="weather-desc">' + w.desc + '</div>';
+    html += '<div class="weather-meta">💨 ' + w.wind + ' mph' + (parseFloat(w.precip) > 0 ? ' · 🌧 ' + w.precip + ' in' : '') + '</div>';
+    html += '</div></div><div class="weather-past-note">Saved weather for this day</div></div>';
+    el.innerHTML = html;
+  }
+
+  function fetchWeather(dateKey, lat, lon) {
+    var el = document.getElementById('weatherContent');
+    if (!el) return;
+    el.innerHTML = '<div class="weather-loading">Loading weather…</div>';
+    var todayStr = keyFor(today.getFullYear(), today.getMonth(), today.getDate());
+    var isToday = (dateKey === todayStr);
+    var todayObj = new Date(todayStr + 'T12:00:00');
+    var dateObj = new Date(dateKey + 'T12:00:00');
+    var diffDays = Math.floor((todayObj - dateObj) / 86400000);
+    var isPast = diffDays > 0;
+    var isOldPast = diffDays > 92;
+    var base = 'https://api.open-meteo.com/v1/forecast';
+    var archiveBase = 'https://archive-api.open-meteo.com/v1/archive';
+    var common = '&daily=temperature_2m_max,temperature_2m_min,weathercode,wind_speed_10m_max,precipitation_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto';
+    var coords = '?latitude=' + lat + '&longitude=' + lon;
+    var url;
+    if (isToday) { url = base + coords + common + '&current_weather=true&forecast_days=8'; }
+    else if (isOldPast) { url = archiveBase + coords + common + '&start_date=' + dateKey + '&end_date=' + dateKey; }
+    else { url = base + coords + common + '&start_date=' + dateKey + '&end_date=' + dateKey; }
+
+    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+      if (!data.daily || !data.daily.time || !data.daily.time.length) {
+        el.innerHTML = '<div class="weather-error">Weather unavailable for this date.</div>'; return;
+      }
+      var idx = isToday ? (data.daily.time.indexOf(todayStr) >= 0 ? data.daily.time.indexOf(todayStr) : 0) : 0;
+      var hi    = Math.round(data.daily.temperature_2m_max[idx]);
+      var lo    = Math.round(data.daily.temperature_2m_min[idx]);
+      var code  = data.daily.weathercode[idx];
+      var wind  = Math.round(data.daily.wind_speed_10m_max[idx] || 0);
+      var precip = parseFloat(data.daily.precipitation_sum[idx] || 0).toFixed(1);
+      var icon  = WMO_ICONS[code] || '🌡️';
+      var desc  = WMO_DESC[code] || 'Unknown';
+      var currentTemp = (data.current_weather && isToday) ? Math.round(data.current_weather.temperature) : null;
+
+      var html = '<div class="weather-card"><div class="weather-main-row">';
+      html += '<span class="weather-icon-big">' + icon + '</span><div>';
+      if (currentTemp !== null) {
+        html += '<div class="weather-temp">' + currentTemp + '°F</div>';
+        html += '<div class="weather-hi-lo">High ' + hi + '° · Low ' + lo + '°</div>';
+      } else {
+        html += '<div class="weather-temp">' + hi + '°F</div>';
+        html += '<div class="weather-hi-lo">Low ' + lo + '°F</div>';
+      }
+      html += '<div class="weather-desc">' + desc + '</div>';
+      html += '<div class="weather-meta">💨 ' + wind + ' mph' + (parseFloat(precip) > 0 ? ' · 🌧 ' + precip + ' in' : '') + '</div>';
+      html += '</div></div>';
+      if (isToday && data.daily.time.length > 1) {
+        var DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        html += '<div class="forecast-strip">';
+        for (var i = 0; i < Math.min(8, data.daily.time.length); i++) {
+          var d = new Date(data.daily.time[i] + 'T12:00:00');
+          var dName = data.daily.time[i] === todayStr ? 'Today' : DAY_SHORT[d.getDay()];
+          var fc = WMO_ICONS[data.daily.weathercode[i]] || '🌡️';
+          html += '<div class="fc-day"><div class="fc-name">' + dName + '</div><div class="fc-icon">' + fc + '</div>';
+          html += '<div class="fc-hi">' + Math.round(data.daily.temperature_2m_max[i]) + '°</div>';
+          html += '<div class="fc-lo">' + Math.round(data.daily.temperature_2m_min[i]) + '°</div></div>';
+        }
+        html += '</div>';
+      }
+      if (isPast) html += '<div class="weather-past-note">Saved weather for this day</div>';
+      if (!isPast && !isToday) html += '<div class="weather-past-note">Forecast for this date</div>';
+      html += '</div>';
+      el.innerHTML = html;
+
+      // Save weather to Supabase for this day
+      if (activeEntry && activeEntry.date === dateKey) {
+        var weatherData = { temp: currentTemp, hi: hi, lo: lo, desc: desc, code: code, wind: wind, precip: precip };
+        ensureEntryRow(activeEntry).then(function() {
+          supabase.from('entries').update({ weather: weatherData }).eq('id', activeEntry.id).then(function(res) {
+            if (!res.error && activeEntry && activeEntry.date === dateKey) activeEntry.weather = weatherData;
+          });
+        }).catch(function() {});
+      }
+    }).catch(function() {
+      el.innerHTML = '<div class="weather-error">Couldn\'t load weather — check your connection.</div>';
+    });
+  }
+
+  // ---------- Prayer times (Aladhan API) ----------
+  function to12h(t) {
+    var p = t.split(':'), h = parseInt(p[0]), m = p[1];
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + ':' + m + ' ' + ampm;
+  }
+
+  function fetchPrayerTimes(dateKey, lat, lon) {
+    var el = document.getElementById('prayerContent');
+    if (!el) return;
+    el.innerHTML = '<div class="weather-loading">Loading prayer times…</div>';
+    var parts = dateKey.split('-');
+    var aladhanDate = parts[2] + '-' + parts[1] + '-' + parts[0];
+    var url = 'https://api.aladhan.com/v1/timings/' + aladhanDate + '?latitude=' + lat + '&longitude=' + lon + '&method=2';
+    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+      if (!data.data || !data.data.timings) { el.innerHTML = '<div class="weather-error">Prayer times unavailable.</div>'; return; }
+      var timings = data.data.timings;
+      var prayers = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+      var todayStr = keyFor(today.getFullYear(), today.getMonth(), today.getDate());
+      var nextPrayer = null;
+      if (dateKey === todayStr) {
+        var now = new Date();
+        var nowMins = now.getHours() * 60 + now.getMinutes();
+        for (var i = 0; i < prayers.length; i++) {
+          var t = timings[prayers[i]].split(':');
+          if (parseInt(t[0]) * 60 + parseInt(t[1]) > nowMins) { nextPrayer = prayers[i]; break; }
+        }
+      }
+      var html = '<div class="prayer-list">';
+      prayers.forEach(function(p) {
+        var isNext = p === nextPrayer;
+        html += '<div class="prayer-row' + (isNext ? ' prayer-next' : '') + '">';
+        html += '<span class="prayer-name">' + p + '</span>';
+        html += '<span class="prayer-time">' + to12h(timings[p]);
+        if (isNext) html += ' <span class="next-badge">next</span>';
+        html += '</span></div>';
+      });
+      html += '</div><div class="prayer-source">Location-based · ISNA calculation</div>';
+      el.innerHTML = html;
+    }).catch(function() {
+      el.innerHTML = '<div class="weather-error">Couldn\'t load prayer times — check your connection.</div>';
+    });
+  }
+
+  // ---------- Prayer reminder popup ----------
+  var prayerPopupOverlay = document.getElementById('prayerPopupOverlay');
+  var ppTitle = document.getElementById('ppTitle');
+  var ppTime = document.getElementById('ppTime');
+  var prayerReminderTimer = null;
+  var lastPrayerAlerted = null;
+
+  document.getElementById('ppDismiss').addEventListener('click', function() {
+    prayerPopupOverlay.classList.remove('open');
+  });
+
+  function playAdhanSound() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var notes = [392, 440, 392, 330, 392, 440, 392];
+      var t = ctx.currentTime;
+      notes.forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq; osc.type = 'sine';
+        gain.gain.setValueAtTime(0, t + i * 0.45);
+        gain.gain.linearRampToValueAtTime(0.28, t + i * 0.45 + 0.06);
+        gain.gain.linearRampToValueAtTime(0, t + i * 0.45 + 0.38);
+        osc.start(t + i * 0.45); osc.stop(t + i * 0.45 + 0.45);
+      });
+    } catch(e) {}
+  }
+
+  function showPrayerPopup(name, timeStr) {
+    ppTitle.textContent = name;
+    ppTime.textContent = timeStr;
+    prayerPopupOverlay.classList.add('open');
+    playAdhanSound();
+  }
+
+  function checkPrayerTimes() {
+    if (!userLat || !userLon) return;
+    var now = new Date();
+    var todayStr = keyFor(now.getFullYear(), now.getMonth(), now.getDate());
+    var parts = todayStr.split('-');
+    var url = 'https://api.aladhan.com/v1/timings/' + parts[2] + '-' + parts[1] + '-' + parts[0] + '?latitude=' + userLat + '&longitude=' + userLon + '&method=2';
+    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+      if (!data.data || !data.data.timings) return;
+      var timings = data.data.timings;
+      var prayers = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+      var nowMins = now.getHours() * 60 + now.getMinutes();
+      prayers.forEach(function(p) {
+        var t = timings[p].split(':');
+        var pMins = parseInt(t[0]) * 60 + parseInt(t[1]);
+        var alertKey = todayStr + '-' + p;
+        if (Math.abs(nowMins - pMins) <= 1 && lastPrayerAlerted !== alertKey) {
+          lastPrayerAlerted = alertKey;
+          showPrayerPopup(p, to12h(timings[p]));
+        }
+      });
+    }).catch(function() {});
+  }
+
+  function startPrayerReminder() {
+    getLocation().then(function(loc) {
+      if (!loc) return;
+      checkPrayerTimes();
+      clearInterval(prayerReminderTimer);
+      prayerReminderTimer = setInterval(checkPrayerTimes, 60000);
+    });
+  }
+
+  // ---------- Picture-in-Picture ----------
+  var pipBtn = document.getElementById('pipBtn');
+  var pipVideo = null;
+
+  pipBtn.addEventListener('click', function() {
+    if (!document.pictureInPictureEnabled) { showToast("Picture-in-Picture isn't supported in this browser."); return; }
+    if (document.pictureInPictureElement) { document.exitPictureInPicture().catch(function() {}); return; }
+    if (!pipVideo) {
+      pipVideo = document.createElement('video');
+      pipVideo.muted = true;
+      var canvas = document.createElement('canvas');
+      canvas.width = 320; canvas.height = 180;
+      var ctx = canvas.getContext('2d');
+      function drawFrame() {
+        ctx.fillStyle = '#171310'; ctx.fillRect(0, 0, 320, 180);
+        ctx.fillStyle = '#f0865a'; ctx.font = 'italic 600 26px serif'; ctx.textAlign = 'center';
+        ctx.fillText('\u2726 I Remember', 160, 70);
+        ctx.fillStyle = '#bcae9c'; ctx.font = '500 15px sans-serif';
+        var now = new Date();
+        ctx.fillText(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 160, 110);
+        ctx.fillStyle = '#7d7263'; ctx.font = '13px sans-serif';
+        ctx.fillText('Running in background', 160, 140);
+        requestAnimationFrame(drawFrame);
+      }
+      drawFrame();
+      pipVideo.srcObject = canvas.captureStream(2);
+      pipVideo.play();
+    }
+    pipVideo.requestPictureInPicture().catch(function() { showToast("Couldn't open Picture-in-Picture — try again."); });
+  });
+
+  var calendarIndex = {};
+  var activeEntry = null;
   var activeKey = null;
 
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
   function keyFor(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
 
-  // ---------- US federal holidays (additive — display only, doesn't touch storage) ----------
   var FEDERAL_HOLIDAYS_FIXED = [
     { month: 0, day: 1, name: "New Year's Day" },
     { month: 5, day: 19, name: "Juneteenth" },
@@ -1124,7 +859,6 @@
     { month: 10, day: 11, name: "Veterans Day" },
     { month: 11, day: 25, name: "Christmas Day" }
   ];
-
   function nthWeekdayOfMonth(year, month, weekday, n) {
     var firstWeekday = new Date(year, month, 1).getDay();
     var offset = (weekday - firstWeekday + 7) % 7;
@@ -1135,7 +869,6 @@
     var offset = (lastDate.getDay() - weekday + 7) % 7;
     return lastDate.getDate() - offset;
   }
-
   function getHolidayName(year, month, day) {
     for (var i = 0; i < FEDERAL_HOLIDAYS_FIXED.length; i++) {
       var h = FEDERAL_HOLIDAYS_FIXED[i];
@@ -1153,112 +886,81 @@
   var today = new Date();
   var viewYear = today.getFullYear();
   var viewMonth = today.getMonth();
-
   var grid = document.getElementById("grid");
   var monthLabel = document.getElementById("monthLabel");
   var MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   var WEEKDAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
-  function summaryFor(key) {
-    return calendarIndex[key] || { mood: null, note: "", count: 0, coverUrl: null };
-  }
+  function summaryFor(key) { return calendarIndex[key] || { mood: null, note: "", count: 0, coverUrl: null }; }
 
   function renderCalendar() {
     monthLabel.textContent = MONTH_NAMES[viewMonth] + " " + viewYear;
     grid.innerHTML = "";
     var firstDay = new Date(viewYear, viewMonth, 1).getDay();
     var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
     for (var i = 0; i < firstDay; i++) {
-      var filler = document.createElement("div");
-      filler.className = "day empty";
-      grid.appendChild(filler);
+      var filler = document.createElement("div"); filler.className = "day empty"; grid.appendChild(filler);
     }
-
     for (var d = 1; d <= daysInMonth; d++) {
       var key = keyFor(viewYear, viewMonth, d);
       var entry = summaryFor(key);
       var btn = document.createElement("button");
-      btn.className = "day";
-      btn.setAttribute("data-key", key);
-
+      btn.className = "day"; btn.setAttribute("data-key", key);
       var isToday = viewYear === today.getFullYear() && viewMonth === today.getMonth() && d === today.getDate();
       if (isToday) btn.classList.add("today");
-
       var hasPhoto = entry.count > 0;
       if (hasPhoto) btn.classList.add("has-photo");
-
       var thumb = document.createElement("div");
       thumb.className = "thumb" + (hasPhoto ? "" : " no-photo");
       if (hasPhoto && entry.coverUrl) thumb.style.backgroundImage = "url('" + entry.coverUrl + "')";
-
-      var num = document.createElement("span");
-      num.className = "num";
-      num.textContent = d;
+      var num = document.createElement("span"); num.className = "num"; num.textContent = d;
       thumb.appendChild(num);
-
       var holidayName = getHolidayName(viewYear, viewMonth, d);
       if (holidayName) {
         var holidayTag = document.createElement("span");
-        holidayTag.className = "holiday-tag";
-        holidayTag.textContent = "🎉";
-        holidayTag.title = holidayName;
+        holidayTag.className = "holiday-tag"; holidayTag.textContent = "🎉"; holidayTag.title = holidayName;
         thumb.appendChild(holidayTag);
       }
-
       if (entry.mood) {
-        var badges = document.createElement("div");
-        badges.className = "badges";
-        var dot = document.createElement("span");
-        dot.className = "dot";
-        badges.appendChild(dot);
-        thumb.appendChild(badges);
+        var badges = document.createElement("div"); badges.className = "badges";
+        var dot = document.createElement("span"); dot.className = "dot";
+        badges.appendChild(dot); thumb.appendChild(badges);
       }
-
       btn.appendChild(thumb);
-
-      var bar = document.createElement("div");
-      bar.className = "mood-bar";
+      var bar = document.createElement("div"); bar.className = "mood-bar";
       bar.style.background = entry.mood ? "var(" + moodMap[entry.mood].var + ")" : "var(--border-soft)";
       btn.appendChild(bar);
-
-      btn.addEventListener("click", function () { openPanel(this.getAttribute("data-key")); });
+      btn.addEventListener("click", function() { openPanel(this.getAttribute("data-key")); });
       grid.appendChild(btn);
     }
   }
 
-  document.getElementById("prevMonth").addEventListener("click", function () {
-    viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-    renderCalendar();
+  document.getElementById("prevMonth").addEventListener("click", function() {
+    viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar();
   });
-  document.getElementById("nextMonth").addEventListener("click", function () {
-    viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-    renderCalendar();
+  document.getElementById("nextMonth").addEventListener("click", function() {
+    viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar();
   });
 
-  // ---------- Panel ----------
   var backdrop = document.getElementById("backdrop");
   var panel = document.getElementById("panel");
   var moodRow = document.getElementById("moodRow");
 
-  MOODS.forEach(function (m) {
+  MOODS.forEach(function(m) {
     var chip = document.createElement("button");
     chip.className = "mood-chip";
     chip.style.setProperty("--mood-c", "var(" + m.var + ")");
     chip.setAttribute("data-mood", m.id);
-    var sw = document.createElement("span");
-    sw.className = "swatch";
-    sw.style.background = "var(" + m.var + ")";
-    chip.appendChild(sw);
-    chip.appendChild(document.createTextNode(m.label));
-    chip.addEventListener("click", function () {
+    var sw = document.createElement("span"); sw.className = "swatch"; sw.style.background = "var(" + m.var + ")";
+    chip.appendChild(sw); chip.appendChild(document.createTextNode(m.label));
+    chip.addEventListener("click", function() {
       if (!activeEntry) return;
       var key = activeEntry.date;
       activeEntry.mood = activeEntry.mood === m.id ? null : m.id;
       refreshMoodRow();
-      ensureEntryRow(activeEntry).then(function (id) {
+      ensureEntryRow(activeEntry).then(function(id) {
         return supabase.from("entries").update({ mood: activeEntry.mood }).eq("id", id);
-      }).then(function (res) {
+      }).then(function(res) {
         if (res && res.error) { showToast("Couldn't save mood — try again."); return; }
         touchCalendarIndex(key, { id: activeEntry.id, mood: activeEntry.mood });
       });
@@ -1268,7 +970,7 @@
 
   function refreshMoodRow() {
     var mood = activeEntry ? activeEntry.mood : null;
-    Array.prototype.forEach.call(moodRow.children, function (chip) {
+    Array.prototype.forEach.call(moodRow.children, function(chip) {
       chip.classList.toggle("active", chip.getAttribute("data-mood") === mood);
     });
   }
@@ -1276,51 +978,56 @@
   function openPanel(key) {
     activeKey = key;
     activeEntry = null;
-
     var parts = key.split("-").map(Number);
     var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
     document.getElementById("panelDate").textContent = MONTH_NAMES[parts[1]-1] + " " + parts[2] + ", " + parts[0];
     document.getElementById("panelWeekday").textContent = WEEKDAY_NAMES[dateObj.getDay()];
     var panelHoliday = document.getElementById("panelHoliday");
     var openedHolidayName = getHolidayName(parts[0], parts[1] - 1, parts[2]);
-    if (openedHolidayName) {
-      panelHoliday.textContent = "🎉 " + openedHolidayName;
-      panelHoliday.hidden = false;
-    } else {
-      panelHoliday.hidden = true;
-    }
+    if (openedHolidayName) { panelHoliday.textContent = "🎉 " + openedHolidayName; panelHoliday.hidden = false; }
+    else { panelHoliday.hidden = true; }
     document.getElementById("textNote").value = "";
-    photoStrip.innerHTML = "";
-    voiceList.innerHTML = "";
-    videoList.innerHTML = "";
-    momentPreview.innerHTML = "";
+    photoStrip.innerHTML = ""; voiceList.innerHTML = ""; videoList.innerHTML = ""; momentPreview.innerHTML = "";
+    backdrop.classList.add("open"); panel.classList.add("open"); panel.setAttribute("aria-hidden", "false");
 
-    backdrop.classList.add("open");
-    panel.classList.add("open");
-    panel.setAttribute("aria-hidden", "false");
+    document.getElementById('weatherContent').innerHTML = '<div class="weather-loading">Loading…</div>';
+    document.getElementById('prayerContent').innerHTML = '<div class="weather-loading">Loading…</div>';
+    var locKey = key;
 
-    loadEntry(key).then(function (entry) {
-      if (activeKey !== key) return; // user already moved to another day
+    // Prayer times — load immediately
+    getLocation().then(function(loc) {
+      if (activeKey !== locKey) return;
+      if (!loc) { document.getElementById('prayerContent').innerHTML = '<div class="weather-error">Allow location access to see prayer times.</div>'; return; }
+      fetchPrayerTimes(locKey, loc.lat, loc.lon);
+    });
+
+    // Weather — waits for entry so we can use saved weather for past days
+    loadEntry(key).then(function(entry) {
+      if (activeKey !== locKey) return;
       activeEntry = entry;
       document.getElementById("textNote").value = activeEntry.note || "";
-      refreshMoodRow();
-      refreshPhotoStrip();
-      refreshVoiceList();
-      refreshMomentPreview();
-      refreshVideoList();
+      refreshMoodRow(); refreshPhotoStrip(); refreshVoiceList(); refreshMomentPreview(); refreshVideoList();
+
+      var todayStr = keyFor(today.getFullYear(), today.getMonth(), today.getDate());
+      if (entry.weather && locKey !== todayStr) {
+        displaySavedWeather(document.getElementById('weatherContent'), entry.weather, locKey);
+      } else {
+        getLocation().then(function(loc) {
+          if (activeKey !== locKey) return;
+          if (!loc) { document.getElementById('weatherContent').innerHTML = '<div class="weather-error">Allow location access to see weather.</div>'; return; }
+          fetchWeather(locKey, loc.lat, loc.lon);
+        });
+      }
     });
   }
 
   function closePanel() {
-    stopRecordingIfActive();
-    stopVideoRecordingIfActive();
-    backdrop.classList.remove("open");
-    panel.classList.remove("open");
-    panel.setAttribute("aria-hidden", "true");
+    stopRecordingIfActive(); stopVideoRecordingIfActive();
+    backdrop.classList.remove("open"); panel.classList.remove("open"); panel.setAttribute("aria-hidden", "true");
   }
   document.getElementById("closePanel").addEventListener("click", closePanel);
   backdrop.addEventListener("click", closePanel);
-  document.addEventListener("keydown", function (e) {
+  document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
       if (reelOverlay.classList.contains("open")) closeReel();
       else if (panel.classList.contains("open")) closePanel();
@@ -1328,15 +1035,15 @@
   });
 
   var noteDebounce = null;
-  document.getElementById("textNote").addEventListener("input", function (e) {
+  document.getElementById("textNote").addEventListener("input", function(e) {
     if (!activeEntry) return;
     var key = activeEntry.date;
     activeEntry.note = e.target.value;
     clearTimeout(noteDebounce);
-    noteDebounce = setTimeout(function () {
-      ensureEntryRow(activeEntry).then(function (id) {
+    noteDebounce = setTimeout(function() {
+      ensureEntryRow(activeEntry).then(function(id) {
         return supabase.from("entries").update({ note: activeEntry.note }).eq("id", id);
-      }).then(function (res) {
+      }).then(function(res) {
         if (res && res.error) { showToast("Couldn't save note — try again."); return; }
         touchCalendarIndex(key, { id: activeEntry.id, note: activeEntry.note });
       });
@@ -1350,102 +1057,70 @@
   function refreshPhotoStrip() {
     if (!activeEntry) return;
     photoStrip.innerHTML = "";
-
     var label = document.querySelector('[data-photo-count]');
     if (label) label.textContent = activeEntry.photos.length + " / " + MAX_PHOTOS_PER_DAY;
-
-    activeEntry.photos.forEach(function (item, idx) {
-      var tile = document.createElement("div");
-      tile.className = "thumb-tile";
-      var img = document.createElement("img");
-      img.src = item.url || "";
-      img.alt = "Photo from " + activeKey;
+    activeEntry.photos.forEach(function(item, idx) {
+      var tile = document.createElement("div"); tile.className = "thumb-tile";
+      var img = document.createElement("img"); img.src = item.url || ""; img.alt = "Photo from " + activeKey;
       tile.appendChild(img);
-      var rm = document.createElement("button");
-      rm.className = "remove";
-      rm.setAttribute("aria-label", "Remove photo");
-      rm.textContent = "✕";
-      rm.addEventListener("click", function (ev) {
+      var rm = document.createElement("button"); rm.className = "remove"; rm.setAttribute("aria-label", "Remove photo"); rm.textContent = "✕";
+      rm.addEventListener("click", function(ev) {
         ev.stopPropagation();
-        activeEntry.photos.splice(idx, 1);
-        refreshPhotoStrip();
-        deleteMedia(item).then(function () {
-          touchCalendarIndex(activeKey, {
-            count: activeEntry.photos.length,
-            coverUrl: activeEntry.photos[0] ? activeEntry.photos[0].url : null
-          });
-        }).catch(function () { showToast("Couldn't delete that photo — try again."); });
+        activeEntry.photos.splice(idx, 1); refreshPhotoStrip();
+        deleteMedia(item).then(function() {
+          touchCalendarIndex(activeKey, { count: activeEntry.photos.length, coverUrl: activeEntry.photos[0] ? activeEntry.photos[0].url : null });
+        }).catch(function() { showToast("Couldn't delete that photo — try again."); });
       });
-      tile.appendChild(rm);
-      photoStrip.appendChild(tile);
+      tile.appendChild(rm); photoStrip.appendChild(tile);
     });
-
     if (activeEntry.photos.length < MAX_PHOTOS_PER_DAY) {
-      var addTile = document.createElement("button");
-      addTile.className = "add-tile";
+      var addTile = document.createElement("button"); addTile.className = "add-tile";
       addTile.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Add photo</span>';
-      addTile.addEventListener("click", function () { photoInput.click(); });
+      addTile.addEventListener("click", function() { photoInput.click(); });
       photoStrip.appendChild(addTile);
     }
   }
 
-  photoInput.addEventListener("change", function (e) {
+  photoInput.addEventListener("change", function(e) {
     var files = Array.prototype.slice.call(e.target.files || []);
     var room = MAX_PHOTOS_PER_DAY - (activeEntry ? activeEntry.photos.length : 0);
     if (files.length > room) {
-      showToast(room <= 0
-        ? "This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day."
-        : "Only room for " + room + " more today (" + MAX_PHOTOS_PER_DAY + " max) — adding the first " + room + ".");
+      showToast(room <= 0 ? "This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day." : "Only room for " + room + " more today (" + MAX_PHOTOS_PER_DAY + " max) — adding the first " + room + ".");
       files = files.slice(0, Math.max(0, room));
     }
-    files.forEach(function (file) { compressAndStore(file); });
+    files.forEach(function(file) { compressAndStore(file); });
     photoInput.value = "";
   });
 
   function compressAndStore(file) {
     if (!activeEntry) return;
-    if (activeEntry.photos.length >= MAX_PHOTOS_PER_DAY) {
-      showToast("This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day.");
-      return;
-    }
+    if (activeEntry.photos.length >= MAX_PHOTOS_PER_DAY) { showToast("This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day."); return; }
     var reader = new FileReader();
-    reader.onload = function (ev) {
+    reader.onload = function(ev) {
       var img = new Image();
-      img.onload = function () {
-        var maxW = 900;
-        var scale = Math.min(1, maxW / img.width);
+      img.onload = function() {
+        var maxW = 900, scale = Math.min(1, maxW / img.width);
         var canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(function (blob) {
+        canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+        var ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function(blob) {
           if (!blob) { showToast("Couldn't process that image."); return; }
-          if (activeEntry.photos.length >= MAX_PHOTOS_PER_DAY) {
-            showToast("This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day.");
-            return;
-          }
-          var entry = activeEntry;
-          var position = entry.photos.length;
-          uploadMedia(entry, "photo", blob, "image/jpeg", { position: position }).then(function (item) {
-            if (activeEntry !== entry) return; // switched days mid-upload
-            entry.photos.push(item);
-            refreshPhotoStrip();
-            touchCalendarIndex(entry.date, {
-              id: entry.id,
-              count: entry.photos.length,
-              coverUrl: entry.photos[0] ? entry.photos[0].url : null
-            });
-          }).catch(function () {});
+          if (activeEntry.photos.length >= MAX_PHOTOS_PER_DAY) { showToast("This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day."); return; }
+          var entry = activeEntry, position = entry.photos.length;
+          uploadMedia(entry, "photo", blob, "image/jpeg", { position: position }).then(function(item) {
+            if (activeEntry !== entry) return;
+            entry.photos.push(item); refreshPhotoStrip();
+            touchCalendarIndex(entry.date, { id: entry.id, count: entry.photos.length, coverUrl: entry.photos[0] ? entry.photos[0].url : null });
+          }).catch(function() {});
         }, "image/jpeg", 0.75);
       };
-      img.onerror = function () { showToast("Couldn't read that image."); };
+      img.onerror = function() { showToast("Couldn't read that image."); };
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   }
 
-  // ---------- Moments (front / back capture) ----------
+  // ---------- Moments ----------
   var momentPreview = document.getElementById("momentPreview");
   var captureBtn = document.getElementById("captureMoment");
 
@@ -1453,145 +1128,84 @@
     momentPreview.innerHTML = "";
     var pair = activeEntry ? activeEntry.moments : null;
     if (!pair) return;
-    ["front", "back"].forEach(function (side) {
+    ["front","back"].forEach(function(side) {
       if (!pair[side]) return;
-      var tile = document.createElement("div");
-      tile.className = "thumb-tile";
-      var img = document.createElement("img");
-      img.src = pair[side].url || "";
+      var tile = document.createElement("div"); tile.className = "thumb-tile";
+      var img = document.createElement("img"); img.src = pair[side].url || "";
       tile.appendChild(img);
-      var tag = document.createElement("span");
-      tag.className = "tag";
-      tag.textContent = side;
-      tile.appendChild(tag);
-      momentPreview.appendChild(tile);
+      var tag = document.createElement("span"); tag.className = "tag"; tag.textContent = side;
+      tile.appendChild(tag); momentPreview.appendChild(tile);
     });
   }
 
-  captureBtn.addEventListener("click", function () {
-    captureFacing("user", "front");
-  });
+  captureBtn.addEventListener("click", function() { captureFacing("user", "front"); });
 
   function saveMoment(entry, side, blob) {
     var kind = side === "front" ? "moment_front" : "moment_back";
     var existing = entry.moments[side];
     var afterDelete = existing ? deleteMedia(existing) : Promise.resolve();
-    return afterDelete.then(function () {
-      return uploadMedia(entry, kind, blob, "image/jpeg", {});
-    }).then(function (item) {
-      if (activeEntry === entry) {
-        entry.moments[side] = item;
-        refreshMomentPreview();
-      }
-    });
+    return afterDelete.then(function() { return uploadMedia(entry, kind, blob, "image/jpeg", {}); })
+      .then(function(item) { if (activeEntry === entry) { entry.moments[side] = item; refreshMomentPreview(); } });
   }
 
   function captureFacing(facingMode, label) {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showToast("Camera isn't available in this preview.");
-      return;
-    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Camera isn't available in this preview."); return; }
     captureBtn.disabled = true;
     var entry = activeEntry;
     navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } })
-      .then(function (stream) {
-        var video = document.createElement("video");
-        video.srcObject = stream;
-        video.playsInline = true;
-        video.muted = true;
-        video.play();
-        video.addEventListener("loadeddata", function () {
-          setTimeout(function () {
+      .then(function(stream) {
+        var video = document.createElement("video"); video.srcObject = stream; video.playsInline = true; video.muted = true; video.play();
+        video.addEventListener("loadeddata", function() {
+          setTimeout(function() {
             var canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth || 480;
-            canvas.height = video.videoHeight || 360;
-            var ctx = canvas.getContext("2d");
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            stream.getTracks().forEach(function (t) { t.stop(); });
-
-            canvas.toBlob(function (blob) {
+            canvas.width = video.videoWidth || 480; canvas.height = video.videoHeight || 360;
+            var ctx = canvas.getContext("2d"); ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            stream.getTracks().forEach(function(t) { t.stop(); });
+            canvas.toBlob(function(blob) {
               if (!blob || !entry) return;
-              saveMoment(entry, label, blob).catch(function () { showToast("Couldn't save that moment — try again."); });
+              saveMoment(entry, label, blob).catch(function() { showToast("Couldn't save that moment — try again."); });
             }, "image/jpeg", 0.8);
-
-            if (label === "front") {
-              showToast("Front captured — trying the back camera…");
-              captureFacing("environment", "back");
-            } else {
-              captureBtn.disabled = false;
-              showToast("Moment saved.");
-            }
+            if (label === "front") { showToast("Front captured — trying the back camera…"); captureFacing("environment", "back"); }
+            else { captureBtn.disabled = false; showToast("Moment saved."); }
           }, 260);
         });
       })
-      .catch(function () {
+      .catch(function() {
         captureBtn.disabled = false;
-        if (label === "back") {
-          showToast("Only a front-facing camera is available here — front shot saved.");
-        } else {
-          showToast("Camera access was declined or isn't available.");
-        }
+        if (label === "back") showToast("Only a front-facing camera is available here — front shot saved.");
+        else showToast("Camera access was declined or isn't available.");
       });
   }
 
-  // ---------- Video recording (video + audio, foreground-only, run until stopped) ----------
+  // ---------- Video recording ----------
   var videoList = document.getElementById("videoList");
   var recordVideoBtn = document.getElementById("recordVideo");
   var videoRecordLabel = document.getElementById("videoRecordLabel");
   var videoRecorder = null;
   var lockCutVideo = false;
   var lockCutAudio = false;
-
-  // ---------- Wake lock: keep the screen from auto-locking while recording ----------
-  // This can't stop someone from pressing the physical lock button, and it can't
-  // resurrect camera/mic access once the screen does lock (that's an OS boundary,
-  // not something a webpage can touch) — but it stops the *automatic* screen-off
-  // timeout from cutting a recording short, which is the far more common case.
   var wakeLock = null;
+
   function requestWakeLock() {
     if (!("wakeLock" in navigator)) return;
-    navigator.wakeLock.request("screen").then(function (lock) {
-      wakeLock = lock;
-    }).catch(function () { /* not fatal — recording still works, screen just isn't held awake */ });
+    navigator.wakeLock.request("screen").then(function(lock) { wakeLock = lock; }).catch(function() {});
   }
-  function releaseWakeLock() {
-    if (wakeLock) { wakeLock.release().catch(function () {}); wakeLock = null; }
-  }
+  function releaseWakeLock() { if (wakeLock) { wakeLock.release().catch(function() {}); wakeLock = null; } }
   function anyRecordingActive() {
-    return (mediaRecorder && mediaRecorder.state === "recording") ||
-           (videoRecorder && videoRecorder.state === "recording");
+    return (mediaRecorder && mediaRecorder.state === "recording") || (videoRecorder && videoRecorder.state === "recording");
   }
-  // If the OS still paused things (backgrounding a tab suspends the lock
-  // regardless), re-request the wake lock once the page is visible again.
-  document.addEventListener("visibilitychange", function () {
+  document.addEventListener("visibilitychange", function() {
     if (!document.hidden && anyRecordingActive()) requestWakeLock();
   });
-  var videoChunks = [];
-  var videoStream = null;
-  var videoStart = 0;
-  var videoTimer = null;
 
-  function fmtDuration(secs) {
-    var m = Math.floor(secs / 60), s = secs % 60;
-    return m + ":" + pad(s);
-  }
+  var videoChunks = [], videoStream = null, videoStart = 0, videoTimer = null;
 
-  // Pick a codec the browser actually supports and can reliably play back later.
-  // Guessing "video/webm" and catching the constructor error isn't enough — some
-  // browsers accept the constructor but produce a file they themselves won't
-  // play cleanly. Checking isTypeSupported() first and preferring mp4 (which every
-  // modern browser, including Safari, can both record and play) avoids that.
+  function fmtDuration(secs) { var m = Math.floor(secs / 60), s = secs % 60; return m + ":" + pad(s); }
+
   function pickVideoMimeType() {
-    var candidates = [
-      "video/mp4",
-      "video/webm;codecs=vp9,opus",
-      "video/webm;codecs=vp8,opus",
-      "video/webm"
-    ];
+    var candidates = ["video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
     if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return "";
-    for (var i = 0; i < candidates.length; i++) {
-      if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i];
-    }
+    for (var i = 0; i < candidates.length; i++) { if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i]; }
     return "";
   }
 
@@ -1599,274 +1213,147 @@
     videoList.innerHTML = "";
     var list = activeEntry ? activeEntry.videos : [];
     if (!list || list.length === 0) return;
-    list.forEach(function (clip, idx) {
-      var item = document.createElement("div");
-      item.className = "video-item";
-      var video = document.createElement("video");
-      video.controls = true;
-      video.playsInline = true;
-      video.preload = "metadata";
-      video.src = clip.url || "";
-      video.addEventListener("error", function () {
-        showToast("This clip didn't load correctly — try reopening the day.");
-      });
+    list.forEach(function(clip, idx) {
+      var item = document.createElement("div"); item.className = "video-item";
+      var video = document.createElement("video"); video.controls = true; video.playsInline = true; video.preload = "metadata"; video.src = clip.url || "";
+      video.addEventListener("error", function() { showToast("This clip didn't load correctly — try reopening the day."); });
       item.appendChild(video);
-      var meta = document.createElement("div");
-      meta.className = "video-meta";
-      var dur = document.createElement("span");
-      dur.className = "mono";
-      dur.textContent = clip.duration;
-      meta.appendChild(dur);
-      var del = document.createElement("button");
-      del.className = "del";
-      del.setAttribute("aria-label", "Delete recording");
-      del.textContent = "✕ remove";
-      del.addEventListener("click", function () {
-        list.splice(idx, 1);
-        refreshVideoList();
-        deleteMedia(clip).catch(function () { showToast("Couldn't delete that clip — try again."); });
+      var meta = document.createElement("div"); meta.className = "video-meta";
+      var dur = document.createElement("span"); dur.className = "mono"; dur.textContent = clip.duration; meta.appendChild(dur);
+      var del = document.createElement("button"); del.className = "del"; del.setAttribute("aria-label", "Delete recording"); del.textContent = "✕ remove";
+      del.addEventListener("click", function() {
+        list.splice(idx, 1); refreshVideoList();
+        deleteMedia(clip).catch(function() { showToast("Couldn't delete that clip — try again."); });
       });
-      meta.appendChild(del);
-      item.appendChild(meta);
-      videoList.appendChild(item);
+      meta.appendChild(del); item.appendChild(meta); videoList.appendChild(item);
     });
   }
 
-  recordVideoBtn.addEventListener("click", function () {
-    if (videoRecorder && videoRecorder.state === "recording") {
-      videoRecorder.stop();
-      return;
-    }
+  recordVideoBtn.addEventListener("click", function() {
+    if (videoRecorder && videoRecorder.state === "recording") { videoRecorder.stop(); return; }
     startVideoRecording();
   });
 
   function startVideoRecording() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showToast("Camera and mic aren't available in this preview.");
-      return;
-    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Camera and mic aren't available in this preview."); return; }
     if (!activeEntry) { showToast("Open a day first."); return; }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true })
-      .then(function (stream) {
-        videoStream = stream;
-        videoChunks = [];
+      .then(function(stream) {
+        videoStream = stream; videoChunks = [];
         var mimeType = pickVideoMimeType();
-        try {
-          videoRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream);
-        } catch (e) {
-          showToast("This browser can't record video — try Chrome, Edge, or Safari 14.3+.");
-          videoStream.getTracks().forEach(function (t) { t.stop(); });
-          return;
-        }
+        try { videoRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream); }
+        catch(e) { showToast("This browser can't record video — try Chrome, Edge, or Safari 14.3+."); videoStream.getTracks().forEach(function(t) { t.stop(); }); return; }
         var entry = activeEntry;
-        videoRecorder.ondataavailable = function (e) { if (e.data.size > 0) videoChunks.push(e.data); };
-        videoRecorder.onstop = function () {
-          videoStream.getTracks().forEach(function (t) { t.stop(); });
-          recordVideoBtn.classList.remove("recording");
-          videoRecordLabel.textContent = "Saving…";
-          recordVideoBtn.disabled = true;
+        videoRecorder.ondataavailable = function(e) { if (e.data.size > 0) videoChunks.push(e.data); };
+        videoRecorder.onstop = function() {
+          videoStream.getTracks().forEach(function(t) { t.stop(); });
+          recordVideoBtn.classList.remove("recording"); videoRecordLabel.textContent = "Saving…"; recordVideoBtn.disabled = true;
           clearInterval(videoTimer);
-          var wasLockCut = lockCutVideo;
-          lockCutVideo = false;
+          var wasLockCut = lockCutVideo; lockCutVideo = false;
           if (!anyRecordingActive()) releaseWakeLock();
-
-          var finish = function () {
-            recordVideoBtn.disabled = false;
-            videoRecordLabel.textContent = "Start recording";
-          };
-
-          if (videoChunks.length === 0) {
-            showToast(wasLockCut ? "Screen locked before anything was captured — nothing to save." : "That recording came out empty — try again.");
-            finish();
-            return;
-          }
+          var finish = function() { recordVideoBtn.disabled = false; videoRecordLabel.textContent = "Start recording"; };
+          if (videoChunks.length === 0) { showToast(wasLockCut ? "Screen locked before anything was captured — nothing to save." : "That recording came out empty — try again."); finish(); return; }
           var blob = new Blob(videoChunks, { type: (videoRecorder && videoRecorder.mimeType) || mimeType || "video/webm" });
           var secs = Math.max(1, Math.round((Date.now() - videoStart) / 1000));
           var duration = fmtDuration(secs);
-          uploadMedia(entry, "video", blob, blob.type || "video/webm", { duration: duration }).then(function (item) {
+          uploadMedia(entry, "video", blob, blob.type || "video/webm", { duration: duration }).then(function(item) {
             item.duration = duration;
-            if (activeEntry === entry) {
-              entry.videos.push(item);
-              refreshVideoList();
-            }
+            if (activeEntry === entry) { entry.videos.push(item); refreshVideoList(); }
             if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
             else showToast("Video saved.");
-          }).catch(function () {
-            showToast("Recording captured, but the save failed — try again.");
-          }).then(finish);
+          }).catch(function() { showToast("Recording captured, but the save failed — try again."); }).then(finish);
         };
-        // No timeslice argument — a single continuous recording, finalized whole
-        // on stop(). Periodic timesliced chunks are what produce the webm files
-        // some browsers accept but then refuse to play back (missing duration/
-        // seek data in the container).
-        videoRecorder.start();
-        requestWakeLock();
-        videoStart = Date.now();
+        videoRecorder.start(); requestWakeLock(); videoStart = Date.now();
         recordVideoBtn.classList.add("recording");
-        videoTimer = setInterval(function () {
-          var secs = Math.round((Date.now() - videoStart) / 1000);
-          videoRecordLabel.textContent = "Recording… " + fmtDuration(secs);
-        }, 500);
+        videoTimer = setInterval(function() { var secs = Math.round((Date.now() - videoStart) / 1000); videoRecordLabel.textContent = "Recording… " + fmtDuration(secs); }, 500);
         showToast("Recording — press Stop whenever you're done.");
       })
-      .catch(function () {
-        showToast("Camera/mic access was declined or isn't available.");
-      });
+      .catch(function() { showToast("Camera/mic access was declined or isn't available."); });
   }
 
-  function stopVideoRecordingIfActive() {
-    if (videoRecorder && videoRecorder.state === "recording") videoRecorder.stop();
-  }
+  function stopVideoRecordingIfActive() { if (videoRecorder && videoRecorder.state === "recording") videoRecorder.stop(); }
 
   // ---------- Voice notes ----------
   var voiceList = document.getElementById("voiceList");
   var recordBtn = document.getElementById("recordVoice");
   var recordLabel = document.getElementById("recordLabel");
-  var mediaRecorder = null;
-  var recordChunks = [];
-  var recordStream = null;
-  var recordStart = 0;
-  var recordTimer = null;
+  var mediaRecorder = null, recordChunks = [], recordStream = null, recordStart = 0, recordTimer = null;
 
   function refreshVoiceList() {
     voiceList.innerHTML = "";
     var list = activeEntry ? activeEntry.voices : [];
     if (!list || list.length === 0) {
-      var empty = document.createElement("div");
-      empty.className = "empty-note";
-      empty.textContent = "No voice notes yet — record one to hear this day back later.";
-      voiceList.appendChild(empty);
-      return;
+      var empty = document.createElement("div"); empty.className = "empty-note";
+      empty.textContent = "No voice notes yet — record one to hear this day back later."; voiceList.appendChild(empty); return;
     }
-    list.forEach(function (note, idx) {
-      var row = document.createElement("div");
-      row.className = "voice-item";
-
-      var playBtn = document.createElement("button");
-      playBtn.className = "play";
+    list.forEach(function(note, idx) {
+      var row = document.createElement("div"); row.className = "voice-item";
+      var playBtn = document.createElement("button"); playBtn.className = "play";
       playBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l10-5.5-10-5.5z"/></svg>';
-      var audio = new Audio();
-      audio.preload = "metadata";
-      audio.src = note.url || "";
-      audio.addEventListener("error", function () { showToast("This voice note didn't load correctly."); });
-      playBtn.addEventListener("click", function () {
-        audio.currentTime = 0;
-        audio.play().catch(function () { showToast("Playback isn't available in this preview."); });
+      playBtn.addEventListener("click", function() {
+        if (!note.url) { showToast("No audio URL — try reopening this day."); return; }
+        var a = new Audio(note.url);
+        a.onerror = function() { showToast("Couldn't load that voice note — try again."); };
+        a.play().catch(function() { showToast("Couldn't play that voice note — try again."); });
       });
       row.appendChild(playBtn);
-
-      var wave = document.createElement("div");
-      wave.className = "wave";
+      var wave = document.createElement("div"); wave.className = "wave";
       for (var i = 0; i < 26; i++) {
         var bar = document.createElement("span");
         var h = 4 + Math.round(Math.abs(Math.sin(i * (note.seed || 1))) * 14);
-        bar.style.height = h + "px";
-        wave.appendChild(bar);
+        bar.style.height = h + "px"; wave.appendChild(bar);
       }
       row.appendChild(wave);
-
-      var dur = document.createElement("span");
-      dur.className = "dur mono";
-      dur.textContent = note.duration;
-      row.appendChild(dur);
-
-      var del = document.createElement("button");
-      del.className = "del";
-      del.setAttribute("aria-label", "Delete voice note");
-      del.textContent = "✕";
-      del.addEventListener("click", function () {
-        list.splice(idx, 1);
-        refreshVoiceList();
-        deleteMedia(note).catch(function () { showToast("Couldn't delete that voice note — try again."); });
-      });
-      row.appendChild(del);
-
-      voiceList.appendChild(row);
+      var dur = document.createElement("span"); dur.className = "dur mono"; dur.textContent = note.duration; row.appendChild(dur);
+      var del = document.createElement("button"); del.className = "del"; del.setAttribute("aria-label", "Delete voice note"); del.textContent = "✕";
+      del.addEventListener("click", function() { list.splice(idx, 1); refreshVoiceList(); deleteMedia(note).catch(function() { showToast("Couldn't delete that voice note — try again."); }); });
+      row.appendChild(del); voiceList.appendChild(row);
     });
   }
 
-  recordBtn.addEventListener("click", function () {
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-      mediaRecorder.stop();
-      return;
-    }
+  recordBtn.addEventListener("click", function() {
+    if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); return; }
     startRecording();
   });
 
   function startRecording() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showToast("Microphone isn't available in this preview.");
-      return;
-    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Microphone isn't available in this preview."); return; }
     if (!activeEntry) { showToast("Open a day first."); return; }
     navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(function (stream) {
-        recordStream = stream;
-        recordChunks = [];
+      .then(function(stream) {
+        recordStream = stream; recordChunks = [];
         var audioMime = "";
         if (window.MediaRecorder && MediaRecorder.isTypeSupported) {
-          ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].some(function (t) {
-            if (MediaRecorder.isTypeSupported(t)) { audioMime = t; return true; }
-            return false;
-          });
+          ["audio/mp4","audio/webm;codecs=opus","audio/webm"].some(function(t) { if (MediaRecorder.isTypeSupported(t)) { audioMime = t; return true; } return false; });
         }
         mediaRecorder = audioMime ? new MediaRecorder(stream, { mimeType: audioMime }) : new MediaRecorder(stream);
         var entry = activeEntry;
-        mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) recordChunks.push(e.data); };
-        mediaRecorder.onstop = function () {
-          recordStream.getTracks().forEach(function (t) { t.stop(); });
-          recordBtn.classList.remove("recording");
-          recordBtn.disabled = true;
-          recordLabel.textContent = "Saving…";
+        mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) recordChunks.push(e.data); };
+        mediaRecorder.onstop = function() {
+          recordStream.getTracks().forEach(function(t) { t.stop(); });
+          recordBtn.classList.remove("recording"); recordBtn.disabled = true; recordLabel.textContent = "Saving…";
           clearInterval(recordTimer);
-          var wasLockCut = lockCutAudio;
-          lockCutAudio = false;
+          var wasLockCut = lockCutAudio; lockCutAudio = false;
           if (!anyRecordingActive()) releaseWakeLock();
-
-          var finish = function () {
-            recordBtn.disabled = false;
-            recordLabel.textContent = "Record a voice note";
-          };
-
-          if (recordChunks.length === 0) {
-            if (wasLockCut) showToast("Screen locked before anything was captured — nothing to save.");
-            finish();
-            return;
-          }
+          var finish = function() { recordBtn.disabled = false; recordLabel.textContent = "Record a voice note"; };
+          if (recordChunks.length === 0) { if (wasLockCut) showToast("Screen locked before anything was captured — nothing to save."); finish(); return; }
           var blob = new Blob(recordChunks, { type: (mediaRecorder && mediaRecorder.mimeType) || audioMime || "audio/webm" });
           var secs = Math.max(1, Math.round((Date.now() - recordStart) / 1000));
-          var duration = fmtDuration(secs);
-          var seed = 1 + Math.random() * 2;
-          uploadMedia(entry, "voice", blob, blob.type || "audio/webm", { duration: duration, seed: seed }).then(function (item) {
-            item.duration = duration;
-            item.seed = seed;
-            if (activeEntry === entry) {
-              entry.voices.push(item);
-              refreshVoiceList();
-            }
+          var duration = fmtDuration(secs), seed = 1 + Math.random() * 2;
+          uploadMedia(entry, "voice", blob, blob.type || "audio/webm", { duration: duration, seed: seed }).then(function(item) {
+            item.duration = duration; item.seed = seed;
+            if (activeEntry === entry) { entry.voices.push(item); refreshVoiceList(); }
             if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
-          }).catch(function () {
-            showToast("Recording captured, but the save failed — try again.");
-          }).then(finish);
+          }).catch(function() { showToast("Recording captured, but the save failed — try again."); }).then(finish);
         };
-        // No duration cap — records until you press stop, same as video.
-        mediaRecorder.start();
-        requestWakeLock();
-        recordStart = Date.now();
+        mediaRecorder.start(); requestWakeLock(); recordStart = Date.now();
         recordBtn.classList.add("recording");
-        recordTimer = setInterval(function () {
-          var secs = Math.round((Date.now() - recordStart) / 1000);
-          recordLabel.textContent = "Recording… " + fmtDuration(secs);
-        }, 300);
+        recordTimer = setInterval(function() { var secs = Math.round((Date.now() - recordStart) / 1000); recordLabel.textContent = "Recording… " + fmtDuration(secs); }, 300);
       })
-      .catch(function () {
-        showToast("Microphone access was declined or isn't available.");
-      });
+      .catch(function() { showToast("Microphone access was declined or isn't available."); });
   }
 
-  function stopRecordingIfActive() {
-    if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
-  }
+  function stopRecordingIfActive() { if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); }
 
   // ---------- Reel ----------
   var reelOverlay = document.getElementById("reelOverlay");
@@ -1876,35 +1363,22 @@
   var reelNote = document.getElementById("reelNote");
   var reelCaption = document.getElementById("reelCaption");
   var reelProgress = document.getElementById("reelProgress");
-  var reelTimer = null;
-  var reelStep = 0;
-  var reelPhotos = [];
+  var reelTimer = null, reelStep = 0, reelPhotos = [];
 
-  document.getElementById("playReel").addEventListener("click", function () {
+  document.getElementById("playReel").addEventListener("click", function() {
     if (!activeEntry) return;
-    reelPhotos = activeEntry.photos.length ? activeEntry.photos.map(function (p) { return p.url; }) : [null];
+    reelPhotos = activeEntry.photos.length ? activeEntry.photos.map(function(p) { return p.url; }) : [null];
     reelStep = 0;
-
     reelDate.textContent = document.getElementById("panelDate").textContent;
     reelMood.textContent = activeEntry.mood ? moodMap[activeEntry.mood].label : "No mood set";
     reelNote.textContent = activeEntry.note || "";
     var voiceCount = activeEntry.voices.length;
-    reelCaption.textContent = voiceCount
-      ? voiceCount + " voice note" + (voiceCount > 1 ? "s" : "") + " from this day"
-      : "";
-
+    reelCaption.textContent = voiceCount ? voiceCount + " voice note" + (voiceCount > 1 ? "s" : "") + " from this day" : "";
     var moodVar = activeEntry.mood ? "var(" + moodMap[activeEntry.mood].var + ")" : "var(--mood-neutral)";
     reelBg.style.setProperty("--mood-c", moodVar);
-
     reelProgress.innerHTML = "";
-    reelPhotos.forEach(function () {
-      var s = document.createElement("span");
-      s.innerHTML = "<i></i>";
-      reelProgress.appendChild(s);
-    });
-
-    reelOverlay.classList.add("open");
-    showReelStep(0);
+    reelPhotos.forEach(function() { var s = document.createElement("span"); s.innerHTML = "<i></i>"; reelProgress.appendChild(s); });
+    reelOverlay.classList.add("open"); showReelStep(0);
   });
 
   function showReelStep(i) {
@@ -1912,85 +1386,42 @@
     if (i >= reelPhotos.length) i = 0;
     reelStep = i;
     var src = reelPhotos[i];
-    if (src) {
-      reelBg.style.backgroundImage = "url('" + src + "')";
-      reelBg.classList.remove("no-image");
-    } else {
-      reelBg.style.backgroundImage = "none";
-      reelBg.classList.add("no-image");
-    }
-
-    Array.prototype.forEach.call(reelProgress.children, function (el, idx) {
-      el.classList.toggle("done", idx < i);
-      el.classList.toggle("active", idx === i);
-      var bar = el.querySelector("i");
-      bar.style.transition = "none";
-      bar.style.width = idx < i ? "100%" : "0%";
-      if (idx === i) {
-        void bar.offsetWidth;
-        bar.style.transition = "width 3.4s linear";
-        bar.style.width = "100%";
-      }
+    if (src) { reelBg.style.backgroundImage = "url('" + src + "')"; reelBg.classList.remove("no-image"); }
+    else { reelBg.style.backgroundImage = "none"; reelBg.classList.add("no-image"); }
+    Array.prototype.forEach.call(reelProgress.children, function(el, idx) {
+      el.classList.toggle("done", idx < i); el.classList.toggle("active", idx === i);
+      var bar = el.querySelector("i"); bar.style.transition = "none"; bar.style.width = idx < i ? "100%" : "0%";
+      if (idx === i) { void bar.offsetWidth; bar.style.transition = "width 3.4s linear"; bar.style.width = "100%"; }
     });
-
-    reelTimer = setTimeout(function () { showReelStep(i + 1); }, 3500);
+    reelTimer = setTimeout(function() { showReelStep(i + 1); }, 3500);
   }
 
-  function closeReel() {
-    clearTimeout(reelTimer);
-    reelOverlay.classList.remove("open");
-  }
+  function closeReel() { clearTimeout(reelTimer); reelOverlay.classList.remove("open"); }
   document.getElementById("closeReel").addEventListener("click", closeReel);
 
   // ---------- Email this day ----------
-  // A webpage can't send email itself — there's no SMTP access in a browser —
-  // so this hands off to whatever the phone/computer already uses for mail.
-  // Where the Web Share API supports file attachments (most mobile browsers),
-  // photos go along as real attachments through the native share sheet, where
-  // Mail is one of the apps offered. Where it doesn't (most desktop browsers),
-  // this falls back to a mailto: link with the mood/note as text — mailto has
-  // no way to attach files at all, so photos would need to be attached by hand
-  // in that case.
-  document.getElementById("emailDay").addEventListener("click", function () {
+  document.getElementById("emailDay").addEventListener("click", function() {
     if (!activeEntry) return;
     var dateLabel = document.getElementById("panelDate").textContent;
     var moodLabel = activeEntry.mood ? moodMap[activeEntry.mood].label : "no mood set";
-    var bodyLines = [
-      "Mood: " + moodLabel,
-      "",
-      activeEntry.note || "(no notes written)",
-      "",
-      "— sent from I Remember"
-    ];
-    var subject = "I Remember — " + dateLabel;
-    var bodyText = bodyLines.join("\n");
-
-    var photosToShare = activeEntry.photos.slice(0, 10).filter(function (p) { return !!p.url; });
-
-    var withFiles = function () {
+    var bodyLines = ["Mood: " + moodLabel, "", activeEntry.note || "(no notes written)", "", "— sent from I Remember"];
+    var subject = "I Remember — " + dateLabel, bodyText = bodyLines.join("\n");
+    var photosToShare = activeEntry.photos.slice(0, 10).filter(function(p) { return !!p.url; });
+    var withFiles = function() {
       if (!photosToShare.length || !navigator.share || !navigator.canShare) return Promise.resolve([]);
-      return Promise.all(photosToShare.map(function (p, i) {
-        return fetch(p.url).then(function (r) { return r.blob(); }).then(function (blob) {
-          return new File([blob], "photo-" + (i + 1) + ".jpg", { type: blob.type || "image/jpeg" });
-        });
-      })).catch(function () { return []; });
+      return Promise.all(photosToShare.map(function(p, i) {
+        return fetch(p.url).then(function(r) { return r.blob(); }).then(function(blob) { return new File([blob], "photo-" + (i + 1) + ".jpg", { type: blob.type || "image/jpeg" }); });
+      })).catch(function() { return []; });
     };
-
-    withFiles().then(function (photoFiles) {
+    withFiles().then(function(photoFiles) {
       if (navigator.share && navigator.canShare && photoFiles.length && navigator.canShare({ files: photoFiles })) {
-        navigator.share({ title: subject, text: bodyText, files: photoFiles }).catch(function (err) {
-          if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet.");
-        });
+        navigator.share({ title: subject, text: bodyText, files: photoFiles }).catch(function(err) { if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet."); });
       } else if (navigator.share) {
-        navigator.share({ title: subject, text: bodyText }).catch(function (err) {
-          if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet.");
-        });
+        navigator.share({ title: subject, text: bodyText }).catch(function(err) { if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet."); });
       } else {
         var mailto = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(bodyText);
         window.location.href = mailto;
-        if (activeEntry.photos.length) {
-          showToast("Opening your mail app — attach photos yourself, email links can't include them automatically.");
-        }
+        if (activeEntry.photos.length) showToast("Opening your mail app — attach photos yourself, email links can't include them automatically.");
       }
     });
   });
@@ -1999,34 +1430,24 @@
   var toast = document.getElementById("toast");
   var toastTimer = null;
   function showToast(msg) {
-    toast.textContent = msg;
-    toast.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2600);
+    toast.textContent = msg; toast.classList.add("show"); clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toast.classList.remove("show"); }, 2600);
   }
 
-  // Screen lock, app switch, or tab backgrounding all suspend camera/mic access
-  // at the OS level — that can't be worked around from a webpage. What CAN be
-  // fixed: without this, the in-progress recording's chunks just sit unflushed
-  // and get thrown away when the stream dies, losing the whole clip. Finalizing
-  // the recording the instant the page goes hidden saves whatever was captured
-  // up to that point instead of losing it entirely.
-  document.addEventListener("visibilitychange", function () {
+  // Desktop: keep recording in background — only stop on mobile
+  document.addEventListener("visibilitychange", function() {
     if (document.hidden) {
-      if (mediaRecorder && mediaRecorder.state === "recording") lockCutAudio = true;
-      if (videoRecorder && videoRecorder.state === "recording") lockCutVideo = true;
-      stopRecordingIfActive();
-      stopVideoRecordingIfActive();
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        if (mediaRecorder && mediaRecorder.state === "recording") lockCutAudio = true;
+        if (videoRecorder && videoRecorder.state === "recording") lockCutVideo = true;
+        stopRecordingIfActive(); stopVideoRecordingIfActive();
+      }
     }
   });
 
-  // Warn before an accidental close/refresh cuts off a save that's still in
-  // flight — this is what used to silently lose a just-stopped recording.
-  window.addEventListener("beforeunload", function (e) {
-    if (recordVideoBtn.disabled || recordBtn.disabled) {
-      e.preventDefault();
-      e.returnValue = "";
-    }
+  window.addEventListener("beforeunload", function(e) {
+    if (recordVideoBtn.disabled || recordBtn.disabled) { e.preventDefault(); e.returnValue = ""; }
   });
 })();
 </script>
