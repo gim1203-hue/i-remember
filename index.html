@@ -112,7 +112,7 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 28px;
+    margin-bottom: 8px;
     flex-wrap: wrap;
   }
 
@@ -168,6 +168,30 @@
   }
   .nav-btn:hover { background: var(--accent-wash); border-color: var(--accent-soft); }
   .nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Account bar ---------- */
+  .account-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .account-bar .email {
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+  }
+  .account-bar .signout-btn {
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    font-size: 0.74rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    padding: 2px 0;
+  }
+  .account-bar .signout-btn:hover { color: var(--accent); }
 
   /* ---------- Calendar ---------- */
   .weekday-row {
@@ -450,6 +474,7 @@
   .capture-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .capture-btn svg { width: 15px; height: 15px; }
   .capture-btn.recording { border-color: var(--mood-angry); color: var(--mood-angry); }
+  .capture-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
   /* Video recording */
   .video-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
@@ -672,6 +697,56 @@
   .reel-progress span.done i { width: 100%; transition: none; }
   .reel-progress span.active i { width: 100%; transition: width linear; }
 
+  /* ---------- Sign-in screen ---------- */
+  .auth-overlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 90;
+  }
+  .auth-card {
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+  }
+  .auth-card .wordmark { justify-content: center; }
+  .auth-card .tagline { margin: 10px 0 28px; }
+  .auth-card .auth-note {
+    margin-top: 18px;
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    line-height: 1.5;
+  }
+  .google-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 0.92rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .google-btn:hover { border-color: var(--accent-soft); background: var(--accent-wash); }
+  .google-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .auth-error {
+    margin-top: 14px;
+    font-size: 0.8rem;
+    color: var(--mood-angry);
+  }
+
+  [hidden] { display: none !important; }
+
   @media (max-width: 520px) {
     .panel { width: 100vw; }
     .month-nav .month-label { min-width: 130px; }
@@ -681,7 +756,29 @@
 </head>
 <body>
 
-<div class="app">
+<!-- Shown until we know whether someone is signed in, then whichever of these two applies. -->
+<div class="auth-overlay" id="authOverlay" hidden>
+  <div class="auth-card">
+    <div class="wordmark">
+      <span class="glyph">✦</span>
+      <h1>I Remember</h1>
+    </div>
+    <p class="tagline">Sign in with Google to keep your calendar private to you, and synced across every device.</p>
+    <button class="google-btn" id="googleSignIn">
+      <svg viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.95v2.33A9 9 0 009 18z"/>
+        <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 013.68 9c0-.59.1-1.17.27-1.7V4.97H.95A9 9 0 000 9c0 1.45.35 2.83.95 4.03l3-2.33z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A8.86 8.86 0 009 0 9 9 0 00.95 4.97l3 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
+      </svg>
+      Continue with Google
+    </button>
+    <p class="auth-error" id="authError" hidden></p>
+    <p class="auth-note">Only you can see what you save — every account's entries are kept private to that account.</p>
+  </div>
+</div>
+
+<div class="app" id="appRoot" hidden>
   <header class="topbar">
     <div>
       <div class="wordmark">
@@ -700,6 +797,11 @@
       </button>
     </div>
   </header>
+
+  <div class="account-bar">
+    <span class="mono email" id="accountEmail"></span>
+    <button class="signout-btn" id="signOutBtn">Sign out</button>
+  </div>
 
   <div class="weekday-row">
     <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
@@ -745,7 +847,7 @@
     </div>
 
     <div class="section">
-      <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to this device</span></div>
+      <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
       <p class="moment-hint">Records video + audio for as long as this tab stays open and in front — press stop whenever you're done. While recording, the screen is held awake automatically so it won't auto-lock mid-clip; pressing the physical lock button, switching apps, or closing the tab still ends it immediately (iOS and Android both cut camera/mic access the instant the screen locks — no app can override that), but whatever was captured up to that point is saved automatically.</p>
       <div class="video-list" id="videoList"></div>
       <button class="capture-btn" id="recordVideo">
@@ -755,7 +857,7 @@
     </div>
 
     <div class="section">
-      <div class="section-label">Voice notes <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to this device</span></div>
+      <div class="section-label">Voice notes <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
       <div class="voice-list" id="voiceList"></div>
       <button class="capture-btn" id="recordVoice">
         <svg viewBox="0 0 16 16" fill="none"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 8a5 5 0 0010 0M8 13v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -796,9 +898,21 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Supabase client — talks to your own project's public API. The publishable key below
+     is safe to expose in client-side code (it's meant to be); real protection comes from
+     the Row Level Security policies on the project, not from hiding this key. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function () {
   "use strict";
+
+  // ---------- Your Supabase project ----------
+  var SUPABASE_URL = "https://kfpzouisepillpokcfin.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmcHpvdWlzZXBpbGxwb2tjZmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3OTAyNTUsImV4cCI6MjEwNTM2NjI1NX0.1hHsUNnhiExzBnfkzcw0L3xDirHwVlMmEeH3MDee8rU";
+  var MEDIA_BUCKET = "media";
+  var SIGNED_URL_TTL = 3600; // seconds — plenty for one open session; refreshed each time a day/calendar loads
+
+  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   var MOODS = [
     { id: "joyful",   label: "Joyful",   var: "--mood-joyful" },
@@ -815,123 +929,189 @@
 
   var MAX_PHOTOS_PER_DAY = 50;
 
-  // ---------- Storage: IndexedDB (photos as Blobs, not localStorage) ----------
-  // localStorage caps out around 5-10MB per origin as text, which a single day
-  // of 50 photos would blow through fast. IndexedDB stores binary Blobs directly
-  // and has a far larger, browser-managed quota, so it's the right store here.
-  var DB_NAME = "iremember-db";
-  var STORE = "days";
-  var dbPromise = null;
-
-  function getDB() {
-    if (dbPromise) return dbPromise;
-    dbPromise = new Promise(function (resolve) {
-      if (!window.indexedDB) { resolve(null); return; }
-      var req = indexedDB.open(DB_NAME, 1);
-      req.onupgradeneeded = function (e) {
-        var db = e.target.result;
-        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "date" });
-      };
-      req.onsuccess = function (e) { resolve(e.target.result); };
-      req.onerror = function () { resolve(null); };
-    });
-    return dbPromise;
+  function newId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return Date.now() + "-" + Math.random().toString(36).slice(2);
   }
 
-  function dbGet(key) {
-    return getDB().then(function (db) {
-      if (!db) return null;
-      return new Promise(function (resolve) {
-        var tx = db.transaction(STORE, "readonly");
-        var req = tx.objectStore(STORE).get(key);
-        req.onsuccess = function () { resolve(req.result || null); };
-        req.onerror = function () { resolve(null); };
-      });
-    });
+  // ---------- Auth ----------
+  var currentUser = null;
+  var authOverlay = document.getElementById("authOverlay");
+  var appRoot = document.getElementById("appRoot");
+  var authError = document.getElementById("authError");
+
+  function showAuthScreen(message) {
+    appRoot.hidden = true;
+    authOverlay.hidden = false;
+    if (message) {
+      authError.textContent = message;
+      authError.hidden = false;
+    } else {
+      authError.hidden = true;
+    }
   }
 
-  function dbPut(record) {
-    return getDB().then(function (db) {
-      if (!db) { showToast("This browser doesn't support on-device storage — entries won't be saved."); return; }
-      return new Promise(function (resolve) {
-        var tx = db.transaction(STORE, "readwrite");
-        tx.objectStore(STORE).put(record);
-        tx.oncomplete = function () { resolve(); };
-        tx.onerror = function () { showToast("Couldn't save that — storage may be full."); resolve(); };
-      });
-    });
-  }
-
-  // Lightweight per-day summary (mood, note, photo count, cover thumbnail) built
-  // once at startup via a cursor, so the calendar grid doesn't have to load every
-  // full-resolution photo for every day just to paint 30-odd cells.
-  function dbLoadSummaries() {
-    return getDB().then(function (db) {
-      if (!db) return {};
-      return new Promise(function (resolve) {
-        var out = {};
-        var tx = db.transaction(STORE, "readonly");
-        var req = tx.objectStore(STORE).openCursor();
-        req.onsuccess = function (e) {
-          var cursor = e.target.result;
-          if (cursor) {
-            var rec = cursor.value;
-            var cover = rec.photos && rec.photos[0] ? rec.photos[0].blob : null;
-            out[rec.date] = {
-              mood: rec.mood,
-              note: rec.note,
-              count: (rec.photos || []).length,
-              coverUrl: cover ? URL.createObjectURL(cover) : null
-            };
-            cursor.continue();
-          } else {
-            resolve(out);
-          }
-        };
-        req.onerror = function () { resolve(out); };
-      });
-    });
-  }
-
-  var calendarIndex = {};   // dateKey -> { mood, note, count, coverUrl } — drives the grid
-  var activeEntry = null;   // full record for the open day, incl. photo Blobs
-  var activePhotoUrls = []; // object URLs created for the open day, revoked on close
-  var activeVoiceUrls = [];
-  var activeVideoUrls = [];
-  var activeMomentUrls = [];
-
-  // Older saved days won't have these fields yet (they were session-only before
-  // this update) — backfill them so the rest of the code can assume they exist.
-  function normalizeEntry(rec, key) {
-    rec = rec || { date: key };
-    if (!rec.photos) rec.photos = [];
-    if (!rec.voices) rec.voices = [];
-    if (!rec.videos) rec.videos = [];
-    if (!rec.moments) rec.moments = {};
-    if (typeof rec.mood === "undefined") rec.mood = null;
-    if (typeof rec.note === "undefined") rec.note = "";
-    return rec;
-  }
-
-  function summaryFor(key) {
-    return calendarIndex[key] || { mood: null, note: "", count: 0, coverUrl: null };
-  }
-
-  function persistActiveEntry() {
-    if (!activeEntry) return Promise.resolve();
-    return dbPut(activeEntry).then(function () {
-      var cover = activeEntry.photos[0] ? activeEntry.photos[0].blob : null;
-      var prevCover = calendarIndex[activeEntry.date] && calendarIndex[activeEntry.date].coverUrl;
-      calendarIndex[activeEntry.date] = {
-        mood: activeEntry.mood,
-        note: activeEntry.note,
-        count: activeEntry.photos.length,
-        coverUrl: cover ? URL.createObjectURL(cover) : null
-      };
-      if (prevCover) URL.revokeObjectURL(prevCover);
+  function showApp() {
+    authOverlay.hidden = true;
+    appRoot.hidden = false;
+    document.getElementById("accountEmail").textContent = currentUser.email || "";
+    renderCalendar();
+    loadCalendarIndex().then(function (index) {
+      calendarIndex = index;
       renderCalendar();
     });
   }
+
+  document.getElementById("googleSignIn").addEventListener("click", function () {
+    supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    }).then(function (res) {
+      if (res.error) showAuthScreen("Couldn't start Google sign-in — try again.");
+    });
+  });
+
+  document.getElementById("signOutBtn").addEventListener("click", function () {
+    closePanel();
+    supabase.auth.signOut();
+  });
+
+  supabase.auth.onAuthStateChange(function (_event, session) {
+    currentUser = session ? session.user : null;
+    if (currentUser) showApp(); else showAuthScreen();
+  });
+
+  supabase.auth.getSession().then(function (res) {
+    currentUser = res.data.session ? res.data.session.user : null;
+    if (currentUser) showApp(); else showAuthScreen();
+  });
+
+  // ---------- Storage: Supabase (Postgres rows + Storage bucket), not local ----------
+  // Every read/write below is automatically scoped to the signed-in user by the
+  // project's Row Level Security policies — the app never has to filter by user
+  // itself, and it's not possible (even with a bug here) for one account to read
+  // or overwrite another account's rows or files.
+
+  function entryDateFilter(dateKey) {
+    return { entry_date: dateKey };
+  }
+
+  // Returns the entries.id for a day, creating the row the first time something
+  // is actually saved for that day. Cheap to call repeatedly — does nothing once
+  // activeEntry.id is already known.
+  function ensureEntryRow(entry) {
+    if (entry.id) return Promise.resolve(entry.id);
+    return supabase
+      .from("entries")
+      .upsert({ user_id: currentUser.id, entry_date: entry.date }, { onConflict: "user_id,entry_date" })
+      .select("id")
+      .single()
+      .then(function (res) {
+        if (res.error) { showToast("Couldn't save — try again."); throw res.error; }
+        entry.id = res.data.id;
+        return entry.id;
+      });
+  }
+
+  function signedUrlsFor(paths) {
+    if (!paths.length) return Promise.resolve({});
+    return supabase.storage.from(MEDIA_BUCKET).createSignedUrls(paths, SIGNED_URL_TTL).then(function (res) {
+      var map = {};
+      (res.data || []).forEach(function (row) { if (row.signedUrl) map[row.path] = row.signedUrl; });
+      return map;
+    });
+  }
+
+  function loadEntry(dateKey) {
+    var entry = { date: dateKey, id: null, mood: null, note: "", photos: [], videos: [], voices: [], moments: {} };
+    return supabase.from("entries").select("id, mood, note").match(entryDateFilter(dateKey)).maybeSingle().then(function (res) {
+      if (!res.data) return entry;
+      entry.id = res.data.id;
+      entry.mood = res.data.mood;
+      entry.note = res.data.note || "";
+      return supabase.from("media").select("id, kind, storage_path, duration, seed, position")
+        .eq("entry_id", entry.id).order("position", { ascending: true }).then(function (mediaRes) {
+          var rows = mediaRes.data || [];
+          return signedUrlsFor(rows.map(function (r) { return r.storage_path; })).then(function (urlByPath) {
+            rows.forEach(function (r) {
+              var url = urlByPath[r.storage_path] || null;
+              if (r.kind === "photo") entry.photos.push({ id: r.id, path: r.storage_path, url: url });
+              else if (r.kind === "video") entry.videos.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration });
+              else if (r.kind === "voice") entry.voices.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration, seed: r.seed });
+              else if (r.kind === "moment_front") entry.moments.front = { id: r.id, path: r.storage_path, url: url };
+              else if (r.kind === "moment_back") entry.moments.back = { id: r.id, path: r.storage_path, url: url };
+            });
+            return entry;
+          });
+        });
+    });
+  }
+
+  // Builds the whole-calendar summary (every day that has a mood/note/photo) in
+  // two queries total, no matter how many months you've filled in.
+  function loadCalendarIndex() {
+    return supabase.from("entries").select("id, entry_date, mood, note").then(function (entriesRes) {
+      var index = {};
+      var entries = entriesRes.data || [];
+      var dateByEntryId = {};
+      entries.forEach(function (e) {
+        index[e.entry_date] = { id: e.id, mood: e.mood, note: e.note || "", count: 0, coverUrl: null };
+        dateByEntryId[e.id] = e.entry_date;
+      });
+      return supabase.from("media").select("entry_id, storage_path, position").eq("kind", "photo").order("position", { ascending: true }).then(function (photosRes) {
+        var photos = photosRes.data || [];
+        var countByEntry = {};
+        var coverPathByEntry = {};
+        photos.forEach(function (p) {
+          countByEntry[p.entry_id] = (countByEntry[p.entry_id] || 0) + 1;
+          if (!(p.entry_id in coverPathByEntry)) coverPathByEntry[p.entry_id] = p.storage_path;
+        });
+        var coverPaths = Object.keys(coverPathByEntry).map(function (k) { return coverPathByEntry[k]; });
+        return signedUrlsFor(coverPaths).then(function (urlByPath) {
+          Object.keys(countByEntry).forEach(function (entryId) {
+            var dateKey = dateByEntryId[entryId];
+            if (!dateKey || !index[dateKey]) return;
+            index[dateKey].count = countByEntry[entryId];
+            var coverPath = coverPathByEntry[entryId];
+            index[dateKey].coverUrl = coverPath ? (urlByPath[coverPath] || null) : null;
+          });
+          return index;
+        });
+      });
+    });
+  }
+
+  function touchCalendarIndex(dateKey, patch) {
+    var existing = calendarIndex[dateKey] || { id: null, mood: null, note: "", count: 0, coverUrl: null };
+    var merged = {};
+    Object.keys(existing).forEach(function (k) { merged[k] = existing[k]; });
+    Object.keys(patch).forEach(function (k) { merged[k] = patch[k]; });
+    calendarIndex[dateKey] = merged;
+    renderCalendar();
+  }
+
+  async function uploadMedia(entry, kind, blob, contentType, extraFields) {
+    var entryId = await ensureEntryRow(entry);
+    var ext = contentType === "image/jpeg" ? "jpg" : (contentType.indexOf("mp4") >= 0 ? "mp4" : "webm");
+    var path = currentUser.id + "/" + entry.date + "/" + kind + "-" + newId() + "." + ext;
+    var upload = await supabase.storage.from(MEDIA_BUCKET).upload(path, blob, { contentType: contentType });
+    if (upload.error) { showToast("Couldn't upload — try again."); throw upload.error; }
+    var row = Object.assign({ entry_id: entryId, user_id: currentUser.id, kind: kind, storage_path: path }, extraFields || {});
+    var inserted = await supabase.from("media").insert(row).select("id, storage_path").single();
+    if (inserted.error) { showToast("Uploaded, but couldn't save the record — try again."); throw inserted.error; }
+    var urlByPath = await signedUrlsFor([path]);
+    return { id: inserted.data.id, path: path, url: urlByPath[path] || null };
+  }
+
+  function deleteMedia(item) {
+    return supabase.storage.from(MEDIA_BUCKET).remove([item.path]).then(function () {
+      return supabase.from("media").delete().eq("id", item.id);
+    });
+  }
+
+  var calendarIndex = {};   // dateKey -> { id, mood, note, count, coverUrl } — drives the grid
+  var activeEntry = null;   // full record for the open day
+  var activeKey = null;
 
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
   function keyFor(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
@@ -973,12 +1153,15 @@
   var today = new Date();
   var viewYear = today.getFullYear();
   var viewMonth = today.getMonth();
-  var activeKey = null;
 
   var grid = document.getElementById("grid");
   var monthLabel = document.getElementById("monthLabel");
   var MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   var WEEKDAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  function summaryFor(key) {
+    return calendarIndex[key] || { mood: null, note: "", count: 0, coverUrl: null };
+  }
 
   function renderCalendar() {
     monthLabel.textContent = MONTH_NAMES[viewMonth] + " " + viewYear;
@@ -1007,7 +1190,7 @@
 
       var thumb = document.createElement("div");
       thumb.className = "thumb" + (hasPhoto ? "" : " no-photo");
-      if (hasPhoto) thumb.style.backgroundImage = "url('" + entry.coverUrl + "')";
+      if (hasPhoto && entry.coverUrl) thumb.style.backgroundImage = "url('" + entry.coverUrl + "')";
 
       var num = document.createElement("span");
       num.className = "num";
@@ -1070,9 +1253,15 @@
     chip.appendChild(document.createTextNode(m.label));
     chip.addEventListener("click", function () {
       if (!activeEntry) return;
+      var key = activeEntry.date;
       activeEntry.mood = activeEntry.mood === m.id ? null : m.id;
-      persistActiveEntry();
       refreshMoodRow();
+      ensureEntryRow(activeEntry).then(function (id) {
+        return supabase.from("entries").update({ mood: activeEntry.mood }).eq("id", id);
+      }).then(function (res) {
+        if (res && res.error) { showToast("Couldn't save mood — try again."); return; }
+        touchCalendarIndex(key, { id: activeEntry.id, mood: activeEntry.mood });
+      });
     });
     moodRow.appendChild(chip);
   });
@@ -1087,14 +1276,6 @@
   function openPanel(key) {
     activeKey = key;
     activeEntry = null;
-    activePhotoUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    activePhotoUrls = [];
-    activeVoiceUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    activeVoiceUrls = [];
-    activeVideoUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    activeVideoUrls = [];
-    activeMomentUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    activeMomentUrls = [];
 
     var parts = key.split("-").map(Number);
     var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -1118,9 +1299,9 @@
     panel.classList.add("open");
     panel.setAttribute("aria-hidden", "false");
 
-    dbGet(key).then(function (rec) {
-      activeEntry = normalizeEntry(rec, key);
+    loadEntry(key).then(function (entry) {
       if (activeKey !== key) return; // user already moved to another day
+      activeEntry = entry;
       document.getElementById("textNote").value = activeEntry.note || "";
       refreshMoodRow();
       refreshPhotoStrip();
@@ -1149,9 +1330,17 @@
   var noteDebounce = null;
   document.getElementById("textNote").addEventListener("input", function (e) {
     if (!activeEntry) return;
+    var key = activeEntry.date;
     activeEntry.note = e.target.value;
     clearTimeout(noteDebounce);
-    noteDebounce = setTimeout(persistActiveEntry, 400);
+    noteDebounce = setTimeout(function () {
+      ensureEntryRow(activeEntry).then(function (id) {
+        return supabase.from("entries").update({ note: activeEntry.note }).eq("id", id);
+      }).then(function (res) {
+        if (res && res.error) { showToast("Couldn't save note — try again."); return; }
+        touchCalendarIndex(key, { id: activeEntry.id, note: activeEntry.note });
+      });
+    }, 400);
   });
 
   // ---------- Photos ----------
@@ -1161,20 +1350,15 @@
   function refreshPhotoStrip() {
     if (!activeEntry) return;
     photoStrip.innerHTML = "";
-    activePhotoUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    activePhotoUrls = [];
 
     var label = document.querySelector('[data-photo-count]');
     if (label) label.textContent = activeEntry.photos.length + " / " + MAX_PHOTOS_PER_DAY;
 
     activeEntry.photos.forEach(function (item, idx) {
-      var url = URL.createObjectURL(item.blob);
-      activePhotoUrls.push(url);
-
       var tile = document.createElement("div");
       tile.className = "thumb-tile";
       var img = document.createElement("img");
-      img.src = url;
+      img.src = item.url || "";
       img.alt = "Photo from " + activeKey;
       tile.appendChild(img);
       var rm = document.createElement("button");
@@ -1184,7 +1368,13 @@
       rm.addEventListener("click", function (ev) {
         ev.stopPropagation();
         activeEntry.photos.splice(idx, 1);
-        persistActiveEntry().then(refreshPhotoStrip);
+        refreshPhotoStrip();
+        deleteMedia(item).then(function () {
+          touchCalendarIndex(activeKey, {
+            count: activeEntry.photos.length,
+            coverUrl: activeEntry.photos[0] ? activeEntry.photos[0].url : null
+          });
+        }).catch(function () { showToast("Couldn't delete that photo — try again."); });
       });
       tile.appendChild(rm);
       photoStrip.appendChild(tile);
@@ -1235,8 +1425,18 @@
             showToast("This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day.");
             return;
           }
-          activeEntry.photos.push({ id: Date.now() + "-" + Math.random().toString(36).slice(2), blob: blob });
-          persistActiveEntry().then(refreshPhotoStrip);
+          var entry = activeEntry;
+          var position = entry.photos.length;
+          uploadMedia(entry, "photo", blob, "image/jpeg", { position: position }).then(function (item) {
+            if (activeEntry !== entry) return; // switched days mid-upload
+            entry.photos.push(item);
+            refreshPhotoStrip();
+            touchCalendarIndex(entry.date, {
+              id: entry.id,
+              count: entry.photos.length,
+              coverUrl: entry.photos[0] ? entry.photos[0].url : null
+            });
+          }).catch(function () {});
         }, "image/jpeg", 0.75);
       };
       img.onerror = function () { showToast("Couldn't read that image."); };
@@ -1251,18 +1451,14 @@
 
   function refreshMomentPreview() {
     momentPreview.innerHTML = "";
-    activeMomentUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    activeMomentUrls = [];
     var pair = activeEntry ? activeEntry.moments : null;
     if (!pair) return;
     ["front", "back"].forEach(function (side) {
       if (!pair[side]) return;
-      var url = URL.createObjectURL(pair[side]);
-      activeMomentUrls.push(url);
       var tile = document.createElement("div");
       tile.className = "thumb-tile";
       var img = document.createElement("img");
-      img.src = url;
+      img.src = pair[side].url || "";
       tile.appendChild(img);
       var tag = document.createElement("span");
       tag.className = "tag";
@@ -1276,12 +1472,27 @@
     captureFacing("user", "front");
   });
 
+  function saveMoment(entry, side, blob) {
+    var kind = side === "front" ? "moment_front" : "moment_back";
+    var existing = entry.moments[side];
+    var afterDelete = existing ? deleteMedia(existing) : Promise.resolve();
+    return afterDelete.then(function () {
+      return uploadMedia(entry, kind, blob, "image/jpeg", {});
+    }).then(function (item) {
+      if (activeEntry === entry) {
+        entry.moments[side] = item;
+        refreshMomentPreview();
+      }
+    });
+  }
+
   function captureFacing(facingMode, label) {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       showToast("Camera isn't available in this preview.");
       return;
     }
     captureBtn.disabled = true;
+    var entry = activeEntry;
     navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } })
       .then(function (stream) {
         var video = document.createElement("video");
@@ -1299,9 +1510,8 @@
             stream.getTracks().forEach(function (t) { t.stop(); });
 
             canvas.toBlob(function (blob) {
-              if (!blob || !activeEntry) return;
-              activeEntry.moments[label] = blob;
-              persistActiveEntry().then(refreshMomentPreview);
+              if (!blob || !entry) return;
+              saveMoment(entry, label, blob).catch(function () { showToast("Couldn't save that moment — try again."); });
             }, "image/jpeg", 0.8);
 
             if (label === "front") {
@@ -1387,23 +1597,18 @@
 
   function refreshVideoList() {
     videoList.innerHTML = "";
-    activeVideoUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    activeVideoUrls = [];
     var list = activeEntry ? activeEntry.videos : [];
     if (!list || list.length === 0) return;
     list.forEach(function (clip, idx) {
-      var url = URL.createObjectURL(clip.blob);
-      activeVideoUrls.push(url);
       var item = document.createElement("div");
       item.className = "video-item";
       var video = document.createElement("video");
       video.controls = true;
       video.playsInline = true;
       video.preload = "metadata";
-      video.src = url;
-      video.load();
+      video.src = clip.url || "";
       video.addEventListener("error", function () {
-        showToast("This clip didn't save correctly — try recording it again.");
+        showToast("This clip didn't load correctly — try reopening the day.");
       });
       item.appendChild(video);
       var meta = document.createElement("div");
@@ -1418,7 +1623,8 @@
       del.textContent = "✕ remove";
       del.addEventListener("click", function () {
         list.splice(idx, 1);
-        persistActiveEntry().then(refreshVideoList);
+        refreshVideoList();
+        deleteMedia(clip).catch(function () { showToast("Couldn't delete that clip — try again."); });
       });
       meta.appendChild(del);
       item.appendChild(meta);
@@ -1439,6 +1645,7 @@
       showToast("Camera and mic aren't available in this preview.");
       return;
     }
+    if (!activeEntry) { showToast("Open a day first."); return; }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true })
       .then(function (stream) {
         videoStream = stream;
@@ -1451,23 +1658,42 @@
           videoStream.getTracks().forEach(function (t) { t.stop(); });
           return;
         }
+        var entry = activeEntry;
         videoRecorder.ondataavailable = function (e) { if (e.data.size > 0) videoChunks.push(e.data); };
         videoRecorder.onstop = function () {
-          if (videoChunks.length === 0) {
-            showToast(lockCutVideo ? "Screen locked before anything was captured — nothing to save." : "That recording came out empty — try again.");
-          } else if (activeEntry) {
-            if (lockCutVideo) showToast("Screen locked, so the recording stopped there — saved what was captured.");
-            var blob = new Blob(videoChunks, { type: videoRecorder.mimeType || mimeType || "video/webm" });
-            var secs = Math.max(1, Math.round((Date.now() - videoStart) / 1000));
-            activeEntry.videos.push({ id: Date.now() + "-" + Math.random().toString(36).slice(2), blob: blob, duration: fmtDuration(secs) });
-          }
           videoStream.getTracks().forEach(function (t) { t.stop(); });
           recordVideoBtn.classList.remove("recording");
-          videoRecordLabel.textContent = "Start recording";
+          videoRecordLabel.textContent = "Saving…";
+          recordVideoBtn.disabled = true;
           clearInterval(videoTimer);
+          var wasLockCut = lockCutVideo;
           lockCutVideo = false;
           if (!anyRecordingActive()) releaseWakeLock();
-          persistActiveEntry().then(refreshVideoList);
+
+          var finish = function () {
+            recordVideoBtn.disabled = false;
+            videoRecordLabel.textContent = "Start recording";
+          };
+
+          if (videoChunks.length === 0) {
+            showToast(wasLockCut ? "Screen locked before anything was captured — nothing to save." : "That recording came out empty — try again.");
+            finish();
+            return;
+          }
+          var blob = new Blob(videoChunks, { type: (videoRecorder && videoRecorder.mimeType) || mimeType || "video/webm" });
+          var secs = Math.max(1, Math.round((Date.now() - videoStart) / 1000));
+          var duration = fmtDuration(secs);
+          uploadMedia(entry, "video", blob, blob.type || "video/webm", { duration: duration }).then(function (item) {
+            item.duration = duration;
+            if (activeEntry === entry) {
+              entry.videos.push(item);
+              refreshVideoList();
+            }
+            if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
+            else showToast("Video saved.");
+          }).catch(function () {
+            showToast("Recording captured, but the save failed — try again.");
+          }).then(finish);
         };
         // No timeslice argument — a single continuous recording, finalized whole
         // on stop(). Periodic timesliced chunks are what produce the webm files
@@ -1504,8 +1730,6 @@
 
   function refreshVoiceList() {
     voiceList.innerHTML = "";
-    activeVoiceUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    activeVoiceUrls = [];
     var list = activeEntry ? activeEntry.voices : [];
     if (!list || list.length === 0) {
       var empty = document.createElement("div");
@@ -1521,12 +1745,10 @@
       var playBtn = document.createElement("button");
       playBtn.className = "play";
       playBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l10-5.5-10-5.5z"/></svg>';
-      var noteUrl = URL.createObjectURL(note.blob);
-      activeVoiceUrls.push(noteUrl);
       var audio = new Audio();
       audio.preload = "metadata";
-      audio.src = noteUrl;
-      audio.addEventListener("error", function () { showToast("This voice note didn't save correctly."); });
+      audio.src = note.url || "";
+      audio.addEventListener("error", function () { showToast("This voice note didn't load correctly."); });
       playBtn.addEventListener("click", function () {
         audio.currentTime = 0;
         audio.play().catch(function () { showToast("Playback isn't available in this preview."); });
@@ -1554,7 +1776,8 @@
       del.textContent = "✕";
       del.addEventListener("click", function () {
         list.splice(idx, 1);
-        persistActiveEntry().then(refreshVoiceList);
+        refreshVoiceList();
+        deleteMedia(note).catch(function () { showToast("Couldn't delete that voice note — try again."); });
       });
       row.appendChild(del);
 
@@ -1575,6 +1798,7 @@
       showToast("Microphone isn't available in this preview.");
       return;
     }
+    if (!activeEntry) { showToast("Open a day first."); return; }
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(function (stream) {
         recordStream = stream;
@@ -1587,28 +1811,43 @@
           });
         }
         mediaRecorder = audioMime ? new MediaRecorder(stream, { mimeType: audioMime }) : new MediaRecorder(stream);
+        var entry = activeEntry;
         mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) recordChunks.push(e.data); };
         mediaRecorder.onstop = function () {
-          if (recordChunks.length === 0) {
-            if (lockCutAudio) showToast("Screen locked before anything was captured — nothing to save.");
-          } else if (activeEntry) {
-            if (lockCutAudio) showToast("Screen locked, so the recording stopped there — saved what was captured.");
-            var blob = new Blob(recordChunks, { type: mediaRecorder.mimeType || audioMime || "audio/webm" });
-            var secs = Math.max(1, Math.round((Date.now() - recordStart) / 1000));
-            activeEntry.voices.push({
-              id: Date.now() + "-" + Math.random().toString(36).slice(2),
-              blob: blob,
-              duration: fmtDuration(secs),
-              seed: 1 + Math.random() * 2
-            });
-          }
           recordStream.getTracks().forEach(function (t) { t.stop(); });
           recordBtn.classList.remove("recording");
-          recordLabel.textContent = "Record a voice note";
+          recordBtn.disabled = true;
+          recordLabel.textContent = "Saving…";
           clearInterval(recordTimer);
+          var wasLockCut = lockCutAudio;
           lockCutAudio = false;
           if (!anyRecordingActive()) releaseWakeLock();
-          persistActiveEntry().then(refreshVoiceList);
+
+          var finish = function () {
+            recordBtn.disabled = false;
+            recordLabel.textContent = "Record a voice note";
+          };
+
+          if (recordChunks.length === 0) {
+            if (wasLockCut) showToast("Screen locked before anything was captured — nothing to save.");
+            finish();
+            return;
+          }
+          var blob = new Blob(recordChunks, { type: (mediaRecorder && mediaRecorder.mimeType) || audioMime || "audio/webm" });
+          var secs = Math.max(1, Math.round((Date.now() - recordStart) / 1000));
+          var duration = fmtDuration(secs);
+          var seed = 1 + Math.random() * 2;
+          uploadMedia(entry, "voice", blob, blob.type || "audio/webm", { duration: duration, seed: seed }).then(function (item) {
+            item.duration = duration;
+            item.seed = seed;
+            if (activeEntry === entry) {
+              entry.voices.push(item);
+              refreshVoiceList();
+            }
+            if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
+          }).catch(function () {
+            showToast("Recording captured, but the save failed — try again.");
+          }).then(finish);
         };
         // No duration cap — records until you press stop, same as video.
         mediaRecorder.start();
@@ -1643,7 +1882,7 @@
 
   document.getElementById("playReel").addEventListener("click", function () {
     if (!activeEntry) return;
-    reelPhotos = activePhotoUrls.length ? activePhotoUrls.slice() : [null];
+    reelPhotos = activeEntry.photos.length ? activeEntry.photos.map(function (p) { return p.url; }) : [null];
     reelStep = 0;
 
     reelDate.textContent = document.getElementById("panelDate").textContent;
@@ -1726,25 +1965,34 @@
     var subject = "I Remember — " + dateLabel;
     var bodyText = bodyLines.join("\n");
 
-    var photoFiles = activeEntry.photos.slice(0, 10).map(function (p, i) {
-      return new File([p.blob], "photo-" + (i + 1) + ".jpg", { type: p.blob.type || "image/jpeg" });
-    });
+    var photosToShare = activeEntry.photos.slice(0, 10).filter(function (p) { return !!p.url; });
 
-    if (navigator.share && navigator.canShare && photoFiles.length && navigator.canShare({ files: photoFiles })) {
-      navigator.share({ title: subject, text: bodyText, files: photoFiles }).catch(function (err) {
-        if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet.");
-      });
-    } else if (navigator.share) {
-      navigator.share({ title: subject, text: bodyText }).catch(function (err) {
-        if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet.");
-      });
-    } else {
-      var mailto = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(bodyText);
-      window.location.href = mailto;
-      if (activeEntry.photos.length) {
-        showToast("Opening your mail app — attach photos yourself, email links can't include them automatically.");
+    var withFiles = function () {
+      if (!photosToShare.length || !navigator.share || !navigator.canShare) return Promise.resolve([]);
+      return Promise.all(photosToShare.map(function (p, i) {
+        return fetch(p.url).then(function (r) { return r.blob(); }).then(function (blob) {
+          return new File([blob], "photo-" + (i + 1) + ".jpg", { type: blob.type || "image/jpeg" });
+        });
+      })).catch(function () { return []; });
+    };
+
+    withFiles().then(function (photoFiles) {
+      if (navigator.share && navigator.canShare && photoFiles.length && navigator.canShare({ files: photoFiles })) {
+        navigator.share({ title: subject, text: bodyText, files: photoFiles }).catch(function (err) {
+          if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet.");
+        });
+      } else if (navigator.share) {
+        navigator.share({ title: subject, text: bodyText }).catch(function (err) {
+          if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet.");
+        });
+      } else {
+        var mailto = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(bodyText);
+        window.location.href = mailto;
+        if (activeEntry.photos.length) {
+          showToast("Opening your mail app — attach photos yourself, email links can't include them automatically.");
+        }
       }
-    }
+    });
   });
 
   // ---------- Toast ----------
@@ -1772,19 +2020,13 @@
     }
   });
 
-  // Ask the browser to treat this site's storage as persistent rather than
-  // "best effort" — without this, iOS/Android can quietly evict IndexedDB
-  // data (oldest first) if the device runs low on space. This doesn't
-  // guarantee anything is kept forever, but it's the one thing a webpage can
-  // do to make months-old entries far less likely to get silently cleared.
-  if (navigator.storage && navigator.storage.persist) {
-    navigator.storage.persist().catch(function () {});
-  }
-
-  renderCalendar();
-  dbLoadSummaries().then(function (summaries) {
-    calendarIndex = summaries;
-    renderCalendar();
+  // Warn before an accidental close/refresh cuts off a save that's still in
+  // flight — this is what used to silently lose a just-stopped recording.
+  window.addEventListener("beforeunload", function (e) {
+    if (recordVideoBtn.disabled || recordBtn.disabled) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
   });
 })();
 </script>
