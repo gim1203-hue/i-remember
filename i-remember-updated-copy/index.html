@@ -1,0 +1,1836 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A calendar that remembers each day the way it felt — photos, video, voice notes, mood colors, email sharing, and a memory-reel playback.">
+<meta name="theme-color" content="#d9652f">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<title>I Remember</title>
+<style>
+  :root {
+    --bg: #faf6f0;
+    --surface: #ffffff;
+    --surface-raised: #fffdf9;
+    --ink: #2b2420;
+    --ink-soft: #6b5f55;
+    --ink-faint: #a89c8c;
+    --border: #e7ddcf;
+    --border-soft: #f0e8db;
+    --accent: #d9652f;
+    --accent-ink: #ffffff;
+    --accent-soft: #f3c97a;
+    --accent-wash: #fbe9d4;
+    --shadow: 220 25% 30%;
+    --mood-joyful: #d99a2b;
+    --mood-calm: #4f8285;
+    --mood-sad: #4c5b7a;
+    --mood-anxious: #7c5a9c;
+    --mood-excited: #d6597a;
+    --mood-angry: #b23a2e;
+    --mood-neutral: #8a8172;
+    --mood-grateful: #5f8a52;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171310; --surface: #211b16; --surface-raised: #271f19;
+      --ink: #f3ece1; --ink-soft: #bcae9c; --ink-faint: #7d7263;
+      --border: #382d23; --border-soft: #2b231c; --accent: #f0865a;
+      --accent-ink: #201209; --accent-soft: #f4c765; --accent-wash: #3a2a1a;
+      --shadow: 20 30% 2%;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171310; --surface: #211b16; --surface-raised: #271f19;
+    --ink: #f3ece1; --ink-soft: #bcae9c; --ink-faint: #7d7263;
+    --border: #382d23; --border-soft: #2b231c; --accent: #f0865a;
+    --accent-ink: #201209; --accent-soft: #f4c765; --accent-wash: #3a2a1a;
+    --shadow: 20 30% 2%;
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  h1, h2, h3, .display { font-family: "Fraunces", ui-serif, Georgia, serif; font-weight: 500; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  button { font-family: inherit; }
+  a { color: inherit; }
+  .app { max-width: 900px; margin: 0 auto; padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 32px) 80px; }
+  .topbar { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+  .wordmark { display: flex; align-items: baseline; gap: 10px; }
+  .wordmark .glyph { font-family: "Fraunces", serif; font-style: italic; font-weight: 600; font-size: 1.9rem; color: var(--accent); }
+  .wordmark h1 { font-size: 1.9rem; font-style: italic; }
+  .tagline { color: var(--ink-soft); font-size: 0.88rem; margin-top: 2px; }
+  .month-nav { display: flex; align-items: center; gap: 14px; }
+  .month-nav .month-label { font-family: "Fraunces", serif; font-size: 1.15rem; min-width: 168px; text-align: center; }
+  .nav-btn { width: 34px; height: 34px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; display: grid; place-items: center; transition: background 0.15s ease, border-color 0.15s ease; }
+  .nav-btn:hover { background: var(--accent-wash); border-color: var(--accent-soft); }
+  .nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .account-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 20px; }
+  .account-bar .email { font-size: 0.74rem; color: var(--ink-faint); }
+  .account-bar .signout-btn { border: none; background: none; color: var(--ink-soft); font-size: 0.74rem; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; padding: 2px 0; }
+  .account-bar .signout-btn:hover { color: var(--accent); }
+  .weekday-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; }
+  .weekday-row span { text-align: center; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .day { position: relative; aspect-ratio: 0.86; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; overflow: hidden; padding: 0; text-align: left; display: flex; flex-direction: column; transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease; }
+  .day:hover { transform: translateY(-2px); border-color: var(--accent-soft); box-shadow: 0 6px 16px -10px hsl(var(--shadow) / 0.5); }
+  .day:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .day.empty { visibility: hidden; pointer-events: none; }
+  .day.today { border-color: var(--accent); }
+  .day .thumb { flex: 1; background-size: cover; background-position: center; position: relative; }
+  .day .thumb.no-photo { background: var(--surface-raised); }
+  .day .num { position: absolute; top: 6px; left: 7px; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; color: var(--ink-soft); background: color-mix(in srgb, var(--surface) 78%, transparent); padding: 1px 5px; border-radius: 6px; }
+  .day.has-photo .num { color: #fff; background: rgba(20, 14, 8, 0.45); }
+  .day .mood-bar { height: 6px; width: 100%; }
+  .day .badges { position: absolute; bottom: 10px; right: 6px; display: flex; gap: 3px; }
+  .day .badges .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.9); }
+  .day:not(.has-photo) .badges .dot { background: var(--accent); }
+  .backdrop { position: fixed; inset: 0; background: hsl(var(--shadow) / 0.45); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity 0.22s ease; z-index: 40; }
+  .backdrop.open { opacity: 1; pointer-events: auto; }
+  .panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); background: var(--surface); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform 0.28s cubic-bezier(.22,.9,.32,1); z-index: 41; display: flex; flex-direction: column; overflow: hidden; }
+  .panel.open { transform: translateX(0); }
+  .panel-scroll { overflow-y: auto; padding: 22px 22px 40px; flex: 1; }
+  .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 22px 14px; border-bottom: 1px solid var(--border-soft); }
+  .panel-head h2 { font-size: 1.4rem; }
+  .panel-head .weekday { color: var(--ink-soft); font-size: 0.85rem; margin-top: 3px; }
+  .holiday-note { color: var(--accent); font-size: 0.78rem; margin-top: 4px; }
+  .day .holiday-tag { position: absolute; top: 6px; right: 7px; font-size: 0.78rem; line-height: 1; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.35)); }
+  .close-btn { width: 32px; height: 32px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
+  .close-btn:hover { border-color: var(--accent-soft); color: var(--ink); }
+  .close-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .section { margin-top: 26px; }
+  .section:first-child { margin-top: 0; }
+  .section-label { font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .mood-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mood-chip { display: flex; align-items: center; gap: 6px; padding: 6px 11px 6px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink-soft); font-size: 0.82rem; cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease; }
+  .mood-chip .swatch { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+  .mood-chip:hover { border-color: var(--accent-soft); }
+  .mood-chip.active { border-color: var(--mood-c); background: color-mix(in srgb, var(--mood-c) 16%, var(--surface-raised)); color: var(--ink); font-weight: 500; }
+  .mood-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .strip::-webkit-scrollbar { height: 6px; }
+  .strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .thumb-tile { position: relative; flex: 0 0 auto; width: 84px; height: 84px; border-radius: 10px; overflow: hidden; background: var(--surface-raised); border: 1px solid var(--border); }
+  .thumb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-tile .remove { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(20,14,8,0.55); color: #fff; font-size: 11px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+  .thumb-tile .tag { position: absolute; left: 4px; bottom: 3px; font-size: 0.58rem; background: rgba(20,14,8,0.55); color: #fff; padding: 1px 4px; border-radius: 4px; letter-spacing: 0.03em; }
+  .add-tile { flex: 0 0 auto; width: 84px; height: 84px; border-radius: 10px; border: 1.5px dashed var(--border); background: none; color: var(--ink-faint); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.66rem; transition: border-color 0.15s ease, color 0.15s ease; }
+  .add-tile:hover { border-color: var(--accent); color: var(--accent); }
+  .add-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .add-tile svg { width: 18px; height: 18px; }
+  .moment-hint { font-size: 0.78rem; color: var(--ink-soft); line-height: 1.45; margin-bottom: 10px; }
+  .moment-row { display: flex; gap: 10px; align-items: center; }
+  .moment-pair { display: flex; gap: 6px; }
+  .moment-pair .thumb-tile { width: 60px; height: 60px; }
+  .capture-btn { display: flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font-size: 0.82rem; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; white-space: nowrap; }
+  .capture-btn:hover { border-color: var(--accent); }
+  .capture-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .capture-btn svg { width: 15px; height: 15px; }
+  .capture-btn.recording { border-color: var(--mood-angry); color: var(--mood-angry); }
+  .capture-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .video-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+  .video-item { border-radius: 12px; background: var(--surface-raised); border: 1px solid var(--border-soft); overflow: hidden; }
+  .video-item video { width: 100%; max-height: 220px; display: block; background: #000; }
+  .video-item .video-meta { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; font-size: 0.72rem; color: var(--ink-faint); }
+  .video-item .del { border: none; background: none; color: var(--ink-faint); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 4px; }
+  .video-item .del:hover { color: var(--mood-angry); }
+  .voice-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .voice-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; background: var(--surface-raised); border: 1px solid var(--border-soft); }
+  .voice-item audio { flex: 1; min-width: 0; height: 36px; }
+  .voice-item .del { border: none; background: none; color: var(--ink-faint); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px; flex-shrink: 0; }
+  .voice-item .del:hover { color: var(--mood-angry); }
+  .empty-note { font-size: 0.8rem; color: var(--ink-faint); font-style: italic; padding: 4px 0; }
+  textarea { width: 100%; min-height: 90px; resize: vertical; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font-family: "Work Sans", sans-serif; font-size: 0.9rem; line-height: 1.55; padding: 10px 12px; }
+  textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  textarea::placeholder { color: var(--ink-faint); }
+  .reel-btn { width: 100%; margin-top: 28px; padding: 13px; border-radius: 12px; border: none; background: var(--accent); color: var(--accent-ink); font-size: 0.92rem; font-weight: 600; letter-spacing: 0.01em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: filter 0.15s ease; }
+  .reel-btn:hover { filter: brightness(1.06); }
+  .reel-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .reel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .reel-btn.secondary { background: var(--surface-raised); color: var(--ink); border: 1px solid var(--border); margin-top: 10px; }
+  .reel-btn.secondary:hover { border-color: var(--accent-soft); }
+  .reel-btn svg { width: 16px; height: 16px; }
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 0.82rem; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 60; max-width: 88vw; text-align: center; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .reel-overlay { position: fixed; inset: 0; z-index: 70; display: none; align-items: center; justify-content: center; flex-direction: column; color: #fdf8ef; overflow: hidden; }
+  .reel-overlay.open { display: flex; }
+  .reel-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: saturate(0.9) brightness(0.6); transform: scale(1.06); transition: opacity 0.9s ease; }
+  .reel-bg.no-image { background: linear-gradient(160deg, var(--mood-c, #4f8285), #171310); }
+  .reel-tint { position: absolute; inset: 0; background: linear-gradient(180deg, hsl(20 30% 3% / 0.15), hsl(20 30% 3% / 0.75)); }
+  .reel-content { position: relative; text-align: center; padding: 0 24px; max-width: 480px; }
+  .reel-content .date { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; margin-bottom: 10px; }
+  .reel-content .mood-label { font-family: "Fraunces", serif; font-style: italic; font-size: 1.9rem; margin-bottom: 14px; }
+  .reel-content .note { font-size: 0.95rem; line-height: 1.6; opacity: 0.92; }
+  .reel-content .caption { margin-top: 16px; font-size: 0.78rem; opacity: 0.7; }
+  .reel-close { position: fixed; top: 76px; right: 20px; min-width: 96px; height: 42px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.7); background: rgba(0,0,0,0.72); color: #fff; cursor: pointer; display: flex; gap: 7px; align-items: center; justify-content: center; z-index: 260; font-weight: 700; }
+  .reel-close:hover { background: rgba(0,0,0,0.45); }
+  .reel-close-bottom { position: absolute; left: 50%; bottom: 48px; transform: translateX(-50%); z-index: 3; border: 1px solid rgba(255,255,255,.55); background: rgba(0,0,0,.55); color: #fff; border-radius: 999px; padding: 10px 18px; font: 600 .84rem "Work Sans", sans-serif; cursor: pointer; white-space: nowrap; }
+  .reel-close-bottom:hover { background: rgba(0,0,0,.78); }
+  .reel-progress { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 2; }
+  .reel-progress span { width: 22px; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.3); overflow: hidden; }
+  .reel-progress span i { display: block; height: 100%; width: 0%; background: #fff; }
+  .reel-progress span.done i { width: 100%; transition: none; }
+  .reel-progress span.active i { width: 100%; transition: width linear; }
+  .auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 90; }
+  .auth-card { max-width: 360px; width: 100%; text-align: center; }
+  .auth-card .wordmark { justify-content: center; }
+  .auth-card .tagline { margin: 10px 0 28px; }
+  .auth-card .auth-note { margin-top: 18px; font-size: 0.76rem; color: var(--ink-faint); line-height: 1.5; }
+  .google-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px 20px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 0.92rem; font-weight: 500; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; }
+  .google-btn:hover { border-color: var(--accent-soft); background: var(--accent-wash); }
+  .google-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .auth-error { margin-top: 14px; font-size: 0.8rem; color: var(--mood-angry); }
+  [hidden] { display: none !important; }
+  @media (max-width: 520px) { .panel { width: 100vw; } .month-nav .month-label { min-width: 130px; } }
+
+  /* ---- Weather ---- */
+  .weather-card { background: var(--surface-raised); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+  .weather-main-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; }
+  .weather-icon-big { font-size: 2.2rem; line-height: 1; flex-shrink: 0; }
+  .weather-temp { font-size: 1.5rem; font-weight: 500; color: var(--ink); }
+  .weather-hi-lo { font-size: 0.75rem; color: var(--ink-soft); margin-top: 1px; }
+  .weather-desc { font-size: 0.8rem; color: var(--ink-soft); margin-top: 1px; }
+  .weather-meta { font-size: 0.72rem; color: var(--ink-faint); margin-top: 3px; }
+  .forecast-strip { display: flex; gap: 6px; overflow-x: auto; padding: 4px 14px 12px; border-top: 1px solid var(--border-soft); }
+  .forecast-strip::-webkit-scrollbar { height: 4px; }
+  .forecast-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .fc-day { flex: 0 0 auto; text-align: center; padding: 8px 6px 4px; min-width: 48px; }
+  .fc-name { font-size: 0.66rem; color: var(--ink-faint); margin-bottom: 4px; }
+  .fc-icon { font-size: 1.1rem; line-height: 1; margin-bottom: 4px; }
+  .fc-hi { font-size: 0.78rem; font-weight: 500; color: var(--ink); }
+  .fc-lo { font-size: 0.68rem; color: var(--ink-faint); }
+  .weather-past-note { font-size: 0.7rem; color: var(--accent); padding: 6px 14px 10px; }
+  .weather-loading { font-size: 0.78rem; color: var(--ink-faint); font-style: italic; padding: 4px 0; }
+  .weather-error { font-size: 0.78rem; color: var(--ink-faint); font-style: italic; padding: 4px 0; }
+
+  /* ---- Prayer times ---- */
+  .prayer-list { display: flex; flex-direction: column; gap: 5px; }
+  .prayer-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; background: var(--surface-raised); border: 1px solid var(--border-soft); border-radius: 8px; }
+  .prayer-row.prayer-next { border-color: var(--accent-soft); background: var(--accent-wash); }
+  .prayer-name { font-size: 0.84rem; font-weight: 500; color: var(--ink); }
+  .prayer-row.prayer-next .prayer-name { color: var(--accent); }
+  .prayer-time { font-size: 0.82rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .prayer-row.prayer-next .prayer-time { color: var(--accent); font-weight: 500; }
+  .next-badge { display: inline-block; font-size: 0.6rem; background: var(--accent); color: var(--accent-ink); padding: 2px 6px; border-radius: 999px; vertical-align: middle; margin-left: 4px; }
+  .prayer-source { font-size: 0.67rem; color: var(--ink-faint); margin-top: 6px; }
+
+  /* ---- Prayer popup ---- */
+  .prayer-popup-overlay { position: fixed; inset: 0; background: hsl(var(--shadow) / 0.55); backdrop-filter: blur(3px); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+  .prayer-popup-overlay.open { opacity: 1; pointer-events: auto; }
+  .prayer-popup { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 28px 28px 22px; max-width: 320px; width: 90%; text-align: center; }
+  .prayer-popup .pp-icon { font-size: 2.4rem; margin-bottom: 10px; }
+  .prayer-popup .pp-title { font-family: "Fraunces", serif; font-size: 1.3rem; font-style: italic; color: var(--ink); margin-bottom: 6px; }
+  .prayer-popup .pp-time { font-size: 2rem; font-weight: 500; color: var(--accent); font-family: "IBM Plex Mono", monospace; margin-bottom: 6px; }
+  .prayer-popup .pp-sub { font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 20px; }
+  .prayer-popup .pp-dismiss { width: 100%; padding: 11px; border-radius: 10px; border: none; background: var(--accent); color: var(--accent-ink); font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+  .prayer-popup .pp-dismiss:hover { filter: brightness(1.06); }
+
+  /* ---- PiP button ---- */
+  .pip-btn { position: fixed; bottom: 22px; right: 22px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; z-index: 50; transition: border-color 0.15s ease, color 0.15s ease; }
+  .pip-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---- 2.0 additions (kept separate from the original styles) ---- */
+  body { background-image: var(--custom-background, none); background-size: cover; background-position: center; background-attachment: fixed; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: color-mix(in srgb, var(--bg) 86%, transparent); }
+  .toolbar { display: grid; grid-template-columns: minmax(180px, 1fr) auto auto; gap: 8px; margin: 16px 0 8px; }
+  .tool-launcher { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+  .tool-launcher .action-btn { flex: 1 1 120px; }
+  .field, .action-btn { min-height: 40px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 8px 10px; font: inherit; }
+  .action-btn { cursor: pointer; font-size: .8rem; font-weight: 600; }
+  .action-btn:hover { border-color: var(--accent); }
+  .action-btn.danger { color: var(--mood-angry); }
+  .search-wrap { position: relative; }
+  .search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 35; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 30px hsl(var(--shadow) / .22); max-height: 360px; overflow: auto; }
+  .search-result { padding: 11px; border-bottom: 1px solid var(--border-soft); }
+  .search-result:last-child { border-bottom: 0; }
+  .search-result-title { font-weight: 600; font-size: .84rem; }
+  .search-result-summary { color: var(--ink-soft); font-size: .76rem; line-height: 1.4; margin: 4px 0 7px; }
+  .inline-actions, .form-row { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .form-row .field { flex: 1 1 120px; min-width: 0; }
+  .stack-list { display: grid; gap: 8px; margin-top: 9px; }
+  .item-card { border: 1px solid var(--border-soft); background: var(--surface-raised); border-radius: 10px; padding: 9px 10px; }
+  .item-card-head { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+  .item-title { font-size: .84rem; font-weight: 600; overflow-wrap: anywhere; }
+  .item-meta { color: var(--ink-faint); font-size: .68rem; margin-top: 3px; }
+  .folder-files { margin-top: 7px; display: grid; gap: 5px; }
+  .file-row { display: flex; justify-content: space-between; gap: 8px; font-size: .75rem; }
+  .file-row a { overflow-wrap: anywhere; }
+  .mini-delete { border: 0; background: none; color: var(--mood-angry); cursor: pointer; padding: 1px 4px; }
+  .feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .feature-card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface-raised); padding: 10px; }
+  .feature-card h3 { font-size: 1rem; margin-bottom: 7px; }
+  .result-box { margin-top: 8px; padding: 8px; border-radius: 8px; background: var(--accent-wash); color: var(--ink); font-size: .78rem; line-height: 1.45; }
+  .radio-status { font-size: .72rem; color: var(--ink-soft); margin-top: 6px; }
+  .limit-note { color: var(--ink-faint); font-size: .7rem; line-height: 1.4; margin: 7px 0 0; }
+  .recording-pill { display: none; position: fixed; left: 16px; bottom: 18px; z-index: 55; border-radius: 999px; padding: 8px 12px; color: #fff; background: #a72f25; font-size: .72rem; font-weight: 700; box-shadow: 0 4px 18px rgba(0,0,0,.2); }
+  .recording-pill.on { display: block; }
+  .visibility-switch { position: fixed; top: 14px; right: 14px; z-index: 200; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; font-size: 1.35rem; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
+  body.background-only > *:not(.visibility-switch) { visibility: hidden !important; pointer-events: none !important; }
+  body.background-only::before { background: transparent; }
+  body.background-only .visibility-switch { visibility: visible !important; pointer-events: auto !important; }
+  .tool-modal { position: fixed; inset: 0; z-index: 180; background: hsl(var(--shadow) / .58); display: grid; place-items: center; padding: 18px; }
+  .tool-modal[hidden] { display: none !important; }
+  .tool-dialog { width: min(620px, 100%); max-height: min(760px, 92vh); overflow: auto; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 22px 60px hsl(var(--shadow) / .4); padding: 18px; }
+  .tool-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .tool-dialog-head h2 { font-size: 1.35rem; }
+  .tool-close { min-width: 84px; }
+  .calc-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .volume-row { display: grid; grid-template-columns: auto 1fr 48px; gap: 9px; align-items: center; margin-top: 10px; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  @media (max-width: 650px) { .toolbar { grid-template-columns: 1fr 1fr; } .search-wrap { grid-column: 1 / -1; } .feature-grid,.calc-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="auth-overlay" id="authOverlay" hidden>
+  <div class="auth-card">
+    <div class="wordmark"><span class="glyph">✦</span><h1>I Remember</h1></div>
+    <p class="tagline">Sign in with Google to keep your calendar private to you, and synced across every device.</p>
+    <button class="google-btn" id="googleSignIn">
+      <svg viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.95v2.33A9 9 0 009 18z"/>
+        <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 013.68 9c0-.59.1-1.17.27-1.7V4.97H.95A9 9 0 000 9c0 1.45.35 2.83.95 4.03l3-2.33z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A8.86 8.86 0 009 0 9 9 0 00.95 4.97l3 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
+      </svg>
+      Continue with Google
+    </button>
+    <p class="auth-error" id="authError" hidden></p>
+    <p class="auth-note">Only you can see what you save — every account's entries are kept private to that account.</p>
+  </div>
+</div>
+
+<div class="app" id="appRoot" hidden>
+  <header class="topbar">
+    <div>
+      <div class="wordmark"><span class="glyph">✦</span><h1>I Remember</h1></div>
+      <p class="tagline">A calendar that remembers each day the way it felt.</p>
+    </div>
+    <div class="month-nav">
+      <button class="nav-btn" id="prevMonth" aria-label="Previous month">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="month-label mono" id="monthLabel"></span>
+      <button class="nav-btn" id="nextMonth" aria-label="Next month">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+  <div class="account-bar">
+    <span class="mono email" id="accountEmail"></span>
+    <button class="signout-btn" id="signOutBtn">Sign out</button>
+  </div>
+  <div class="toolbar" aria-label="App tools">
+    <div class="search-wrap">
+      <input class="field" id="memorySearch" type="search" placeholder="Search memories as you type…" autocomplete="off" style="width:100%">
+      <div class="search-results" id="memorySearchResults" hidden></div>
+    </div>
+    <select class="field" id="languageSelect" aria-label="Language">
+      <option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="ar">العربية</option><option value="ur">اردو</option><option value="hi">हिन्दी</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="zh">中文</option>
+    </select>
+    <button class="action-btn" id="backgroundButton">🖼 Background</button>
+    <input id="backgroundInput" type="file" accept="image/*" hidden>
+    <button class="action-btn" id="toolsButton" aria-expanded="true">Tools ▾</button>
+  </div>
+  <div class="tool-launcher" id="toolLauncher">
+    <button class="action-btn" data-open-tool="calculatorModal">🧮 Calculator</button>
+    <button class="action-btn" data-open-tool="radioModal">📻 Worldwide radio</button>
+    <button class="action-btn" data-open-tool="alarmModal">⏰ Alarms</button>
+    <button class="action-btn" data-open-tool="horoscopeModal">♈ Horoscope</button>
+  </div>
+  <div class="weekday-row">
+    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<aside class="panel" id="panel" aria-hidden="true">
+  <div class="panel-head">
+    <div>
+      <h2 id="panelDate"></h2>
+      <div class="weekday mono" id="panelWeekday"></div>
+      <div class="holiday-note mono" id="panelHoliday" hidden></div>
+    </div>
+    <div class="inline-actions">
+    <button class="close-btn" id="closePanel" aria-label="Close">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+    </div>
+  </div>
+  <div class="panel-scroll">
+
+    <div class="section" id="weatherSection">
+      <div class="section-label">Weather</div>
+      <div id="weatherContent"><div class="weather-loading">Open a day to see weather.</div></div>
+    </div>
+
+    <div class="section" id="prayerSection">
+      <div class="section-label">Prayer times</div>
+      <div id="prayerContent"><div class="weather-loading">Open a day to see prayer times.</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Mood</div>
+      <div class="mood-row" id="moodRow"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Photos <span class="mono" data-photo-count style="text-transform:none; letter-spacing:0; font-size:0.68rem;">0 / 100</span></div>
+      <div class="strip" id="photoStrip"></div>
+      <input type="file" id="photoInput" accept="image/*" multiple capture="environment" hidden>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Moments <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">front + back</span></div>
+      <p class="moment-hint">Captured while the app is open — a phone can't film in the background, so a moment is a quick front-and-back pair you take on purpose.</p>
+      <div class="moment-row">
+        <button class="capture-btn" id="captureMoment">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="9" height="8" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 6.5l3.4-1.8v6.6l-3.4-1.8" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Capture moment
+        </button>
+        <div class="moment-pair" id="momentPreview"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
+      <p class="moment-hint">Records video + audio for as long as this tab stays open and in front — press stop whenever you're done. While recording, the screen is held awake automatically so it won't auto-lock mid-clip.</p>
+      <div class="video-list" id="videoList"></div>
+      <button class="capture-btn" id="recordVideo">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="9" height="8" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 6.5l3.4-1.8v6.6l-3.4-1.8" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        <span id="videoRecordLabel">Start recording</span>
+      </button>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Voice notes <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
+      <div class="voice-list" id="voiceList"></div>
+      <button class="capture-btn" id="recordVoice">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 8a5 5 0 0010 0M8 13v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span id="recordLabel">Record a voice note</span>
+      </button>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Notes</div>
+      <textarea id="textNote" placeholder="What happened today?"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Timestamped notes <span class="mono" id="noteCount">0</span></div>
+      <div class="form-row"><input class="field" id="newNoteText" maxlength="4000" placeholder="Add a separate note"><button class="action-btn" id="addNoteButton">Add note</button></div>
+      <div class="stack-list" id="timestampedNotes"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Files &amp; folders <span class="mono" id="folderCount">0 / 10</span></div>
+      <div class="form-row"><input class="field" id="newFolderName" maxlength="80" placeholder="Folder name"><button class="action-btn" id="addFolderButton">New folder</button></div>
+      <input id="documentInput" type="file" multiple hidden>
+      <div class="stack-list" id="folderList"></div>
+      <p class="limit-note">Up to 10 folders per day and 50 files per folder. PDF page count is saved when the browser can read it; device folder-picking support varies.</p>
+    </div>
+
+    <button class="reel-btn" id="playReel">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M4 2.5v11l10-5.5-10-5.5z" fill="currentColor"/></svg>
+      Play memory reel
+    </button>
+    <button class="reel-btn secondary" id="emailDay">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 4.5h12v7a1 1 0 01-1 1H3a1 1 0 01-1-1v-7z" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 4.8l5.5 4 5.5-4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      Email this day
+    </button>
+  </div>
+</aside>
+
+<div class="tool-modal" id="calculatorModal" hidden><section class="tool-dialog" role="dialog" aria-modal="true" aria-labelledby="calculatorTitle"><div class="tool-dialog-head"><h2 id="calculatorTitle">Construction calculator</h2><button class="action-btn tool-close" data-close-tool>✕ Close</button></div><div class="calc-grid"><select class="field" id="calcMode"><option value="area">Area / flooring</option><option value="concrete">Concrete volume</option><option value="paint">Paint</option><option value="drywall">Drywall</option><option value="roofing">Roofing bundles</option><option value="block">Concrete block wall</option><option value="studs">Wall studs</option><option value="gravel">Gravel / fill</option></select><input class="field" id="calcLength" type="number" min="0" step="any" placeholder="Length (feet)"><input class="field" id="calcWidth" type="number" min="0" step="any" placeholder="Width/height (feet)"><input class="field" id="calcDepth" type="number" min="0" step="any" placeholder="Depth (inches)"><input class="field" id="calcWaste" type="number" min="0" max="50" step="1" value="10" placeholder="Waste %"><input class="field" id="calcCost" type="number" min="0" step="any" placeholder="Optional cost per unit"></div><div class="inline-actions" style="margin-top:10px"><button class="action-btn" id="calculateButton">Calculate materials</button><button class="action-btn" id="clearCalculator">Clear</button></div><div class="result-box" id="calcResult" aria-live="polite">Choose a task and enter measurements.</div></section></div>
+
+<div class="tool-modal" id="radioModal" hidden><section class="tool-dialog" role="dialog" aria-modal="true" aria-labelledby="radioTitle"><div class="tool-dialog-head"><h2 id="radioTitle">Worldwide live radio</h2><button class="action-btn tool-close" data-close-tool>✕ Close</button></div><div class="form-row"><select class="field" id="radioCountry"><option value="">Choose country</option></select><select class="field" id="radioStation"><option value="">Choose station</option></select></div><audio id="radioPlayer" controls preload="none" style="width:100%;margin-top:12px"></audio><div class="volume-row"><button class="action-btn" id="radioMute">Mute</button><input id="radioVolume" type="range" min="0" max="100" value="70" aria-label="Radio volume"><output id="radioVolumeValue">70%</output></div><div class="radio-status" id="radioStatus">Countries are alphabetical. Station data comes from the community Radio Browser directory.</div><p class="limit-note">Radio can continue while you use this page. After a full refresh, browsers require you to press Play again.</p></section></div>
+
+<div class="tool-modal" id="alarmModal" hidden><section class="tool-dialog" role="dialog" aria-modal="true" aria-labelledby="alarmTitle"><div class="tool-dialog-head"><h2 id="alarmTitle">Smart alarms</h2><button class="action-btn tool-close" data-close-tool>✕ Close</button></div><div class="form-row"><input class="field" id="alarmDate" type="date"><input class="field" id="alarmTime" type="time"><input class="field" id="alarmLabel" maxlength="120" placeholder="Work meeting, gym, family…"><button class="action-btn" id="addAlarmButton">Set alarm</button></div><div class="stack-list" id="alarmList"></div><button class="action-btn" id="testAlarmButton" type="button">Test sound and voice</button><p class="limit-note">Every alarm sounds and speaks its label 10 minutes early while the app is running. The operating system may suspend a closed or locked browser.</p></section></div>
+
+<div class="tool-modal" id="horoscopeModal" hidden><section class="tool-dialog" role="dialog" aria-modal="true" aria-labelledby="horoscopeTitle"><div class="tool-dialog-head"><h2 id="horoscopeTitle">Daily horoscope</h2><button class="action-btn tool-close" data-close-tool>✕ Close</button></div><div class="form-row"><select class="field" id="zodiacSign"><option>Aries</option><option>Taurus</option><option>Gemini</option><option>Cancer</option><option>Leo</option><option>Virgo</option><option>Libra</option><option>Scorpio</option><option>Sagittarius</option><option>Capricorn</option><option>Aquarius</option><option>Pisces</option></select><button class="action-btn" id="readHoroscope">🔊 Read aloud</button></div><div class="result-box" id="horoscopeText"></div></section></div>
+
+<div class="reel-overlay" id="reelOverlay">
+  <button class="reel-close" id="closeReel" aria-label="Close reel">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Close
+  </button>
+  <div class="reel-bg" id="reelBg"></div>
+  <div class="reel-tint"></div>
+  <div class="reel-content">
+    <div class="date mono" id="reelDate"></div>
+    <div class="mood-label" id="reelMood"></div>
+    <div class="note" id="reelNote"></div>
+    <div class="caption" id="reelCaption"></div>
+  </div>
+  <div class="reel-progress" id="reelProgress"></div>
+  <button class="reel-close-bottom" id="closeReelBottom">Close memory reel</button>
+</div>
+
+<!-- Prayer popup -->
+<div class="prayer-popup-overlay" id="prayerPopupOverlay">
+  <div class="prayer-popup">
+    <div class="pp-icon">🕌</div>
+    <div class="pp-title" id="ppTitle">Prayer</div>
+    <div class="pp-time" id="ppTime"></div>
+    <div class="pp-sub">Prayer begins in 10 minutes</div>
+    <button class="pp-dismiss" id="ppDismiss">Dismiss</button>
+  </div>
+</div>
+
+<!-- Picture-in-Picture float button -->
+<button class="pip-btn" id="pipBtn" title="Float on top">
+  <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="7" width="6" height="4" rx="1" fill="currentColor"/></svg>
+</button>
+
+<button class="visibility-switch" id="visibilitySwitch" aria-label="Show background only" title="Background-only mode">☀️</button>
+<div class="recording-pill" id="recordingPill">● RECORDING</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var SUPABASE_URL = "https://kfpzouisepillpokcfin.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmcHpvdWlzZXBpbGxwb2tjZmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3OTAyNTUsImV4cCI6MjEwNTM2NjI1NX0.1hHsUNnhiExzBnfkzcw0L3xDirHwVlMmEeH3MDee8rU";
+  var MEDIA_BUCKET = "media";
+  var SIGNED_URL_TTL = 3600;
+  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var MOODS = [
+    { id: "joyful",  label: "Joyful",   var: "--mood-joyful" },
+    { id: "calm",    label: "Calm",      var: "--mood-calm" },
+    { id: "grateful",label: "Grateful",  var: "--mood-grateful" },
+    { id: "excited", label: "Excited",   var: "--mood-excited" },
+    { id: "neutral", label: "Neutral",   var: "--mood-neutral" },
+    { id: "anxious", label: "Anxious",   var: "--mood-anxious" },
+    { id: "sad",     label: "Sad",       var: "--mood-sad" },
+    { id: "angry",   label: "Angry",     var: "--mood-angry" }
+  ];
+  var moodMap = {};
+  MOODS.forEach(function(m) { moodMap[m.id] = m; });
+
+  var MAX_PHOTOS_PER_DAY = 100;
+
+  function newId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return Date.now() + "-" + Math.random().toString(36).slice(2);
+  }
+
+  // ---------- Auth ----------
+  var currentUser = null;
+  var authOverlay = document.getElementById("authOverlay");
+  var appRoot = document.getElementById("appRoot");
+  var authError = document.getElementById("authError");
+  
+  async function ensureProfile() {
+  if (!currentUser) return;
+
+  const fullName =
+    currentUser.user_metadata?.full_name ||
+    currentUser.user_metadata?.name ||
+    "";
+
+  const email = currentUser.email || "";
+
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: currentUser.id,
+        full_name: fullName,
+        email: email
+      },
+      {
+        onConflict: "id"
+      }
+    );
+
+  if (error) {
+    console.error("Profile upsert error:", error);
+  }
+}
+
+  function showAuthScreen(message) {
+    appRoot.hidden = true;
+    authOverlay.hidden = false;
+    if (message) { authError.textContent = message; authError.hidden = false; }
+    else { authError.hidden = true; }
+  }
+function showApp() {
+    authOverlay.hidden = true;
+    appRoot.hidden = false;
+    document.getElementById("accountEmail").textContent = currentUser.email || "";
+
+    ensureProfile();
+
+    renderCalendar();
+    startPrayerReminder();
+    loadCalendarIndex().then(function(index) {
+        calendarIndex = index;
+        renderCalendar();
+    });
+}
+
+  document.getElementById("googleSignIn").addEventListener("click", function() {
+    supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } })
+      .then(function(res) { if (res.error) showAuthScreen("Couldn't start Google sign-in — try again."); });
+  });
+  document.getElementById("signOutBtn").addEventListener("click", function() { closePanel(); supabase.auth.signOut(); });
+  supabase.auth.onAuthStateChange(function(_event, session) {
+    currentUser = session ? session.user : null;
+    if (currentUser) showApp(); else showAuthScreen();
+  });
+  supabase.auth.getSession().then(function(res) {
+    currentUser = res.data.session ? res.data.session.user : null;
+    if (currentUser) showApp(); else showAuthScreen();
+  });
+
+  // ---------- Supabase helpers ----------
+  function entryDateFilter(dateKey) { return { entry_date: dateKey }; }
+
+  function ensureEntryRow(entry) {
+    if (entry.id) return Promise.resolve(entry.id);
+    return supabase.from("entries")
+      .upsert({ user_id: currentUser.id, entry_date: entry.date }, { onConflict: "user_id,entry_date" })
+      .select("id").single()
+      .then(function(res) {
+        if (res.error) { showToast("Couldn't save — try again."); throw res.error; }
+        entry.id = res.data.id;
+        return entry.id;
+      });
+  }
+
+  function signedUrlsFor(paths) {
+    if (!paths.length) return Promise.resolve({});
+    return supabase.storage.from(MEDIA_BUCKET).createSignedUrls(paths, SIGNED_URL_TTL).then(function(res) {
+      var map = {};
+      (res.data || []).forEach(function(row) { if (row.signedUrl) map[row.path] = row.signedUrl; });
+      return map;
+    });
+  }
+
+  function loadEntry(dateKey) {
+    var entry = { date: dateKey, id: null, mood: null, note: "", weather: null, photos: [], videos: [], voices: [], moments: {} };
+    return supabase.from("entries").select("id, mood, note, weather").match(entryDateFilter(dateKey)).maybeSingle()
+      .then(function(res) {
+        if (!res.data) return entry;
+        entry.id = res.data.id;
+        entry.mood = res.data.mood;
+        entry.note = res.data.note || "";
+        entry.weather = res.data.weather || null;
+        return supabase.from("media").select("id, kind, storage_path, duration, seed, position")
+          .eq("entry_id", entry.id).order("position", { ascending: true })
+          .then(function(mediaRes) {
+            var rows = mediaRes.data || [];
+            return signedUrlsFor(rows.map(function(r) { return r.storage_path; })).then(function(urlByPath) {
+              rows.forEach(function(r) {
+                var url = urlByPath[r.storage_path] || null;
+                if (r.kind === "photo") entry.photos.push({ id: r.id, path: r.storage_path, url: url });
+                else if (r.kind === "video") entry.videos.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration });
+                else if (r.kind === "voice") entry.voices.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration, seed: r.seed });
+                else if (r.kind === "moment_front") entry.moments.front = { id: r.id, path: r.storage_path, url: url };
+                else if (r.kind === "moment_back") entry.moments.back = { id: r.id, path: r.storage_path, url: url };
+              });
+              return entry;
+            });
+          });
+      });
+  }
+
+  function loadCalendarIndex() {
+    return supabase.from("entries").select("id, entry_date, mood, note").then(function(entriesRes) {
+      var index = {};
+      var entries = entriesRes.data || [];
+      var dateByEntryId = {};
+      entries.forEach(function(e) {
+        index[e.entry_date] = { id: e.id, mood: e.mood, note: e.note || "", count: 0, coverUrl: null };
+        dateByEntryId[e.id] = e.entry_date;
+      });
+      return supabase.from("media").select("entry_id, storage_path, position").eq("kind", "photo").order("position", { ascending: true })
+        .then(function(photosRes) {
+          var photos = photosRes.data || [];
+          var countByEntry = {}, coverPathByEntry = {};
+          photos.forEach(function(p) {
+            countByEntry[p.entry_id] = (countByEntry[p.entry_id] || 0) + 1;
+            if (!(p.entry_id in coverPathByEntry)) coverPathByEntry[p.entry_id] = p.storage_path;
+          });
+          var coverPaths = Object.keys(coverPathByEntry).map(function(k) { return coverPathByEntry[k]; });
+          return signedUrlsFor(coverPaths).then(function(urlByPath) {
+            Object.keys(countByEntry).forEach(function(entryId) {
+              var dateKey = dateByEntryId[entryId];
+              if (!dateKey || !index[dateKey]) return;
+              index[dateKey].count = countByEntry[entryId];
+              var coverPath = coverPathByEntry[entryId];
+              index[dateKey].coverUrl = coverPath ? (urlByPath[coverPath] || null) : null;
+            });
+            return index;
+          });
+        });
+    });
+  }
+
+  function touchCalendarIndex(dateKey, patch) {
+    var existing = calendarIndex[dateKey] || { id: null, mood: null, note: "", count: 0, coverUrl: null };
+    var merged = {};
+    Object.keys(existing).forEach(function(k) { merged[k] = existing[k]; });
+    Object.keys(patch).forEach(function(k) { merged[k] = patch[k]; });
+    calendarIndex[dateKey] = merged;
+    renderCalendar();
+  }
+
+  async function uploadMedia(entry, kind, blob, contentType, extraFields) {
+    var entryId = await ensureEntryRow(entry);
+    var ext = contentType === "image/jpeg" ? "jpg" : (contentType.indexOf("mp4") >= 0 ? "mp4" : "webm");
+    var path = currentUser.id + "/" + entry.date + "/" + kind + "-" + newId() + "." + ext;
+    var upload = await supabase.storage.from(MEDIA_BUCKET).upload(path, blob, { contentType: contentType });
+    if (upload.error) { showToast("Couldn't upload — try again."); throw upload.error; }
+    var row = Object.assign({ entry_id: entryId, user_id: currentUser.id, kind: kind, storage_path: path }, extraFields || {});
+    var inserted = await supabase.from("media").insert(row).select("id, storage_path").single();
+    if (inserted.error) { showToast("Uploaded, but couldn't save the record — try again."); throw inserted.error; }
+    var urlByPath = await signedUrlsFor([path]);
+    return { id: inserted.data.id, path: path, url: urlByPath[path] || null };
+  }
+
+  function deleteMedia(item) {
+    return supabase.storage.from(MEDIA_BUCKET).remove([item.path]).then(function() {
+      return supabase.from("media").delete().eq("id", item.id);
+    });
+  }
+
+  // ---------- Location ----------
+  var userLat = null;
+  var userLon = null;
+
+  function getLocation() {
+    return new Promise(function(resolve) {
+      if (userLat !== null) { resolve({ lat: userLat, lon: userLon }); return; }
+      if (!navigator.geolocation) { resolve(null); return; }
+      navigator.geolocation.getCurrentPosition(
+        function(pos) { userLat = pos.coords.latitude; userLon = pos.coords.longitude; resolve({ lat: userLat, lon: userLon }); },
+        function() { resolve(null); },
+        { timeout: 8000 }
+      );
+    });
+  }
+
+  // ---------- Weather (Open-Meteo, free, no API key) ----------
+  var WMO_ICONS = {
+    0:'☀️',1:'🌤️',2:'⛅',3:'🌥️',45:'🌫️',48:'🌫️',
+    51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',
+    71:'🌨️',73:'🌨️',75:'🌨️',77:'🌨️',80:'🌧️',81:'🌧️',82:'⛈️',
+    85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️'
+  };
+  var WMO_DESC = {
+    0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',
+    45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
+    61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',
+    75:'Heavy snow',77:'Snow grains',80:'Rain showers',81:'Rain showers',
+    82:'Heavy showers',85:'Snow showers',86:'Heavy snow showers',
+    95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'
+  };
+
+  function displaySavedWeather(el, w, dateKey) {
+    var icon = WMO_ICONS[w.code] || '🌡️';
+    var html = '<div class="weather-card"><div class="weather-main-row">';
+    html += '<span class="weather-icon-big">' + icon + '</span><div>';
+    if (w.temp !== null && w.temp !== undefined) {
+      html += '<div class="weather-temp">' + w.temp + '°F</div>';
+      html += '<div class="weather-hi-lo">High ' + w.hi + '° · Low ' + w.lo + '°</div>';
+    } else {
+      html += '<div class="weather-temp">' + w.hi + '°F</div>';
+      html += '<div class="weather-hi-lo">Low ' + w.lo + '°F</div>';
+    }
+    html += '<div class="weather-desc">' + w.desc + '</div>';
+    html += '<div class="weather-meta">💨 ' + w.wind + ' mph' + (parseFloat(w.precip) > 0 ? ' · 🌧 ' + w.precip + ' in' : '') + '</div>';
+    html += '</div></div><div class="weather-past-note">Saved weather for this day</div></div>';
+    el.innerHTML = html;
+  }
+
+  function fetchWeather(dateKey, lat, lon) {
+    var el = document.getElementById('weatherContent');
+    if (!el) return;
+    el.innerHTML = '<div class="weather-loading">Loading weather…</div>';
+    var todayStr = keyFor(today.getFullYear(), today.getMonth(), today.getDate());
+    var isToday = (dateKey === todayStr);
+    var todayObj = new Date(todayStr + 'T12:00:00');
+    var dateObj = new Date(dateKey + 'T12:00:00');
+    var diffDays = Math.floor((todayObj - dateObj) / 86400000);
+    var isPast = diffDays > 0;
+    var isOldPast = diffDays > 92;
+    var base = 'https://api.open-meteo.com/v1/forecast';
+    var archiveBase = 'https://archive-api.open-meteo.com/v1/archive';
+    var common = '&daily=temperature_2m_max,temperature_2m_min,weathercode,wind_speed_10m_max,precipitation_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto';
+    var coords = '?latitude=' + lat + '&longitude=' + lon;
+    var url;
+    if (isToday) { url = base + coords + common + '&current_weather=true&forecast_days=8'; }
+    else if (isOldPast) { url = archiveBase + coords + common + '&start_date=' + dateKey + '&end_date=' + dateKey; }
+    else { url = base + coords + common + '&start_date=' + dateKey + '&end_date=' + dateKey; }
+
+    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+      if (!data.daily || !data.daily.time || !data.daily.time.length) {
+        el.innerHTML = '<div class="weather-error">Weather unavailable for this date.</div>'; return;
+      }
+      var idx = isToday ? (data.daily.time.indexOf(todayStr) >= 0 ? data.daily.time.indexOf(todayStr) : 0) : 0;
+      var hi    = Math.round(data.daily.temperature_2m_max[idx]);
+      var lo    = Math.round(data.daily.temperature_2m_min[idx]);
+      var code  = data.daily.weathercode[idx];
+      var wind  = Math.round(data.daily.wind_speed_10m_max[idx] || 0);
+      var precip = parseFloat(data.daily.precipitation_sum[idx] || 0).toFixed(1);
+      var icon  = WMO_ICONS[code] || '🌡️';
+      var desc  = WMO_DESC[code] || 'Unknown';
+      var currentTemp = (data.current_weather && isToday) ? Math.round(data.current_weather.temperature) : null;
+
+      var html = '<div class="weather-card"><div class="weather-main-row">';
+      html += '<span class="weather-icon-big">' + icon + '</span><div>';
+      if (currentTemp !== null) {
+        html += '<div class="weather-temp">' + currentTemp + '°F</div>';
+        html += '<div class="weather-hi-lo">High ' + hi + '° · Low ' + lo + '°</div>';
+      } else {
+        html += '<div class="weather-temp">' + hi + '°F</div>';
+        html += '<div class="weather-hi-lo">Low ' + lo + '°F</div>';
+      }
+      html += '<div class="weather-desc">' + desc + '</div>';
+      html += '<div class="weather-meta">💨 ' + wind + ' mph' + (parseFloat(precip) > 0 ? ' · 🌧 ' + precip + ' in' : '') + '</div>';
+      html += '</div></div>';
+      if (isToday && data.daily.time.length > 1) {
+        var DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        html += '<div class="forecast-strip">';
+        for (var i = 0; i < Math.min(8, data.daily.time.length); i++) {
+          var d = new Date(data.daily.time[i] + 'T12:00:00');
+          var dName = data.daily.time[i] === todayStr ? 'Today' : DAY_SHORT[d.getDay()];
+          var fc = WMO_ICONS[data.daily.weathercode[i]] || '🌡️';
+          html += '<div class="fc-day"><div class="fc-name">' + dName + '</div><div class="fc-icon">' + fc + '</div>';
+          html += '<div class="fc-hi">' + Math.round(data.daily.temperature_2m_max[i]) + '°</div>';
+          html += '<div class="fc-lo">' + Math.round(data.daily.temperature_2m_min[i]) + '°</div></div>';
+        }
+        html += '</div>';
+      }
+      if (isPast) html += '<div class="weather-past-note">Saved weather for this day</div>';
+      if (!isPast && !isToday) html += '<div class="weather-past-note">Forecast for this date</div>';
+      html += '</div>';
+      el.innerHTML = html;
+
+      // Save weather to Supabase for this day
+      if (activeEntry && activeEntry.date === dateKey) {
+        var weatherData = { temp: currentTemp, hi: hi, lo: lo, desc: desc, code: code, wind: wind, precip: precip };
+        ensureEntryRow(activeEntry).then(function() {
+          supabase.from('entries').update({ weather: weatherData }).eq('id', activeEntry.id).then(function(res) {
+            if (!res.error && activeEntry && activeEntry.date === dateKey) activeEntry.weather = weatherData;
+          });
+        }).catch(function() {});
+      }
+    }).catch(function() {
+      el.innerHTML = '<div class="weather-error">Couldn\'t load weather — check your connection.</div>';
+    });
+  }
+
+  // ---------- Prayer times (Aladhan API) ----------
+  function to12h(t) {
+    var p = t.split(':'), h = parseInt(p[0]), m = p[1];
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + ':' + m + ' ' + ampm;
+  }
+
+  function fetchPrayerTimes(dateKey, lat, lon) {
+    var el = document.getElementById('prayerContent');
+    if (!el) return;
+    el.innerHTML = '<div class="weather-loading">Loading prayer times…</div>';
+    var parts = dateKey.split('-');
+    var aladhanDate = parts[2] + '-' + parts[1] + '-' + parts[0];
+    var url = 'https://api.aladhan.com/v1/timings/' + aladhanDate + '?latitude=' + lat + '&longitude=' + lon + '&method=2';
+    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+      if (!data.data || !data.data.timings) { el.innerHTML = '<div class="weather-error">Prayer times unavailable.</div>'; return; }
+      var timings = data.data.timings;
+      var prayers = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+      var todayStr = keyFor(today.getFullYear(), today.getMonth(), today.getDate());
+      var nextPrayer = null;
+      if (dateKey === todayStr) {
+        var now = new Date();
+        var nowMins = now.getHours() * 60 + now.getMinutes();
+        for (var i = 0; i < prayers.length; i++) {
+          var t = timings[prayers[i]].split(':');
+          if (parseInt(t[0]) * 60 + parseInt(t[1]) > nowMins) { nextPrayer = prayers[i]; break; }
+        }
+      }
+      var html = '<div class="prayer-list">';
+      prayers.forEach(function(p) {
+        var isNext = p === nextPrayer;
+        html += '<div class="prayer-row' + (isNext ? ' prayer-next' : '') + '">';
+        html += '<span class="prayer-name">' + p + '</span>';
+        html += '<span class="prayer-time">' + to12h(timings[p]);
+        if (isNext) html += ' <span class="next-badge">next</span>';
+        html += '</span></div>';
+      });
+      html += '</div><div class="prayer-source">Location-based · ISNA calculation</div>';
+      el.innerHTML = html;
+    }).catch(function() {
+      el.innerHTML = '<div class="weather-error">Couldn\'t load prayer times — check your connection.</div>';
+    });
+  }
+
+  // ---------- Prayer reminder popup ----------
+  var prayerPopupOverlay = document.getElementById('prayerPopupOverlay');
+  var ppTitle = document.getElementById('ppTitle');
+  var ppTime = document.getElementById('ppTime');
+  var prayerReminderTimer = null;
+  var lastPrayerAlerted = null;
+
+  document.getElementById('ppDismiss').addEventListener('click', function() {
+    prayerPopupOverlay.classList.remove('open');
+  });
+
+  var alarmAudioContext = null;
+  function unlockReminderAudio() {
+    try {
+      if (!alarmAudioContext) alarmAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if (alarmAudioContext.state === "suspended") alarmAudioContext.resume();
+      speechSynthesis.getVoices();
+    } catch(ignore) {}
+  }
+  document.addEventListener("pointerdown", unlockReminderAudio, { once: true });
+
+  function playAdhanSound() {
+    try {
+      unlockReminderAudio();
+      var ctx = alarmAudioContext;
+      if (!ctx) return;
+      var notes = [392, 440, 392, 330, 392, 440, 392];
+      var t = ctx.currentTime;
+      notes.forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq; osc.type = 'sine';
+        gain.gain.setValueAtTime(0, t + i * 0.45);
+        gain.gain.linearRampToValueAtTime(0.28, t + i * 0.45 + 0.06);
+        gain.gain.linearRampToValueAtTime(0, t + i * 0.45 + 0.38);
+        osc.start(t + i * 0.45); osc.stop(t + i * 0.45 + 0.45);
+      });
+    } catch(e) {}
+  }
+
+  function showPrayerPopup(name, timeStr) {
+    ppTitle.textContent = name;
+    ppTime.textContent = timeStr;
+    prayerPopupOverlay.classList.add('open');
+    playAdhanSound();
+    speakText(name + ' prayer is coming up in 10 minutes.');
+  }
+
+  function checkPrayerTimes() {
+    if (!userLat || !userLon) return;
+    var now = new Date();
+    var todayStr = keyFor(now.getFullYear(), now.getMonth(), now.getDate());
+    var parts = todayStr.split('-');
+    var url = 'https://api.aladhan.com/v1/timings/' + parts[2] + '-' + parts[1] + '-' + parts[0] + '?latitude=' + userLat + '&longitude=' + userLon + '&method=2';
+    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+      if (!data.data || !data.data.timings) return;
+      var timings = data.data.timings;
+      var prayers = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+      var nowMins = now.getHours() * 60 + now.getMinutes();
+      prayers.forEach(function(p) {
+        var t = timings[p].split(':');
+        var pMins = parseInt(t[0]) * 60 + parseInt(t[1]);
+        var alertKey = todayStr + '-' + p;
+        if (Math.abs(nowMins - (pMins - 10)) <= 1 && lastPrayerAlerted !== alertKey) {
+          lastPrayerAlerted = alertKey;
+          showPrayerPopup(p, to12h(timings[p]));
+        }
+      });
+    }).catch(function() {});
+  }
+
+  function startPrayerReminder() {
+    getLocation().then(function(loc) {
+      if (!loc) return;
+      checkPrayerTimes();
+      clearInterval(prayerReminderTimer);
+      prayerReminderTimer = setInterval(checkPrayerTimes, 60000);
+    });
+  }
+
+  // ---------- Picture-in-Picture ----------
+  var pipBtn = document.getElementById('pipBtn');
+  var pipVideo = null;
+
+  pipBtn.addEventListener('click', function() {
+    if (!document.pictureInPictureEnabled) { showToast("Picture-in-Picture isn't supported in this browser."); return; }
+    if (document.pictureInPictureElement) { document.exitPictureInPicture().catch(function() {}); return; }
+    if (!pipVideo) {
+      pipVideo = document.createElement('video');
+      pipVideo.muted = true;
+      var canvas = document.createElement('canvas');
+      canvas.width = 320; canvas.height = 180;
+      var ctx = canvas.getContext('2d');
+      function drawFrame() {
+        ctx.fillStyle = '#171310'; ctx.fillRect(0, 0, 320, 180);
+        ctx.fillStyle = '#f0865a'; ctx.font = 'italic 600 26px serif'; ctx.textAlign = 'center';
+        ctx.fillText('\u2726 I Remember', 160, 70);
+        ctx.fillStyle = '#bcae9c'; ctx.font = '500 15px sans-serif';
+        var now = new Date();
+        ctx.fillText(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 160, 110);
+        ctx.fillStyle = '#7d7263'; ctx.font = '13px sans-serif';
+        ctx.fillText('Running in background', 160, 140);
+        requestAnimationFrame(drawFrame);
+      }
+      drawFrame();
+      pipVideo.srcObject = canvas.captureStream(2);
+      pipVideo.play();
+    }
+    pipVideo.requestPictureInPicture().catch(function() { showToast("Couldn't open Picture-in-Picture — try again."); });
+  });
+
+  var calendarIndex = {};
+  var activeEntry = null;
+  var activeKey = null;
+
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function keyFor(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
+
+  var FEDERAL_HOLIDAYS_FIXED = [
+    { month: 0, day: 1, name: "New Year's Day" },
+    { month: 5, day: 19, name: "Juneteenth" },
+    { month: 6, day: 4, name: "Independence Day" },
+    { month: 10, day: 11, name: "Veterans Day" },
+    { month: 11, day: 25, name: "Christmas Day" }
+  ];
+  function nthWeekdayOfMonth(year, month, weekday, n) {
+    var firstWeekday = new Date(year, month, 1).getDay();
+    var offset = (weekday - firstWeekday + 7) % 7;
+    return 1 + offset + (n - 1) * 7;
+  }
+  function lastWeekdayOfMonth(year, month, weekday) {
+    var lastDate = new Date(year, month + 1, 0);
+    var offset = (lastDate.getDay() - weekday + 7) % 7;
+    return lastDate.getDate() - offset;
+  }
+  function getHolidayName(year, month, day) {
+    for (var i = 0; i < FEDERAL_HOLIDAYS_FIXED.length; i++) {
+      var h = FEDERAL_HOLIDAYS_FIXED[i];
+      if (h.month === month && h.day === day) return h.name;
+    }
+    if (month === 0 && day === nthWeekdayOfMonth(year, 0, 1, 3)) return "Martin Luther King Jr. Day";
+    if (month === 1 && day === nthWeekdayOfMonth(year, 1, 1, 3)) return "Presidents' Day";
+    if (month === 4 && day === lastWeekdayOfMonth(year, 4, 1)) return "Memorial Day";
+    if (month === 8 && day === nthWeekdayOfMonth(year, 8, 1, 1)) return "Labor Day";
+    if (month === 9 && day === nthWeekdayOfMonth(year, 9, 1, 2)) return "Columbus Day";
+    if (month === 10 && day === nthWeekdayOfMonth(year, 10, 4, 4)) return "Thanksgiving Day";
+    return null;
+  }
+
+  var today = new Date();
+  var viewYear = today.getFullYear();
+  var viewMonth = today.getMonth();
+  var grid = document.getElementById("grid");
+  var monthLabel = document.getElementById("monthLabel");
+  var MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var WEEKDAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  function summaryFor(key) { return calendarIndex[key] || { mood: null, note: "", count: 0, coverUrl: null }; }
+
+  function renderCalendar() {
+    monthLabel.textContent = MONTH_NAMES[viewMonth] + " " + viewYear;
+    grid.innerHTML = "";
+    var firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    for (var i = 0; i < firstDay; i++) {
+      var filler = document.createElement("div"); filler.className = "day empty"; grid.appendChild(filler);
+    }
+    for (var d = 1; d <= daysInMonth; d++) {
+      var key = keyFor(viewYear, viewMonth, d);
+      var entry = summaryFor(key);
+      var btn = document.createElement("button");
+      btn.className = "day"; btn.setAttribute("data-key", key);
+      var isToday = viewYear === today.getFullYear() && viewMonth === today.getMonth() && d === today.getDate();
+      if (isToday) btn.classList.add("today");
+      var hasPhoto = entry.count > 0;
+      if (hasPhoto) btn.classList.add("has-photo");
+      var thumb = document.createElement("div");
+      thumb.className = "thumb" + (hasPhoto ? "" : " no-photo");
+      if (hasPhoto && entry.coverUrl) thumb.style.backgroundImage = "url('" + entry.coverUrl + "')";
+      var num = document.createElement("span"); num.className = "num"; num.textContent = d;
+      thumb.appendChild(num);
+      var holidayName = getHolidayName(viewYear, viewMonth, d);
+      if (holidayName) {
+        var holidayTag = document.createElement("span");
+        holidayTag.className = "holiday-tag"; holidayTag.textContent = "🎉"; holidayTag.title = holidayName;
+        thumb.appendChild(holidayTag);
+      }
+      if (entry.mood) {
+        var badges = document.createElement("div"); badges.className = "badges";
+        var dot = document.createElement("span"); dot.className = "dot";
+        badges.appendChild(dot); thumb.appendChild(badges);
+      }
+      btn.appendChild(thumb);
+      var bar = document.createElement("div"); bar.className = "mood-bar";
+      bar.style.background = entry.mood ? "var(" + moodMap[entry.mood].var + ")" : "var(--border-soft)";
+      btn.appendChild(bar);
+      btn.addEventListener("click", function() { openPanel(this.getAttribute("data-key")); });
+      grid.appendChild(btn);
+    }
+  }
+
+  document.getElementById("prevMonth").addEventListener("click", function() {
+    viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar();
+  });
+  document.getElementById("nextMonth").addEventListener("click", function() {
+    viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar();
+  });
+
+  var backdrop = document.getElementById("backdrop");
+  var panel = document.getElementById("panel");
+  var moodRow = document.getElementById("moodRow");
+
+  MOODS.forEach(function(m) {
+    var chip = document.createElement("button");
+    chip.className = "mood-chip";
+    chip.style.setProperty("--mood-c", "var(" + m.var + ")");
+    chip.setAttribute("data-mood", m.id);
+    var sw = document.createElement("span"); sw.className = "swatch"; sw.style.background = "var(" + m.var + ")";
+    chip.appendChild(sw); chip.appendChild(document.createTextNode(m.label));
+    chip.addEventListener("click", function() {
+      if (!activeEntry) return;
+      var key = activeEntry.date;
+      activeEntry.mood = activeEntry.mood === m.id ? null : m.id;
+      refreshMoodRow();
+      ensureEntryRow(activeEntry).then(function(id) {
+        return supabase.from("entries").update({ mood: activeEntry.mood }).eq("id", id);
+      }).then(function(res) {
+        if (res && res.error) { showToast("Couldn't save mood — try again."); return; }
+        touchCalendarIndex(key, { id: activeEntry.id, mood: activeEntry.mood });
+      });
+    });
+    moodRow.appendChild(chip);
+  });
+
+  function refreshMoodRow() {
+    var mood = activeEntry ? activeEntry.mood : null;
+    Array.prototype.forEach.call(moodRow.children, function(chip) {
+      chip.classList.toggle("active", chip.getAttribute("data-mood") === mood);
+    });
+  }
+
+  function openPanel(key) {
+    activeKey = key;
+    activeEntry = null;
+    var parts = key.split("-").map(Number);
+    var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    document.getElementById("panelDate").textContent = MONTH_NAMES[parts[1]-1] + " " + parts[2] + ", " + parts[0];
+    document.getElementById("panelWeekday").textContent = WEEKDAY_NAMES[dateObj.getDay()];
+    var panelHoliday = document.getElementById("panelHoliday");
+    var openedHolidayName = getHolidayName(parts[0], parts[1] - 1, parts[2]);
+    if (openedHolidayName) { panelHoliday.textContent = "🎉 " + openedHolidayName; panelHoliday.hidden = false; }
+    else { panelHoliday.hidden = true; }
+    document.getElementById("textNote").value = "";
+    photoStrip.innerHTML = ""; voiceList.innerHTML = ""; videoList.innerHTML = ""; momentPreview.innerHTML = "";
+    backdrop.classList.add("open"); panel.classList.add("open"); panel.setAttribute("aria-hidden", "false");
+
+    document.getElementById('weatherContent').innerHTML = '<div class="weather-loading">Loading…</div>';
+    document.getElementById('prayerContent').innerHTML = '<div class="weather-loading">Loading…</div>';
+    var locKey = key;
+
+    // Prayer times — load immediately
+    getLocation().then(function(loc) {
+      if (activeKey !== locKey) return;
+      if (!loc) { document.getElementById('prayerContent').innerHTML = '<div class="weather-error">Allow location access to see prayer times.</div>'; return; }
+      fetchPrayerTimes(locKey, loc.lat, loc.lon);
+    });
+
+    // Weather — waits for entry so we can use saved weather for past days
+    loadEntry(key).then(function(entry) {
+      if (activeKey !== locKey) return;
+      activeEntry = entry;
+      document.getElementById("textNote").value = activeEntry.note || "";
+      refreshMoodRow(); refreshPhotoStrip(); refreshVoiceList(); refreshMomentPreview(); refreshVideoList();
+      loadDayAdditions(entry);
+
+      var todayStr = keyFor(today.getFullYear(), today.getMonth(), today.getDate());
+      if (entry.weather && locKey !== todayStr) {
+        displaySavedWeather(document.getElementById('weatherContent'), entry.weather, locKey);
+      } else {
+        getLocation().then(function(loc) {
+          if (activeKey !== locKey) return;
+          if (!loc) { document.getElementById('weatherContent').innerHTML = '<div class="weather-error">Allow location access to see weather.</div>'; return; }
+          fetchWeather(locKey, loc.lat, loc.lon);
+        });
+      }
+    });
+  }
+
+  function closePanel() {
+    backdrop.classList.remove("open"); panel.classList.remove("open"); panel.setAttribute("aria-hidden", "true");
+  }
+  document.getElementById("closePanel").addEventListener("click", closePanel);
+  backdrop.addEventListener("click", closePanel);
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      if (reelOverlay.classList.contains("open")) closeReel();
+      else if (panel.classList.contains("open")) closePanel();
+    }
+  });
+
+  var noteDebounce = null;
+  document.getElementById("textNote").addEventListener("input", function(e) {
+    if (!activeEntry) return;
+    var key = activeEntry.date;
+    activeEntry.note = e.target.value;
+    clearTimeout(noteDebounce);
+    noteDebounce = setTimeout(function() {
+      ensureEntryRow(activeEntry).then(function(id) {
+        return supabase.from("entries").update({ note: activeEntry.note }).eq("id", id);
+      }).then(function(res) {
+        if (res && res.error) { showToast("Couldn't save note — try again."); return; }
+        touchCalendarIndex(key, { id: activeEntry.id, note: activeEntry.note });
+      });
+    }, 400);
+  });
+
+  // ---------- Photos ----------
+  var photoStrip = document.getElementById("photoStrip");
+  var photoInput = document.getElementById("photoInput");
+
+  function refreshPhotoStrip() {
+    if (!activeEntry) return;
+    photoStrip.innerHTML = "";
+    var label = document.querySelector('[data-photo-count]');
+    if (label) label.textContent = activeEntry.photos.length + " / " + MAX_PHOTOS_PER_DAY;
+    activeEntry.photos.forEach(function(item, idx) {
+      var tile = document.createElement("div"); tile.className = "thumb-tile";
+      var img = document.createElement("img"); img.src = item.url || ""; img.alt = "Photo from " + activeKey;
+      tile.appendChild(img);
+      var rm = document.createElement("button"); rm.className = "remove"; rm.setAttribute("aria-label", "Remove photo"); rm.textContent = "✕";
+      rm.addEventListener("click", function(ev) {
+        ev.stopPropagation();
+        activeEntry.photos.splice(idx, 1); refreshPhotoStrip();
+        deleteMedia(item).then(function() {
+          touchCalendarIndex(activeKey, { count: activeEntry.photos.length, coverUrl: activeEntry.photos[0] ? activeEntry.photos[0].url : null });
+        }).catch(function() { showToast("Couldn't delete that photo — try again."); });
+      });
+      tile.appendChild(rm); photoStrip.appendChild(tile);
+    });
+    if (activeEntry.photos.length < MAX_PHOTOS_PER_DAY) {
+      var addTile = document.createElement("button"); addTile.className = "add-tile";
+      addTile.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Add photo</span>';
+      addTile.addEventListener("click", function() { photoInput.click(); });
+      photoStrip.appendChild(addTile);
+    }
+  }
+
+  photoInput.addEventListener("change", function(e) {
+    var files = Array.prototype.slice.call(e.target.files || []);
+    var room = MAX_PHOTOS_PER_DAY - (activeEntry ? activeEntry.photos.length : 0);
+    if (files.length > room) {
+      showToast(room <= 0 ? "This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day." : "Only room for " + room + " more today (" + MAX_PHOTOS_PER_DAY + " max) — adding the first " + room + ".");
+      files = files.slice(0, Math.max(0, room));
+    }
+    files.forEach(function(file) { compressAndStore(file); });
+    photoInput.value = "";
+  });
+
+  function compressAndStore(file) {
+    if (!activeEntry) return;
+    if (activeEntry.photos.length >= MAX_PHOTOS_PER_DAY) { showToast("This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day."); return; }
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() {
+        var maxW = 900, scale = Math.min(1, maxW / img.width);
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+        var ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function(blob) {
+          if (!blob) { showToast("Couldn't process that image."); return; }
+          if (activeEntry.photos.length >= MAX_PHOTOS_PER_DAY) { showToast("This day already has " + MAX_PHOTOS_PER_DAY + " photos — the max per day."); return; }
+          var entry = activeEntry, position = entry.photos.length;
+          uploadMedia(entry, "photo", blob, "image/jpeg", { position: position }).then(function(item) {
+            if (activeEntry !== entry) return;
+            entry.photos.push(item); refreshPhotoStrip();
+            touchCalendarIndex(entry.date, { id: entry.id, count: entry.photos.length, coverUrl: entry.photos[0] ? entry.photos[0].url : null });
+          }).catch(function() {});
+        }, "image/jpeg", 0.75);
+      };
+      img.onerror = function() { showToast("Couldn't read that image."); };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ---------- Moments ----------
+  var momentPreview = document.getElementById("momentPreview");
+  var captureBtn = document.getElementById("captureMoment");
+
+  function refreshMomentPreview() {
+    momentPreview.innerHTML = "";
+    var pair = activeEntry ? activeEntry.moments : null;
+    if (!pair) return;
+    ["front","back"].forEach(function(side) {
+      if (!pair[side]) return;
+      var tile = document.createElement("div"); tile.className = "thumb-tile";
+      var img = document.createElement("img"); img.src = pair[side].url || "";
+      tile.appendChild(img);
+      var tag = document.createElement("span"); tag.className = "tag"; tag.textContent = side;
+      tile.appendChild(tag); momentPreview.appendChild(tile);
+    });
+  }
+
+  captureBtn.addEventListener("click", function() { captureFacing("user", "front"); });
+
+  function saveMoment(entry, side, blob) {
+    var kind = side === "front" ? "moment_front" : "moment_back";
+    var existing = entry.moments[side];
+    var afterDelete = existing ? deleteMedia(existing) : Promise.resolve();
+    return afterDelete.then(function() { return uploadMedia(entry, kind, blob, "image/jpeg", {}); })
+      .then(function(item) { if (activeEntry === entry) { entry.moments[side] = item; refreshMomentPreview(); } });
+  }
+
+  function captureFacing(facingMode, label) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Camera isn't available in this preview."); return; }
+    captureBtn.disabled = true;
+    var entry = activeEntry;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } })
+      .then(function(stream) {
+        var video = document.createElement("video"); video.srcObject = stream; video.playsInline = true; video.muted = true; video.play();
+        video.addEventListener("loadeddata", function() {
+          setTimeout(function() {
+            var canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth || 480; canvas.height = video.videoHeight || 360;
+            var ctx = canvas.getContext("2d"); ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            stream.getTracks().forEach(function(t) { t.stop(); });
+            canvas.toBlob(function(blob) {
+              if (!blob || !entry) return;
+              saveMoment(entry, label, blob).catch(function() { showToast("Couldn't save that moment — try again."); });
+            }, "image/jpeg", 0.8);
+            if (label === "front") { showToast("Front captured — trying the back camera…"); captureFacing("environment", "back"); }
+            else { captureBtn.disabled = false; showToast("Moment saved."); }
+          }, 260);
+        });
+      })
+      .catch(function() {
+        captureBtn.disabled = false;
+        if (label === "back") showToast("Only a front-facing camera is available here — front shot saved.");
+        else showToast("Camera access was declined or isn't available.");
+      });
+  }
+
+  // ---------- Video recording ----------
+  var videoList = document.getElementById("videoList");
+  var recordVideoBtn = document.getElementById("recordVideo");
+  var videoRecordLabel = document.getElementById("videoRecordLabel");
+  var videoRecorder = null;
+  var lockCutVideo = false;
+  var lockCutAudio = false;
+  var wakeLock = null;
+
+  function requestWakeLock() {
+    if (!("wakeLock" in navigator)) return;
+    navigator.wakeLock.request("screen").then(function(lock) { wakeLock = lock; }).catch(function() {});
+  }
+  function releaseWakeLock() { if (wakeLock) { wakeLock.release().catch(function() {}); wakeLock = null; } }
+  function anyRecordingActive() {
+    return (mediaRecorder && mediaRecorder.state === "recording") || (videoRecorder && videoRecorder.state === "recording");
+  }
+  document.addEventListener("visibilitychange", function() {
+    if (!document.hidden && anyRecordingActive()) requestWakeLock();
+  });
+
+  var videoChunks = [], videoStream = null, videoStart = 0, videoTimer = null;
+
+  function fmtDuration(secs) { var m = Math.floor(secs / 60), s = secs % 60; return m + ":" + pad(s); }
+
+  function pickVideoMimeType() {
+    var candidates = ["video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+    if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return "";
+    for (var i = 0; i < candidates.length; i++) { if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i]; }
+    return "";
+  }
+
+  function refreshVideoList() {
+    videoList.innerHTML = "";
+    var list = activeEntry ? activeEntry.videos : [];
+    if (!list || list.length === 0) return;
+    list.forEach(function(clip, idx) {
+      var item = document.createElement("div"); item.className = "video-item";
+      var video = document.createElement("video"); video.controls = true; video.playsInline = true; video.preload = "metadata"; video.src = clip.url || "";
+      video.addEventListener("error", function() { showToast("This clip didn't load correctly — try reopening the day."); });
+      item.appendChild(video);
+      var meta = document.createElement("div"); meta.className = "video-meta";
+      var dur = document.createElement("span"); dur.className = "mono"; dur.textContent = clip.duration; meta.appendChild(dur);
+      var del = document.createElement("button"); del.className = "del"; del.setAttribute("aria-label", "Delete recording"); del.textContent = "✕ remove";
+      del.addEventListener("click", function() {
+        list.splice(idx, 1); refreshVideoList();
+        deleteMedia(clip).catch(function() { showToast("Couldn't delete that clip — try again."); });
+      });
+      meta.appendChild(del); item.appendChild(meta); videoList.appendChild(item);
+    });
+  }
+
+  recordVideoBtn.addEventListener("click", function() {
+    if (videoRecorder && videoRecorder.state === "recording") { videoRecorder.stop(); return; }
+    startVideoRecording();
+  });
+
+  function startVideoRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Camera and mic aren't available in this preview."); return; }
+    if (!activeEntry) { showToast("Open a day first."); return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true })
+      .then(function(stream) {
+        videoStream = stream; videoChunks = [];
+        var mimeType = pickVideoMimeType();
+        try { videoRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream); }
+        catch(e) { showToast("This browser can't record video — try Chrome, Edge, or Safari 14.3+."); videoStream.getTracks().forEach(function(t) { t.stop(); }); return; }
+        var entry = activeEntry;
+        videoRecorder.ondataavailable = function(e) { if (e.data.size > 0) videoChunks.push(e.data); };
+        videoRecorder.onstop = function() {
+          videoStream.getTracks().forEach(function(t) { t.stop(); });
+          recordVideoBtn.classList.remove("recording"); videoRecordLabel.textContent = "Saving…"; recordVideoBtn.disabled = true;
+          clearInterval(videoTimer);
+          var wasLockCut = lockCutVideo; lockCutVideo = false;
+          if (!anyRecordingActive()) releaseWakeLock();
+          var finish = function() { recordVideoBtn.disabled = false; videoRecordLabel.textContent = "Start recording"; };
+          if (videoChunks.length === 0) { showToast(wasLockCut ? "Screen locked before anything was captured — nothing to save." : "That recording came out empty — try again."); finish(); return; }
+          var blob = new Blob(videoChunks, { type: (videoRecorder && videoRecorder.mimeType) || mimeType || "video/webm" });
+          var secs = Math.max(1, Math.round((Date.now() - videoStart) / 1000));
+          var duration = fmtDuration(secs);
+          uploadMedia(entry, "video", blob, blob.type || "video/webm", { duration: duration }).then(function(item) {
+            item.duration = duration;
+            if (activeEntry === entry) { entry.videos.push(item); refreshVideoList(); }
+            if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
+            else showToast("Video saved.");
+          }).catch(function() { showToast("Recording captured, but the save failed — try again."); }).then(finish);
+        };
+        videoRecorder.start(); requestWakeLock(); videoStart = Date.now();
+        recordVideoBtn.classList.add("recording");
+        videoTimer = setInterval(function() { var secs = Math.round((Date.now() - videoStart) / 1000); videoRecordLabel.textContent = "Recording… " + fmtDuration(secs); }, 500);
+        showToast("Recording — press Stop whenever you're done.");
+      })
+      .catch(function() { showToast("Camera/mic access was declined or isn't available."); });
+  }
+
+  function stopVideoRecordingIfActive() { if (videoRecorder && videoRecorder.state === "recording") videoRecorder.stop(); }
+
+  // ---------- Voice notes ----------
+  var voiceList = document.getElementById("voiceList");
+  var recordBtn = document.getElementById("recordVoice");
+  var recordLabel = document.getElementById("recordLabel");
+  var mediaRecorder = null, recordChunks = [], recordStream = null, recordStart = 0, recordTimer = null;
+
+  function refreshVoiceList() {
+    voiceList.innerHTML = "";
+    var list = activeEntry ? activeEntry.voices : [];
+    if (!list || list.length === 0) {
+      var empty = document.createElement("div"); empty.className = "empty-note";
+      empty.textContent = "No voice notes yet — record one to hear this day back later."; voiceList.appendChild(empty); return;
+    }
+    list.forEach(function(note, idx) {
+      var row = document.createElement("div"); row.className = "voice-item";
+      var audio = document.createElement("audio");
+      audio.controls = true;
+      audio.preload = "metadata";
+      audio.src = note.url || "";
+      audio.setAttribute("aria-label", "Voice note playback");
+      audio.onerror = function() { showToast("Couldn't load that voice note — try again."); };
+      row.appendChild(audio);
+      var del = document.createElement("button"); del.className = "del"; del.setAttribute("aria-label", "Delete voice note"); del.textContent = "✕";
+      del.addEventListener("click", function() { list.splice(idx, 1); refreshVoiceList(); deleteMedia(note).catch(function() { showToast("Couldn't delete that voice note — try again."); }); });
+      row.appendChild(del); voiceList.appendChild(row);
+    });
+  }
+
+  recordBtn.addEventListener("click", function() {
+    if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); return; }
+    startRecording();
+  });
+
+  function startRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Microphone isn't available in this preview."); return; }
+    if (!activeEntry) { showToast("Open a day first."); return; }
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(function(stream) {
+        recordStream = stream; recordChunks = [];
+        var audioMime = "";
+        if (window.MediaRecorder && MediaRecorder.isTypeSupported) {
+          ["audio/mp4","audio/webm;codecs=opus","audio/webm"].some(function(t) { if (MediaRecorder.isTypeSupported(t)) { audioMime = t; return true; } return false; });
+        }
+        mediaRecorder = audioMime ? new MediaRecorder(stream, { mimeType: audioMime }) : new MediaRecorder(stream);
+        var entry = activeEntry;
+        mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) recordChunks.push(e.data); };
+        mediaRecorder.onstop = function() {
+          recordStream.getTracks().forEach(function(t) { t.stop(); });
+          recordBtn.classList.remove("recording"); recordBtn.disabled = true; recordLabel.textContent = "Saving…";
+          clearInterval(recordTimer);
+          var wasLockCut = lockCutAudio; lockCutAudio = false;
+          if (!anyRecordingActive()) releaseWakeLock();
+          var finish = function() { recordBtn.disabled = false; recordLabel.textContent = "Record a voice note"; };
+          if (recordChunks.length === 0) { if (wasLockCut) showToast("Screen locked before anything was captured — nothing to save."); finish(); return; }
+          var blob = new Blob(recordChunks, { type: (mediaRecorder && mediaRecorder.mimeType) || audioMime || "audio/webm" });
+          var secs = Math.max(1, Math.round((Date.now() - recordStart) / 1000));
+          var duration = fmtDuration(secs), seed = 1 + Math.random() * 2;
+          uploadMedia(entry, "voice", blob, blob.type || "audio/webm", { duration: duration, seed: seed }).then(function(item) {
+            item.duration = duration; item.seed = seed;
+            if (activeEntry === entry) { entry.voices.push(item); refreshVoiceList(); }
+            if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
+          }).catch(function() { showToast("Recording captured, but the save failed — try again."); }).then(finish);
+        };
+        mediaRecorder.start(); requestWakeLock(); recordStart = Date.now();
+        recordBtn.classList.add("recording");
+        recordTimer = setInterval(function() { var secs = Math.round((Date.now() - recordStart) / 1000); recordLabel.textContent = "Recording… " + fmtDuration(secs); }, 300);
+      })
+      .catch(function() { showToast("Microphone access was declined or isn't available."); });
+  }
+
+  function stopRecordingIfActive() { if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); }
+
+  // ---------- Reel ----------
+  var reelOverlay = document.getElementById("reelOverlay");
+  var reelBg = document.getElementById("reelBg");
+  var reelDate = document.getElementById("reelDate");
+  var reelMood = document.getElementById("reelMood");
+  var reelNote = document.getElementById("reelNote");
+  var reelCaption = document.getElementById("reelCaption");
+  var reelProgress = document.getElementById("reelProgress");
+  var reelTimer = null, reelStep = 0, reelPhotos = [];
+
+  document.getElementById("playReel").addEventListener("click", function() {
+    if (!activeEntry) return;
+    reelPhotos = activeEntry.photos.length ? activeEntry.photos.map(function(p) { return p.url; }) : [null];
+    reelStep = 0;
+    reelDate.textContent = document.getElementById("panelDate").textContent;
+    reelMood.textContent = activeEntry.mood ? moodMap[activeEntry.mood].label : "No mood set";
+    reelNote.textContent = activeEntry.note || "";
+    var voiceCount = activeEntry.voices.length;
+    reelCaption.textContent = voiceCount ? voiceCount + " voice note" + (voiceCount > 1 ? "s" : "") + " from this day" : "";
+    var moodVar = activeEntry.mood ? "var(" + moodMap[activeEntry.mood].var + ")" : "var(--mood-neutral)";
+    reelBg.style.setProperty("--mood-c", moodVar);
+    reelProgress.innerHTML = "";
+    reelPhotos.forEach(function() { var s = document.createElement("span"); s.innerHTML = "<i></i>"; reelProgress.appendChild(s); });
+    reelOverlay.classList.add("open"); showReelStep(0);
+  });
+
+  function showReelStep(i) {
+    clearTimeout(reelTimer);
+    if (i >= reelPhotos.length) i = 0;
+    reelStep = i;
+    var src = reelPhotos[i];
+    if (src) { reelBg.style.backgroundImage = "url('" + src + "')"; reelBg.classList.remove("no-image"); }
+    else { reelBg.style.backgroundImage = "none"; reelBg.classList.add("no-image"); }
+    Array.prototype.forEach.call(reelProgress.children, function(el, idx) {
+      el.classList.toggle("done", idx < i); el.classList.toggle("active", idx === i);
+      var bar = el.querySelector("i"); bar.style.transition = "none"; bar.style.width = idx < i ? "100%" : "0%";
+      if (idx === i) { void bar.offsetWidth; bar.style.transition = "width 3.4s linear"; bar.style.width = "100%"; }
+    });
+    reelTimer = setTimeout(function() { showReelStep(i + 1); }, 3500);
+  }
+
+  function closeReel() { clearTimeout(reelTimer); reelOverlay.classList.remove("open"); }
+  document.getElementById("closeReel").addEventListener("click", closeReel);
+  document.getElementById("closeReelBottom").addEventListener("click", closeReel);
+
+  // ---------- Email this day ----------
+  document.getElementById("emailDay").addEventListener("click", function() {
+    if (!activeEntry) return;
+    var dateLabel = document.getElementById("panelDate").textContent;
+    var moodLabel = activeEntry.mood ? moodMap[activeEntry.mood].label : "no mood set";
+    var bodyLines = ["Mood: " + moodLabel, "", activeEntry.note || "(no notes written)", "", "— sent from I Remember"];
+    var subject = "I Remember — " + dateLabel, bodyText = bodyLines.join("\n");
+    var photosToShare = activeEntry.photos.slice(0, 10).filter(function(p) { return !!p.url; });
+    var withFiles = function() {
+      if (!photosToShare.length || !navigator.share || !navigator.canShare) return Promise.resolve([]);
+      return Promise.all(photosToShare.map(function(p, i) {
+        return fetch(p.url).then(function(r) { return r.blob(); }).then(function(blob) { return new File([blob], "photo-" + (i + 1) + ".jpg", { type: blob.type || "image/jpeg" }); });
+      })).catch(function() { return []; });
+    };
+    withFiles().then(function(photoFiles) {
+      if (navigator.share && navigator.canShare && photoFiles.length && navigator.canShare({ files: photoFiles })) {
+        navigator.share({ title: subject, text: bodyText, files: photoFiles }).catch(function(err) { if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet."); });
+      } else if (navigator.share) {
+        navigator.share({ title: subject, text: bodyText }).catch(function(err) { if (err && err.name !== "AbortError") showToast("Couldn't open the share sheet."); });
+      } else {
+        var mailto = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(bodyText);
+        window.location.href = mailto;
+        if (activeEntry.photos.length) showToast("Opening your mail app — attach photos yourself, email links can't include them automatically.");
+      }
+    });
+  });
+
+  // ---------- 2.0 additions ----------
+  var dayNotes = [], dayFolders = [], dayFiles = [], dayAlarms = [];
+  var selectedFolderId = null;
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>\"]/g, function(ch) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[ch]; });
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes) return "0 B";
+    var units = ["B","KB","MB","GB"], i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), 3);
+    return (bytes / Math.pow(1024, i)).toFixed(i ? 1 : 0) + " " + units[i];
+  }
+
+  function speakText(text) {
+    if (!("speechSynthesis" in window) || !text) { showToast("Read-aloud isn't available in this browser."); return; }
+    speechSynthesis.cancel();
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = document.getElementById("languageSelect").value || "en";
+    var voices = speechSynthesis.getVoices();
+    var match = voices.find(function(v) { return v.lang.toLowerCase().indexOf(utterance.lang.toLowerCase()) === 0; });
+    if (match) utterance.voice = match;
+    speechSynthesis.speak(utterance);
+  }
+
+  function additionsError(res) {
+    if (res && res.error) console.warn("I Remember addition:", res.error.message);
+    return res && res.error;
+  }
+
+  function loadDayAdditions(entry) {
+    dayNotes = []; dayFolders = []; dayFiles = [];
+    renderDayNotes(); renderFolders(); renderHoroscope();
+    if (!entry || !entry.id) return;
+    Promise.all([
+      supabase.from("daily_notes").select("id,body,created_at").eq("entry_id", entry.id).order("created_at", { ascending: false }),
+      supabase.from("daily_folders").select("id,name,created_at").eq("entry_id", entry.id).order("created_at", { ascending: true }),
+      supabase.from("daily_files").select("id,folder_id,file_name,mime_type,byte_size,page_count,storage_path,created_at").eq("entry_id", entry.id).order("created_at", { ascending: true })
+    ]).then(function(results) {
+      if (!activeEntry || activeEntry.id !== entry.id) return;
+      var missing = results.some(additionsError);
+      dayNotes = results[0].data || []; dayFolders = results[1].data || []; dayFiles = results[2].data || [];
+      renderDayNotes(); renderFolders();
+      if (missing) showToast("Run supabase-migration.sql once to enable the new saved features.");
+    });
+  }
+
+  function renderDayNotes() {
+    var root = document.getElementById("timestampedNotes");
+    document.getElementById("noteCount").textContent = dayNotes.length;
+    root.innerHTML = dayNotes.map(function(n) {
+      return '<div class="item-card"><div class="item-card-head"><div><div class="item-title">' + escapeHtml(n.body) + '</div><div class="item-meta">' + new Date(n.created_at).toLocaleString() + '</div></div><button class="mini-delete" data-delete-note="' + n.id + '">Delete</button></div></div>';
+    }).join("") || '<div class="empty-note">No separate notes yet. Your original Notes box is unchanged.</div>';
+  }
+
+  document.getElementById("addNoteButton").addEventListener("click", function() {
+    var input = document.getElementById("newNoteText"), body = input.value.trim();
+    if (!body || !activeEntry) return;
+    ensureEntryRow(activeEntry).then(function(entryId) { return supabase.from("daily_notes").insert({ user_id: currentUser.id, entry_id: entryId, body: body }).select("id,body,created_at").single(); }).then(function(res) {
+      if (additionsError(res)) { showToast("Couldn't save note. Run the migration if needed."); return; }
+      dayNotes.unshift(res.data); input.value = ""; renderDayNotes();
+    });
+  });
+
+  document.getElementById("timestampedNotes").addEventListener("click", function(e) {
+    var id = e.target.getAttribute("data-delete-note"); if (!id) return;
+    supabase.from("daily_notes").delete().eq("id", id).then(function(res) { if (!res.error) { dayNotes = dayNotes.filter(function(n) { return n.id !== id; }); renderDayNotes(); } });
+  });
+
+  function renderFolders() {
+    document.getElementById("folderCount").textContent = dayFolders.length + " / 10";
+    var root = document.getElementById("folderList");
+    root.innerHTML = dayFolders.map(function(folder) {
+      var files = dayFiles.filter(function(f) { return f.folder_id === folder.id; });
+      var fileHtml = files.map(function(f) { return '<div class="file-row"><span>' + escapeHtml(f.file_name) + ' · ' + formatBytes(f.byte_size) + (f.page_count ? ' · ' + f.page_count + ' pages' : '') + '</span><span><button class="mini-delete" data-open-file="' + f.id + '">Open</button><button class="mini-delete" data-delete-file="' + f.id + '">Delete</button></span></div>'; }).join("");
+      return '<div class="item-card"><div class="item-card-head"><div><div class="item-title">📁 ' + escapeHtml(folder.name) + '</div><div class="item-meta">' + files.length + ' / 50 files</div></div><span><button class="mini-delete" data-upload-folder="' + folder.id + '">Upload</button><button class="mini-delete" data-delete-folder="' + folder.id + '">Delete</button></span></div><div class="folder-files">' + fileHtml + '</div></div>';
+    }).join("") || '<div class="empty-note">No folders for this day.</div>';
+  }
+
+  document.getElementById("addFolderButton").addEventListener("click", function() {
+    var input = document.getElementById("newFolderName"), name = input.value.trim();
+    if (!name || !activeEntry) return;
+    if (dayFolders.length >= 10) { showToast("This day already has 10 folders."); return; }
+    ensureEntryRow(activeEntry).then(function(entryId) { return supabase.from("daily_folders").insert({ user_id: currentUser.id, entry_id: entryId, name: name }).select("id,name,created_at").single(); }).then(function(res) {
+      if (additionsError(res)) { showToast("Couldn't create folder. Run the migration if needed."); return; }
+      dayFolders.push(res.data); input.value = ""; renderFolders();
+    });
+  });
+
+  document.getElementById("folderList").addEventListener("click", function(e) {
+    var folderId = e.target.getAttribute("data-upload-folder");
+    if (folderId) { selectedFolderId = folderId; document.getElementById("documentInput").click(); return; }
+    var fileId = e.target.getAttribute("data-open-file");
+    if (fileId) { var f = dayFiles.find(function(x) { return x.id === fileId; }); if (f) supabase.storage.from("documents").createSignedUrl(f.storage_path, 300).then(function(r) { if (r.data) window.open(r.data.signedUrl, "_blank", "noopener"); }); return; }
+    fileId = e.target.getAttribute("data-delete-file");
+    if (fileId) { var old = dayFiles.find(function(x) { return x.id === fileId; }); if (!old) return; supabase.storage.from("documents").remove([old.storage_path]).then(function() { return supabase.from("daily_files").delete().eq("id", fileId); }).then(function(res) { if (!res.error) { dayFiles = dayFiles.filter(function(x) { return x.id !== fileId; }); renderFolders(); } }); return; }
+    folderId = e.target.getAttribute("data-delete-folder");
+    if (folderId) { var paths = dayFiles.filter(function(x) { return x.folder_id === folderId; }).map(function(x) { return x.storage_path; }); var remove = paths.length ? supabase.storage.from("documents").remove(paths) : Promise.resolve(); remove.then(function() { return supabase.from("daily_folders").delete().eq("id", folderId); }).then(function(res) { if (!res.error) { dayFolders = dayFolders.filter(function(x) { return x.id !== folderId; }); dayFiles = dayFiles.filter(function(x) { return x.folder_id !== folderId; }); renderFolders(); } }); }
+  });
+
+  document.getElementById("documentInput").addEventListener("change", async function(e) {
+    var folderId = selectedFolderId, folderFiles = dayFiles.filter(function(x) { return x.folder_id === folderId; });
+    var files = Array.prototype.slice.call(e.target.files || []).slice(0, Math.max(0, 50 - folderFiles.length)); e.target.value = "";
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      if (file.size > 25 * 1024 * 1024) { showToast(file.name + " is over the 25 MB limit."); continue; }
+      var pages = null;
+      if (file.type === "application/pdf" && file.size < 8 * 1024 * 1024) { try { var txt = new TextDecoder("latin1").decode(await file.arrayBuffer()); pages = (txt.match(/\/Type\s*\/Page\b/g) || []).length || null; } catch(ignore) {} }
+      var path = currentUser.id + "/" + activeEntry.date + "/" + folderId + "/" + newId() + "-" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      var uploaded = await supabase.storage.from("documents").upload(path, file, { contentType: file.type || "application/octet-stream" });
+      if (uploaded.error) { showToast("Upload failed for " + file.name); continue; }
+      var inserted = await supabase.from("daily_files").insert({ user_id: currentUser.id, entry_id: activeEntry.id, folder_id: folderId, file_name: file.name, mime_type: file.type, byte_size: file.size, page_count: pages, storage_path: path }).select().single();
+      if (!inserted.error) dayFiles.push(inserted.data);
+    }
+    renderFolders();
+  });
+
+  var alarmEntry = null;
+  function renderAlarms() {
+    var dateLabel = document.getElementById("alarmDate").value || "selected day";
+    document.getElementById("alarmList").innerHTML = dayAlarms.map(function(a) { return '<div class="item-card"><div class="item-card-head"><div><div class="item-title">⏰ ' + escapeHtml(a.label) + '</div><div class="item-meta">' + escapeHtml(dateLabel) + ' at ' + escapeHtml(a.event_time.slice(0,5)) + ' · sounds and speaks 10 minutes before</div></div><button class="mini-delete" data-delete-alarm="' + a.id + '">Delete</button></div></div>'; }).join("") || '<div class="empty-note">No alarms for this date.</div>';
+  }
+
+  function loadAlarmDate(dateKey) {
+    if (!currentUser || !dateKey) return;
+    loadEntry(dateKey).then(function(entry) {
+      alarmEntry = entry;
+      if (!entry.id) { dayAlarms = []; renderAlarms(); return; }
+      return supabase.from("alarms").select("id,event_time,label,enabled,last_fired_at").eq("entry_id", entry.id).order("event_time", { ascending: true }).then(function(res) { dayAlarms = res.data || []; renderAlarms(); });
+    });
+  }
+
+  document.getElementById("addAlarmButton").addEventListener("click", function() {
+    var dateKey = document.getElementById("alarmDate").value, time = document.getElementById("alarmTime").value, label = document.getElementById("alarmLabel").value.trim();
+    if (!dateKey || !time || !label || !currentUser) { showToast("Choose a date, time, and alarm label."); return; }
+    var ready = alarmEntry && alarmEntry.date === dateKey ? Promise.resolve(alarmEntry) : loadEntry(dateKey);
+    ready.then(function(entry) { alarmEntry = entry; return ensureEntryRow(entry); }).then(function(entryId) { return supabase.from("alarms").insert({ user_id: currentUser.id, entry_id: entryId, event_time: time + ":00", label: label }).select().single(); }).then(function(res) { if (additionsError(res)) { showToast("Couldn't set alarm. Check the migration and permissions."); return; } dayAlarms.push(res.data); renderAlarms(); document.getElementById("alarmLabel").value = ""; showToast("Alarm set for 10 minutes before " + time + "."); });
+  });
+  document.getElementById("alarmList").addEventListener("click", function(e) { var id = e.target.getAttribute("data-delete-alarm"); if (!id) return; supabase.from("alarms").delete().eq("id", id).then(function(res) { if (!res.error) { dayAlarms = dayAlarms.filter(function(a) { return a.id !== id; }); renderAlarms(); } }); });
+
+  function checkCustomAlarms() {
+    if (!currentUser) return;
+    var now = new Date(), alertAt = new Date(now.getTime() + 10 * 60000), dateKey = keyFor(alertAt.getFullYear(), alertAt.getMonth(), alertAt.getDate()), hhmm = pad(alertAt.getHours()) + ":" + pad(alertAt.getMinutes());
+    supabase.from("entries").select("id").eq("entry_date", dateKey).maybeSingle().then(function(entryRes) {
+      if (!entryRes.data) return { data: [] };
+      return supabase.from("alarms").select("id,label,event_time,last_fired_at").eq("entry_id", entryRes.data.id).eq("enabled", true).gte("event_time", hhmm + ":00").lte("event_time", hhmm + ":59");
+    }).then(function(res) {
+      (res && res.data || []).forEach(function(a) { var last = a.last_fired_at ? new Date(a.last_fired_at) : null; if (last && Date.now() - last.getTime() < 20 * 3600000) return; playAdhanSound(); speakText(a.label + " is coming up in 10 minutes."); showToast(a.label + " is coming up in 10 minutes"); supabase.from("alarms").update({ last_fired_at: new Date().toISOString() }).eq("id", a.id); });
+    });
+  }
+  setInterval(checkCustomAlarms, 30000);
+
+  var memorySearchTimer = null;
+  document.getElementById("memorySearch").addEventListener("input", function(e) {
+    clearTimeout(memorySearchTimer); var q = e.target.value.trim().toLowerCase(), root = document.getElementById("memorySearchResults");
+    if (!q) { root.hidden = true; return; }
+    memorySearchTimer = setTimeout(function() {
+      Promise.all([supabase.from("entries").select("id,entry_date,mood,note"), supabase.from("daily_notes").select("entry_id,body"), supabase.from("daily_folders").select("entry_id,name")]).then(function(all) {
+        var notes = all[1].data || [], folders = all[2].data || [];
+        var hits = (all[0].data || []).map(function(entry) { var extras = notes.filter(function(n) { return n.entry_id === entry.id; }).map(function(n) { return n.body; }).concat(folders.filter(function(f) { return f.entry_id === entry.id; }).map(function(f) { return f.name; })); var hay = [entry.entry_date, entry.mood, entry.note].concat(extras).join(" ").toLowerCase(); return { entry: entry, extras: extras, match: hay.indexOf(q) >= 0 }; }).filter(function(x) { return x.match; }).slice(0, 12);
+        root.innerHTML = hits.map(function(hit) { var e = hit.entry, summary = [e.mood ? "Mood: " + e.mood + "." : "", e.note || "", hit.extras.slice(0,2).join(" · ")].filter(Boolean).join(" ").slice(0,240) || "Saved memory for this day."; return '<div class="search-result"><div class="search-result-title">' + new Date(e.entry_date + 'T12:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}) + '</div><div class="search-result-summary">' + escapeHtml(summary) + '</div><div class="inline-actions"><button class="action-btn" data-open-day="' + e.entry_date + '">Open day</button><button class="action-btn" data-read-summary="' + encodeURIComponent(summary) + '">🔊 Read</button></div></div>'; }).join("") || '<div class="search-result">No matching saved days.</div>';
+        root.hidden = false;
+      });
+    }, 180);
+  });
+  document.getElementById("memorySearchResults").addEventListener("click", function(e) { var day = e.target.getAttribute("data-open-day"); if (day) { var p = day.split("-").map(Number); viewYear = p[0]; viewMonth = p[1]-1; renderCalendar(); openPanel(day); this.hidden = true; } var text = e.target.getAttribute("data-read-summary"); if (text) speakText(decodeURIComponent(text)); });
+
+  document.getElementById("backgroundButton").addEventListener("click", function() { document.getElementById("backgroundInput").click(); });
+  document.getElementById("backgroundInput").addEventListener("change", function(e) {
+    var file=e.target.files[0]; e.target.value=""; if(!file)return;
+    if(!file.type.match(/^image\//)){showToast("Choose a JPG, PNG, WEBP, or other browser-supported image.");return;}
+    if(file.size>30*1024*1024){showToast("Choose a background under 30 MB.");return;}
+    var objectUrl=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){
+      try{
+        var max=1920,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),canvas=document.createElement("canvas");
+        canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+        var data=canvas.toDataURL("image/jpeg",.82);
+        localStorage.setItem("iremember-background",data);applyBackground(data);showToast("Background saved.");
+      }catch(err){showToast("This picture is too large to save. Try a JPG or PNG screenshot.");}
+      URL.revokeObjectURL(objectUrl);
+    };
+    img.onerror=function(){URL.revokeObjectURL(objectUrl);showToast("This picture format isn't supported. Convert it to JPG or PNG.");};
+    img.src=objectUrl;
+  });
+  function applyBackground(data) { document.body.style.setProperty("--custom-background", data ? 'url("' + data + '")' : "none"); }
+  applyBackground(localStorage.getItem("iremember-background"));
+
+  document.getElementById("visibilitySwitch").addEventListener("click", function() { var hidden = document.body.classList.toggle("background-only"); this.textContent = hidden ? "🌙" : "☀️"; this.setAttribute("aria-label", hidden ? "Show all controls" : "Show background only"); });
+  function setToolsButtonLabel(isOpen) {
+    var lang = document.getElementById("languageSelect").value;
+    var label = (TRANSLATIONS[lang] && TRANSLATIONS[lang].Tools) || "Tools";
+    document.getElementById("toolsButton").textContent = label + (isOpen ? " ▾" : " ▸");
+  }
+  function showTools() {
+    var launcher = document.getElementById("toolLauncher"), willShow = launcher.hidden;
+    launcher.hidden = !willShow;
+    document.getElementById("toolsButton").setAttribute("aria-expanded", String(willShow));
+    setToolsButtonLabel(willShow);
+  }
+  document.getElementById("toolsButton").addEventListener("click", showTools);
+  document.getElementById("toolLauncher").addEventListener("click", function(e) {
+    var id = e.target.getAttribute("data-open-tool"); if (!id) return;
+    document.getElementById(id).hidden = false;
+    if (id === "alarmModal") loadAlarmDate(document.getElementById("alarmDate").value);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-close-tool]"), function(btn) { btn.addEventListener("click", function() { btn.closest(".tool-modal").hidden = true; }); });
+  Array.prototype.forEach.call(document.querySelectorAll(".tool-modal"), function(modal) { modal.addEventListener("click", function(e) { if (e.target === modal) modal.hidden = true; }); });
+  document.addEventListener("keydown", function(e) { if (e.key === "Escape") Array.prototype.forEach.call(document.querySelectorAll(".tool-modal"), function(m) { m.hidden = true; }); });
+  var alarmToday = new Date(); document.getElementById("alarmDate").value = keyFor(alarmToday.getFullYear(), alarmToday.getMonth(), alarmToday.getDate());
+  document.getElementById("alarmDate").addEventListener("change", function() { loadAlarmDate(this.value); });
+  document.getElementById("testAlarmButton").addEventListener("click", function() { var label = document.getElementById("alarmLabel").value.trim() || "Your test alarm"; playAdhanSound(); speakText(label + " is coming up in 10 minutes."); });
+
+  var TRANSLATIONS = { es:{"Sign out":"Salir","Tools":"Herramientas","Weather":"Clima","Prayer times":"Horas de oración"}, fr:{"Sign out":"Déconnexion","Tools":"Outils","Weather":"Météo","Prayer times":"Heures de prière"}, ar:{"Sign out":"تسجيل الخروج","Tools":"أدوات","Weather":"الطقس","Prayer times":"مواقيت الصلاة"}, ur:{"Sign out":"سائن آؤٹ","Tools":"اوزار","Weather":"موسم","Prayer times":"نماز کے اوقات"} };
+  document.getElementById("languageSelect").addEventListener("change", function() { var lang = this.value; localStorage.setItem("iremember-language", lang); document.documentElement.lang = lang; document.documentElement.dir = (lang === "ar" || lang === "ur") ? "rtl" : "ltr"; var d = TRANSLATIONS[lang] || {}; document.getElementById("signOutBtn").textContent = d["Sign out"] || "Sign out"; setToolsButtonLabel(!document.getElementById("toolLauncher").hidden); showToast("Language preference saved. Full dynamic translation requires a translation service."); });
+  var savedLanguage = localStorage.getItem("iremember-language"); if (savedLanguage) { document.getElementById("languageSelect").value = savedLanguage; document.getElementById("languageSelect").dispatchEvent(new Event("change")); }
+
+  document.getElementById("calculateButton").addEventListener("click", function() {
+    var mode=document.getElementById("calcMode").value,l=parseFloat(document.getElementById("calcLength").value)||0,w=parseFloat(document.getElementById("calcWidth").value)||0,d=parseFloat(document.getElementById("calcDepth").value)||0,waste=parseFloat(document.getElementById("calcWaste").value)||0,cost=parseFloat(document.getElementById("calcCost").value)||0,mult=1+waste/100,area=l*w,qty=0,unit="",detail="";
+    if (!l || !w) { document.getElementById("calcResult").textContent="Enter both length and width/height."; return; }
+    if(mode==="concrete"){if(!d){document.getElementById("calcResult").textContent="Enter concrete depth in inches.";return;}qty=area*(d/12)/27*mult;unit="cubic yards";detail=Math.ceil(qty/0.022)+" approximate 80-lb bags";}
+    else if(mode==="paint"){qty=area/350*mult;unit="gallons per coat";detail=Math.ceil(qty)+" whole gallons";}
+    else if(mode==="drywall"){qty=area/32*mult;unit="4×8 sheets";detail=Math.ceil(qty)+" whole sheets";}
+    else if(mode==="roofing"){qty=area/100*3*mult;unit="bundles";detail=(area/100*mult).toFixed(2)+" roofing squares";}
+    else if(mode==="block"){qty=area/0.889*mult;unit="8×8×16 blocks";detail=Math.ceil(qty)+" whole blocks";}
+    else if(mode==="studs"){qty=(l*12/16+1)*mult;unit="studs";detail=Math.ceil(qty)+" studs at 16-inch centers";}
+    else if(mode==="gravel"){if(!d){document.getElementById("calcResult").textContent="Enter gravel depth in inches.";return;}qty=area*(d/12)/27*mult;unit="cubic yards";detail=(qty*1.4).toFixed(2)+" estimated tons";}
+    else{qty=area*mult;unit="square feet";detail=area.toFixed(2)+" measured sq ft";}
+    var total=cost?" Estimated material cost: $"+(qty*cost).toFixed(2)+".":""; document.getElementById("calcResult").textContent="Order "+qty.toFixed(2)+" "+unit+" (includes "+waste+"% waste). "+detail+"."+total;
+  });
+  document.getElementById("clearCalculator").addEventListener("click", function(){["calcLength","calcWidth","calcDepth","calcCost"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("calcWaste").value="10";document.getElementById("calcResult").textContent="Choose a task and enter measurements.";});
+
+  var horoscopeLines = ["Focus on one practical step; steady progress will matter more than speed.","A clear conversation can remove uncertainty today. Listen before deciding.","Make room for something restorative, then return to your priorities with fresh attention.","Notice the useful detail others miss. It may guide a better choice.","Protect your time and spend it on the relationship or task that matters most."];
+  function renderHoroscope() { var sign = document.getElementById("zodiacSign").value, date = activeKey || keyFor(today.getFullYear(),today.getMonth(),today.getDate()), seed = (sign + date).split("").reduce(function(a,c){return a+c.charCodeAt(0);},0); document.getElementById("horoscopeText").textContent = sign + " · " + date + ": " + horoscopeLines[seed % horoscopeLines.length]; }
+  document.getElementById("zodiacSign").addEventListener("change", renderHoroscope); document.getElementById("readHoroscope").addEventListener("click", function() { speakText(document.getElementById("horoscopeText").textContent); }); renderHoroscope();
+
+  var countrySelect = document.getElementById("radioCountry"), stationSelect = document.getElementById("radioStation"), radioPlayer = document.getElementById("radioPlayer");
+  var radioVolume=document.getElementById("radioVolume"),radioVolumeValue=document.getElementById("radioVolumeValue"); radioPlayer.volume=(parseInt(localStorage.getItem("iremember-radio-volume"),10)||70)/100; radioVolume.value=Math.round(radioPlayer.volume*100); radioVolumeValue.textContent=radioVolume.value+"%";
+  fetch("https://de1.api.radio-browser.info/json/countries?order=name&hidebroken=true").then(function(r){return r.json();}).then(function(rows){ rows.sort(function(a,b){return a.name.localeCompare(b.name,undefined,{sensitivity:"base"});}).forEach(function(c){ if(!c.iso_3166_1)return;var o=document.createElement("option");o.value=c.iso_3166_1;o.textContent=c.name+" ("+c.stationcount+")";countrySelect.appendChild(o);}); var saved=localStorage.getItem("iremember-radio-country");if(saved){countrySelect.value=saved;countrySelect.dispatchEvent(new Event("change"));} }).catch(function(){ document.getElementById("radioStatus").textContent="Radio directory is unavailable right now."; });
+  countrySelect.addEventListener("change", function(){ var selected=this.value;localStorage.setItem("iremember-radio-country",selected);stationSelect.innerHTML='<option value="">Loading stations…</option>'; fetch("https://de1.api.radio-browser.info/json/stations/bycountrycodeexact/"+encodeURIComponent(selected)+"?hidebroken=true&order=name&limit=300").then(function(r){return r.json();}).then(function(rows){ stationSelect.innerHTML='<option value="">Choose station</option>'; rows.filter(function(s){return s.url_resolved;}).sort(function(a,b){return a.name.localeCompare(b.name,undefined,{sensitivity:"base"});}).forEach(function(s){var o=document.createElement("option");o.value=s.url_resolved;o.textContent=s.name;stationSelect.appendChild(o);});var saved=localStorage.getItem("iremember-radio-station");if(saved)stationSelect.value=saved; }); });
+  stationSelect.addEventListener("change", function(){ if (!this.value) return; localStorage.setItem("iremember-radio-station",this.value);radioPlayer.src=this.value; radioPlayer.play().catch(function(){ document.getElementById("radioStatus").textContent="Press Play to start this station."; }); if ("mediaSession" in navigator) navigator.mediaSession.metadata = new MediaMetadata({title:this.options[this.selectedIndex].text,artist:countrySelect.options[countrySelect.selectedIndex].text,album:"I Remember Radio"}); });
+  radioVolume.addEventListener("input",function(){radioPlayer.muted=false;radioPlayer.volume=this.value/100;radioVolumeValue.textContent=this.value+"%";localStorage.setItem("iremember-radio-volume",this.value);document.getElementById("radioMute").textContent="Mute";});
+  document.getElementById("radioMute").addEventListener("click",function(){radioPlayer.muted=!radioPlayer.muted;this.textContent=radioPlayer.muted?"Unmute":"Mute";});
+
+  function refreshRecordingPill() { document.getElementById("recordingPill").classList.toggle("on", anyRecordingActive()); }
+  setInterval(refreshRecordingPill, 500);
+
+  // ---------- Toast ----------
+  var toast = document.getElementById("toast");
+  var toastTimer = null;
+  function showToast(msg) {
+    if (!toast) toast = document.getElementById("toast");
+    if (!toast) return;
+    toast.textContent = msg; toast.classList.add("show"); clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toast.classList.remove("show"); }, 2600);
+  }
+
+  // Desktop: keep recording in background — only stop on mobile
+  document.addEventListener("visibilitychange", function() {
+    if (document.hidden) {
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        if (mediaRecorder && mediaRecorder.state === "recording") lockCutAudio = true;
+        if (videoRecorder && videoRecorder.state === "recording") lockCutVideo = true;
+        stopRecordingIfActive(); stopVideoRecordingIfActive();
+      }
+    }
+  });
+
+  window.addEventListener("beforeunload", function(e) {
+    if (recordVideoBtn.disabled || recordBtn.disabled) { e.preventDefault(); e.returnValue = ""; }
+  });
+})();
+</script>
+</body>
+</html>
