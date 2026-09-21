@@ -137,11 +137,7 @@
   .video-item .del:hover { color: var(--mood-angry); }
   .voice-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
   .voice-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; background: var(--surface-raised); border: 1px solid var(--border-soft); }
-  .voice-item .play { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--accent); color: var(--accent-ink); cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
-  .voice-item .play svg { width: 12px; height: 12px; }
-  .voice-item .wave { flex: 1; display: flex; align-items: center; gap: 2px; height: 20px; }
-  .voice-item .wave span { width: 2.5px; background: var(--border); border-radius: 2px; }
-  .voice-item .dur { font-size: 0.72rem; color: var(--ink-faint); flex-shrink: 0; }
+  .voice-item audio { flex: 1; min-width: 0; height: 36px; }
   .voice-item .del { border: none; background: none; color: var(--ink-faint); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px; flex-shrink: 0; }
   .voice-item .del:hover { color: var(--mood-angry); }
   .empty-note { font-size: 0.8rem; color: var(--ink-faint); font-style: italic; padding: 4px 0; }
@@ -431,6 +427,34 @@
   var authOverlay = document.getElementById("authOverlay");
   var appRoot = document.getElementById("appRoot");
   var authError = document.getElementById("authError");
+  
+  async function ensureProfile() {
+  if (!currentUser) return;
+
+  const fullName =
+    currentUser.user_metadata?.full_name ||
+    currentUser.user_metadata?.name ||
+    "";
+
+  const email = currentUser.email || "";
+
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: currentUser.id,
+        full_name: fullName,
+        email: email
+      },
+      {
+        onConflict: "id"
+      }
+    );
+
+  if (error) {
+    console.error("Profile upsert error:", error);
+  }
+}
 
   function showAuthScreen(message) {
     appRoot.hidden = true;
@@ -438,15 +462,20 @@
     if (message) { authError.textContent = message; authError.hidden = false; }
     else { authError.hidden = true; }
   }
-
-  function showApp() {
+function showApp() {
     authOverlay.hidden = true;
     appRoot.hidden = false;
     document.getElementById("accountEmail").textContent = currentUser.email || "";
+
+    ensureProfile();
+
     renderCalendar();
     startPrayerReminder();
-    loadCalendarIndex().then(function(index) { calendarIndex = index; renderCalendar(); });
-  }
+    loadCalendarIndex().then(function(index) {
+        calendarIndex = index;
+        renderCalendar();
+    });
+}
 
   document.getElementById("googleSignIn").addEventListener("click", function() {
     supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } })
@@ -1288,23 +1317,13 @@
     }
     list.forEach(function(note, idx) {
       var row = document.createElement("div"); row.className = "voice-item";
-      var playBtn = document.createElement("button"); playBtn.className = "play";
-      playBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l10-5.5-10-5.5z"/></svg>';
-      playBtn.addEventListener("click", function() {
-        if (!note.url) { showToast("No audio URL — try reopening this day."); return; }
-        var a = new Audio(note.url);
-        a.onerror = function() { showToast("Couldn't load that voice note — try again."); };
-        a.play().catch(function() { showToast("Couldn't play that voice note — try again."); });
-      });
-      row.appendChild(playBtn);
-      var wave = document.createElement("div"); wave.className = "wave";
-      for (var i = 0; i < 26; i++) {
-        var bar = document.createElement("span");
-        var h = 4 + Math.round(Math.abs(Math.sin(i * (note.seed || 1))) * 14);
-        bar.style.height = h + "px"; wave.appendChild(bar);
-      }
-      row.appendChild(wave);
-      var dur = document.createElement("span"); dur.className = "dur mono"; dur.textContent = note.duration; row.appendChild(dur);
+      var audio = document.createElement("audio");
+      audio.controls = true;
+      audio.preload = "metadata";
+      audio.src = note.url || "";
+      audio.setAttribute("aria-label", "Voice note playback");
+      audio.onerror = function() { showToast("Couldn't load that voice note — try again."); };
+      row.appendChild(audio);
       var del = document.createElement("button"); del.className = "del"; del.setAttribute("aria-label", "Delete voice note"); del.textContent = "✕";
       del.addEventListener("click", function() { list.splice(idx, 1); refreshVoiceList(); deleteMedia(note).catch(function() { showToast("Couldn't delete that voice note — try again."); }); });
       row.appendChild(del); voiceList.appendChild(row);
