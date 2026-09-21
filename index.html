@@ -228,6 +228,45 @@
   /* ---- PiP button ---- */
   .pip-btn { position: fixed; bottom: 22px; right: 22px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; z-index: 50; transition: border-color 0.15s ease, color 0.15s ease; }
   .pip-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---- 2.0 additions (kept separate from the original styles) ---- */
+  body { background-image: var(--custom-background, none); background-size: cover; background-position: center; background-attachment: fixed; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: color-mix(in srgb, var(--bg) 86%, transparent); }
+  .toolbar { display: grid; grid-template-columns: minmax(180px, 1fr) auto auto auto; gap: 8px; margin: 16px 0; }
+  .field, .action-btn { min-height: 40px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 8px 10px; font: inherit; }
+  .action-btn { cursor: pointer; font-size: .8rem; font-weight: 600; }
+  .action-btn:hover { border-color: var(--accent); }
+  .action-btn.danger { color: var(--mood-angry); }
+  .search-wrap { position: relative; }
+  .search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 35; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 30px hsl(var(--shadow) / .22); max-height: 360px; overflow: auto; }
+  .search-result { padding: 11px; border-bottom: 1px solid var(--border-soft); }
+  .search-result:last-child { border-bottom: 0; }
+  .search-result-title { font-weight: 600; font-size: .84rem; }
+  .search-result-summary { color: var(--ink-soft); font-size: .76rem; line-height: 1.4; margin: 4px 0 7px; }
+  .inline-actions, .form-row { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .form-row .field { flex: 1 1 120px; min-width: 0; }
+  .stack-list { display: grid; gap: 8px; margin-top: 9px; }
+  .item-card { border: 1px solid var(--border-soft); background: var(--surface-raised); border-radius: 10px; padding: 9px 10px; }
+  .item-card-head { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+  .item-title { font-size: .84rem; font-weight: 600; overflow-wrap: anywhere; }
+  .item-meta { color: var(--ink-faint); font-size: .68rem; margin-top: 3px; }
+  .folder-files { margin-top: 7px; display: grid; gap: 5px; }
+  .file-row { display: flex; justify-content: space-between; gap: 8px; font-size: .75rem; }
+  .file-row a { overflow-wrap: anywhere; }
+  .mini-delete { border: 0; background: none; color: var(--mood-angry); cursor: pointer; padding: 1px 4px; }
+  .feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .feature-card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface-raised); padding: 10px; }
+  .feature-card h3 { font-size: 1rem; margin-bottom: 7px; }
+  .result-box { margin-top: 8px; padding: 8px; border-radius: 8px; background: var(--accent-wash); color: var(--ink); font-size: .78rem; line-height: 1.45; }
+  .radio-status { font-size: .72rem; color: var(--ink-soft); margin-top: 6px; }
+  .limit-note { color: var(--ink-faint); font-size: .7rem; line-height: 1.4; margin: 7px 0 0; }
+  .recording-pill { display: none; position: fixed; left: 16px; bottom: 18px; z-index: 55; border-radius: 999px; padding: 8px 12px; color: #fff; background: #a72f25; font-size: .72rem; font-weight: 700; box-shadow: 0 4px 18px rgba(0,0,0,.2); }
+  .recording-pill.on { display: block; }
+  .visibility-switch { position: fixed; top: 14px; right: 14px; z-index: 200; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; font-size: 1.35rem; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
+  body.background-only > *:not(.visibility-switch) { visibility: hidden !important; pointer-events: none !important; }
+  body.background-only::before { background: transparent; }
+  body.background-only .visibility-switch { visibility: visible !important; pointer-events: auto !important; }
+  @media (max-width: 650px) { .toolbar { grid-template-columns: 1fr 1fr; } .search-wrap { grid-column: 1 / -1; } .feature-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -269,6 +308,18 @@
   <div class="account-bar">
     <span class="mono email" id="accountEmail"></span>
     <button class="signout-btn" id="signOutBtn">Sign out</button>
+  </div>
+  <div class="toolbar" aria-label="App tools">
+    <div class="search-wrap">
+      <input class="field" id="memorySearch" type="search" placeholder="Search memories as you type…" autocomplete="off" style="width:100%">
+      <div class="search-results" id="memorySearchResults" hidden></div>
+    </div>
+    <select class="field" id="languageSelect" aria-label="Language">
+      <option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="ar">العربية</option><option value="ur">اردو</option><option value="hi">हिन्दी</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="zh">中文</option>
+    </select>
+    <button class="action-btn" id="backgroundButton">🖼 Background</button>
+    <input id="backgroundInput" type="file" accept="image/*" hidden>
+    <button class="action-btn" id="toolsButton">Tools</button>
   </div>
   <div class="weekday-row">
     <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
@@ -347,6 +398,33 @@
       <textarea id="textNote" placeholder="What happened today?"></textarea>
     </div>
 
+    <div class="section">
+      <div class="section-label">Timestamped notes <span class="mono" id="noteCount">0</span></div>
+      <div class="form-row"><input class="field" id="newNoteText" maxlength="4000" placeholder="Add a separate note"><button class="action-btn" id="addNoteButton">Add note</button></div>
+      <div class="stack-list" id="timestampedNotes"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Files &amp; folders <span class="mono" id="folderCount">0 / 10</span></div>
+      <div class="form-row"><input class="field" id="newFolderName" maxlength="80" placeholder="Folder name"><button class="action-btn" id="addFolderButton">New folder</button></div>
+      <input id="documentInput" type="file" multiple hidden>
+      <div class="stack-list" id="folderList"></div>
+      <p class="limit-note">Up to 10 folders per day and 50 files per folder. PDF page count is saved when the browser can read it; device folder-picking support varies.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Alarm for this day</div>
+      <div class="form-row"><input class="field" id="alarmTime" type="time"><input class="field" id="alarmLabel" maxlength="120" placeholder="Work meeting, gym, family…"><button class="action-btn" id="addAlarmButton">Set</button></div>
+      <div class="stack-list" id="alarmList"></div>
+      <p class="limit-note">Sounds and speaks 10 minutes early while this app is running. Browser and phone power rules can delay or block alarms after the app is closed or the device is locked.</p>
+    </div>
+
+    <div class="section feature-grid" id="extraTools" hidden>
+      <div class="feature-card"><h3>Construction calculator</h3><div class="form-row"><select class="field" id="calcMode"><option value="area">Area / flooring</option><option value="concrete">Concrete</option><option value="paint">Paint</option><option value="drywall">Drywall</option></select><input class="field" id="calcLength" type="number" min="0" step="any" placeholder="Length ft"><input class="field" id="calcWidth" type="number" min="0" step="any" placeholder="Width ft"><input class="field" id="calcDepth" type="number" min="0" step="any" placeholder="Depth in"></div><button class="action-btn" id="calculateButton">Calculate</button><div class="result-box" id="calcResult">Choose a task and enter measurements.</div></div>
+      <div class="feature-card"><h3>Worldwide radio</h3><div class="form-row"><select class="field" id="radioCountry"><option value="">Choose country</option></select><select class="field" id="radioStation"><option value="">Choose station</option></select></div><audio id="radioPlayer" controls preload="none" style="width:100%;margin-top:8px"></audio><div class="radio-status" id="radioStatus">Station data comes from the community Radio Browser directory.</div></div>
+      <div class="feature-card"><h3>Daily horoscope</h3><div class="form-row"><select class="field" id="zodiacSign"><option>Aries</option><option>Taurus</option><option>Gemini</option><option>Cancer</option><option>Leo</option><option>Virgo</option><option>Libra</option><option>Scorpio</option><option>Sagittarius</option><option>Capricorn</option><option>Aquarius</option><option>Pisces</option></select><button class="action-btn" id="readHoroscope">🔊 Read</button></div><div class="result-box" id="horoscopeText"></div></div>
+    </div>
+
     <button class="reel-btn" id="playReel">
       <svg viewBox="0 0 16 16" fill="none"><path d="M4 2.5v11l10-5.5-10-5.5z" fill="currentColor"/></svg>
       Play memory reel
@@ -388,6 +466,9 @@
 <button class="pip-btn" id="pipBtn" title="Float on top">
   <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="7" width="6" height="4" rx="1" fill="currentColor"/></svg>
 </button>
+
+<button class="visibility-switch" id="visibilitySwitch" aria-label="Show background only" title="Background-only mode">☀️</button>
+<div class="recording-pill" id="recordingPill">● RECORDING</div>
 
 <div class="toast" id="toast"></div>
 
@@ -809,6 +890,7 @@ function showApp() {
     ppTime.textContent = timeStr;
     prayerPopupOverlay.classList.add('open');
     playAdhanSound();
+    speakText(name + ' prayer is in 10 minutes.');
   }
 
   function checkPrayerTimes() {
@@ -826,7 +908,7 @@ function showApp() {
         var t = timings[p].split(':');
         var pMins = parseInt(t[0]) * 60 + parseInt(t[1]);
         var alertKey = todayStr + '-' + p;
-        if (Math.abs(nowMins - pMins) <= 1 && lastPrayerAlerted !== alertKey) {
+        if (Math.abs(nowMins - (pMins - 10)) <= 1 && lastPrayerAlerted !== alertKey) {
           lastPrayerAlerted = alertKey;
           showPrayerPopup(p, to12h(timings[p]));
         }
@@ -1036,6 +1118,7 @@ function showApp() {
       activeEntry = entry;
       document.getElementById("textNote").value = activeEntry.note || "";
       refreshMoodRow(); refreshPhotoStrip(); refreshVoiceList(); refreshMomentPreview(); refreshVideoList();
+      loadDayAdditions(entry);
 
       var todayStr = keyFor(today.getFullYear(), today.getMonth(), today.getDate());
       if (entry.weather && locKey !== todayStr) {
@@ -1051,7 +1134,6 @@ function showApp() {
   }
 
   function closePanel() {
-    stopRecordingIfActive(); stopVideoRecordingIfActive();
     backdrop.classList.remove("open"); panel.classList.remove("open"); panel.setAttribute("aria-hidden", "true");
   }
   document.getElementById("closePanel").addEventListener("click", closePanel);
@@ -1445,10 +1527,191 @@ function showApp() {
     });
   });
 
+  // ---------- 2.0 additions ----------
+  var dayNotes = [], dayFolders = [], dayFiles = [], dayAlarms = [];
+  var selectedFolderId = null;
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>\"]/g, function(ch) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[ch]; });
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes) return "0 B";
+    var units = ["B","KB","MB","GB"], i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), 3);
+    return (bytes / Math.pow(1024, i)).toFixed(i ? 1 : 0) + " " + units[i];
+  }
+
+  function speakText(text) {
+    if (!("speechSynthesis" in window) || !text) { showToast("Read-aloud isn't available in this browser."); return; }
+    speechSynthesis.cancel();
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = document.getElementById("languageSelect").value || "en";
+    var voices = speechSynthesis.getVoices();
+    var match = voices.find(function(v) { return v.lang.toLowerCase().indexOf(utterance.lang.toLowerCase()) === 0; });
+    if (match) utterance.voice = match;
+    speechSynthesis.speak(utterance);
+  }
+
+  function additionsError(res) {
+    if (res && res.error) console.warn("I Remember addition:", res.error.message);
+    return res && res.error;
+  }
+
+  function loadDayAdditions(entry) {
+    dayNotes = []; dayFolders = []; dayFiles = []; dayAlarms = [];
+    renderDayNotes(); renderFolders(); renderAlarms(); renderHoroscope();
+    if (!entry || !entry.id) return;
+    Promise.all([
+      supabase.from("daily_notes").select("id,body,created_at").eq("entry_id", entry.id).order("created_at", { ascending: false }),
+      supabase.from("daily_folders").select("id,name,created_at").eq("entry_id", entry.id).order("created_at", { ascending: true }),
+      supabase.from("daily_files").select("id,folder_id,file_name,mime_type,byte_size,page_count,storage_path,created_at").eq("entry_id", entry.id).order("created_at", { ascending: true }),
+      supabase.from("alarms").select("id,event_time,label,enabled,last_fired_at").eq("entry_id", entry.id).order("event_time", { ascending: true })
+    ]).then(function(results) {
+      if (!activeEntry || activeEntry.id !== entry.id) return;
+      var missing = results.some(additionsError);
+      dayNotes = results[0].data || []; dayFolders = results[1].data || []; dayFiles = results[2].data || []; dayAlarms = results[3].data || [];
+      renderDayNotes(); renderFolders(); renderAlarms();
+      if (missing) showToast("Run supabase-migration.sql once to enable the new saved features.");
+    });
+  }
+
+  function renderDayNotes() {
+    var root = document.getElementById("timestampedNotes");
+    document.getElementById("noteCount").textContent = dayNotes.length;
+    root.innerHTML = dayNotes.map(function(n) {
+      return '<div class="item-card"><div class="item-card-head"><div><div class="item-title">' + escapeHtml(n.body) + '</div><div class="item-meta">' + new Date(n.created_at).toLocaleString() + '</div></div><button class="mini-delete" data-delete-note="' + n.id + '">Delete</button></div></div>';
+    }).join("") || '<div class="empty-note">No separate notes yet. Your original Notes box is unchanged.</div>';
+  }
+
+  document.getElementById("addNoteButton").addEventListener("click", function() {
+    var input = document.getElementById("newNoteText"), body = input.value.trim();
+    if (!body || !activeEntry) return;
+    ensureEntryRow(activeEntry).then(function(entryId) { return supabase.from("daily_notes").insert({ user_id: currentUser.id, entry_id: entryId, body: body }).select("id,body,created_at").single(); }).then(function(res) {
+      if (additionsError(res)) { showToast("Couldn't save note. Run the migration if needed."); return; }
+      dayNotes.unshift(res.data); input.value = ""; renderDayNotes();
+    });
+  });
+
+  document.getElementById("timestampedNotes").addEventListener("click", function(e) {
+    var id = e.target.getAttribute("data-delete-note"); if (!id) return;
+    supabase.from("daily_notes").delete().eq("id", id).then(function(res) { if (!res.error) { dayNotes = dayNotes.filter(function(n) { return n.id !== id; }); renderDayNotes(); } });
+  });
+
+  function renderFolders() {
+    document.getElementById("folderCount").textContent = dayFolders.length + " / 10";
+    var root = document.getElementById("folderList");
+    root.innerHTML = dayFolders.map(function(folder) {
+      var files = dayFiles.filter(function(f) { return f.folder_id === folder.id; });
+      var fileHtml = files.map(function(f) { return '<div class="file-row"><span>' + escapeHtml(f.file_name) + ' · ' + formatBytes(f.byte_size) + (f.page_count ? ' · ' + f.page_count + ' pages' : '') + '</span><span><button class="mini-delete" data-open-file="' + f.id + '">Open</button><button class="mini-delete" data-delete-file="' + f.id + '">Delete</button></span></div>'; }).join("");
+      return '<div class="item-card"><div class="item-card-head"><div><div class="item-title">📁 ' + escapeHtml(folder.name) + '</div><div class="item-meta">' + files.length + ' / 50 files</div></div><span><button class="mini-delete" data-upload-folder="' + folder.id + '">Upload</button><button class="mini-delete" data-delete-folder="' + folder.id + '">Delete</button></span></div><div class="folder-files">' + fileHtml + '</div></div>';
+    }).join("") || '<div class="empty-note">No folders for this day.</div>';
+  }
+
+  document.getElementById("addFolderButton").addEventListener("click", function() {
+    var input = document.getElementById("newFolderName"), name = input.value.trim();
+    if (!name || !activeEntry) return;
+    if (dayFolders.length >= 10) { showToast("This day already has 10 folders."); return; }
+    ensureEntryRow(activeEntry).then(function(entryId) { return supabase.from("daily_folders").insert({ user_id: currentUser.id, entry_id: entryId, name: name }).select("id,name,created_at").single(); }).then(function(res) {
+      if (additionsError(res)) { showToast("Couldn't create folder. Run the migration if needed."); return; }
+      dayFolders.push(res.data); input.value = ""; renderFolders();
+    });
+  });
+
+  document.getElementById("folderList").addEventListener("click", function(e) {
+    var folderId = e.target.getAttribute("data-upload-folder");
+    if (folderId) { selectedFolderId = folderId; document.getElementById("documentInput").click(); return; }
+    var fileId = e.target.getAttribute("data-open-file");
+    if (fileId) { var f = dayFiles.find(function(x) { return x.id === fileId; }); if (f) supabase.storage.from("documents").createSignedUrl(f.storage_path, 300).then(function(r) { if (r.data) window.open(r.data.signedUrl, "_blank", "noopener"); }); return; }
+    fileId = e.target.getAttribute("data-delete-file");
+    if (fileId) { var old = dayFiles.find(function(x) { return x.id === fileId; }); if (!old) return; supabase.storage.from("documents").remove([old.storage_path]).then(function() { return supabase.from("daily_files").delete().eq("id", fileId); }).then(function(res) { if (!res.error) { dayFiles = dayFiles.filter(function(x) { return x.id !== fileId; }); renderFolders(); } }); return; }
+    folderId = e.target.getAttribute("data-delete-folder");
+    if (folderId) { var paths = dayFiles.filter(function(x) { return x.folder_id === folderId; }).map(function(x) { return x.storage_path; }); var remove = paths.length ? supabase.storage.from("documents").remove(paths) : Promise.resolve(); remove.then(function() { return supabase.from("daily_folders").delete().eq("id", folderId); }).then(function(res) { if (!res.error) { dayFolders = dayFolders.filter(function(x) { return x.id !== folderId; }); dayFiles = dayFiles.filter(function(x) { return x.folder_id !== folderId; }); renderFolders(); } }); }
+  });
+
+  document.getElementById("documentInput").addEventListener("change", async function(e) {
+    var folderId = selectedFolderId, folderFiles = dayFiles.filter(function(x) { return x.folder_id === folderId; });
+    var files = Array.prototype.slice.call(e.target.files || []).slice(0, Math.max(0, 50 - folderFiles.length)); e.target.value = "";
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      if (file.size > 25 * 1024 * 1024) { showToast(file.name + " is over the 25 MB limit."); continue; }
+      var pages = null;
+      if (file.type === "application/pdf" && file.size < 8 * 1024 * 1024) { try { var txt = new TextDecoder("latin1").decode(await file.arrayBuffer()); pages = (txt.match(/\/Type\s*\/Page\b/g) || []).length || null; } catch(ignore) {} }
+      var path = currentUser.id + "/" + activeEntry.date + "/" + folderId + "/" + newId() + "-" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      var uploaded = await supabase.storage.from("documents").upload(path, file, { contentType: file.type || "application/octet-stream" });
+      if (uploaded.error) { showToast("Upload failed for " + file.name); continue; }
+      var inserted = await supabase.from("daily_files").insert({ user_id: currentUser.id, entry_id: activeEntry.id, folder_id: folderId, file_name: file.name, mime_type: file.type, byte_size: file.size, page_count: pages, storage_path: path }).select().single();
+      if (!inserted.error) dayFiles.push(inserted.data);
+    }
+    renderFolders();
+  });
+
+  function renderAlarms() {
+    document.getElementById("alarmList").innerHTML = dayAlarms.map(function(a) { return '<div class="item-card"><div class="item-card-head"><div><div class="item-title">⏰ ' + escapeHtml(a.label) + '</div><div class="item-meta">Scheduled ' + escapeHtml(a.event_time.slice(0,5)) + ' · alerts 10 minutes before</div></div><button class="mini-delete" data-delete-alarm="' + a.id + '">Delete</button></div></div>'; }).join("") || '<div class="empty-note">No alarms for this day.</div>';
+  }
+
+  document.getElementById("addAlarmButton").addEventListener("click", function() {
+    var time = document.getElementById("alarmTime").value, label = document.getElementById("alarmLabel").value.trim();
+    if (!time || !label || !activeEntry) return;
+    ensureEntryRow(activeEntry).then(function(entryId) { return supabase.from("alarms").insert({ user_id: currentUser.id, entry_id: entryId, event_time: time + ":00", label: label }).select().single(); }).then(function(res) { if (additionsError(res)) { showToast("Couldn't set alarm. Run the migration if needed."); return; } dayAlarms.push(res.data); renderAlarms(); });
+  });
+  document.getElementById("alarmList").addEventListener("click", function(e) { var id = e.target.getAttribute("data-delete-alarm"); if (!id) return; supabase.from("alarms").delete().eq("id", id).then(function(res) { if (!res.error) { dayAlarms = dayAlarms.filter(function(a) { return a.id !== id; }); renderAlarms(); } }); });
+
+  function checkCustomAlarms() {
+    if (!currentUser) return;
+    var now = new Date(), alertAt = new Date(now.getTime() + 10 * 60000), dateKey = keyFor(alertAt.getFullYear(), alertAt.getMonth(), alertAt.getDate()), hhmm = pad(alertAt.getHours()) + ":" + pad(alertAt.getMinutes());
+    supabase.from("alarms").select("id,label,event_time,last_fired_at,entries!inner(entry_date)").eq("enabled", true).eq("entries.entry_date", dateKey).gte("event_time", hhmm + ":00").lte("event_time", hhmm + ":59").then(function(res) {
+      (res.data || []).forEach(function(a) { var last = a.last_fired_at ? new Date(a.last_fired_at) : null; if (last && Date.now() - last.getTime() < 20 * 3600000) return; playAdhanSound(); speakText(a.label + " in 10 minutes."); showToast(a.label + " in 10 minutes"); supabase.from("alarms").update({ last_fired_at: new Date().toISOString() }).eq("id", a.id); });
+    });
+  }
+  setInterval(checkCustomAlarms, 30000);
+
+  var memorySearchTimer = null;
+  document.getElementById("memorySearch").addEventListener("input", function(e) {
+    clearTimeout(memorySearchTimer); var q = e.target.value.trim().toLowerCase(), root = document.getElementById("memorySearchResults");
+    if (!q) { root.hidden = true; return; }
+    memorySearchTimer = setTimeout(function() {
+      Promise.all([supabase.from("entries").select("id,entry_date,mood,note"), supabase.from("daily_notes").select("entry_id,body"), supabase.from("daily_folders").select("entry_id,name")]).then(function(all) {
+        var notes = all[1].data || [], folders = all[2].data || [];
+        var hits = (all[0].data || []).map(function(entry) { var extras = notes.filter(function(n) { return n.entry_id === entry.id; }).map(function(n) { return n.body; }).concat(folders.filter(function(f) { return f.entry_id === entry.id; }).map(function(f) { return f.name; })); var hay = [entry.entry_date, entry.mood, entry.note].concat(extras).join(" ").toLowerCase(); return { entry: entry, extras: extras, match: hay.indexOf(q) >= 0 }; }).filter(function(x) { return x.match; }).slice(0, 12);
+        root.innerHTML = hits.map(function(hit) { var e = hit.entry, summary = [e.mood ? "Mood: " + e.mood + "." : "", e.note || "", hit.extras.slice(0,2).join(" · ")].filter(Boolean).join(" ").slice(0,240) || "Saved memory for this day."; return '<div class="search-result"><div class="search-result-title">' + new Date(e.entry_date + 'T12:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}) + '</div><div class="search-result-summary">' + escapeHtml(summary) + '</div><div class="inline-actions"><button class="action-btn" data-open-day="' + e.entry_date + '">Open day</button><button class="action-btn" data-read-summary="' + encodeURIComponent(summary) + '">🔊 Read</button></div></div>'; }).join("") || '<div class="search-result">No matching saved days.</div>';
+        root.hidden = false;
+      });
+    }, 180);
+  });
+  document.getElementById("memorySearchResults").addEventListener("click", function(e) { var day = e.target.getAttribute("data-open-day"); if (day) { var p = day.split("-").map(Number); viewYear = p[0]; viewMonth = p[1]-1; renderCalendar(); openPanel(day); this.hidden = true; } var text = e.target.getAttribute("data-read-summary"); if (text) speakText(decodeURIComponent(text)); });
+
+  document.getElementById("backgroundButton").addEventListener("click", function() { document.getElementById("backgroundInput").click(); });
+  document.getElementById("backgroundInput").addEventListener("change", function(e) { var file = e.target.files[0]; if (!file) return; if (file.size > 8 * 1024 * 1024) { showToast("Choose a background under 8 MB."); return; } var reader = new FileReader(); reader.onload = function() { localStorage.setItem("iremember-background", reader.result); applyBackground(reader.result); }; reader.readAsDataURL(file); });
+  function applyBackground(data) { document.body.style.setProperty("--custom-background", data ? 'url("' + data + '")' : "none"); }
+  applyBackground(localStorage.getItem("iremember-background"));
+
+  document.getElementById("visibilitySwitch").addEventListener("click", function() { var hidden = document.body.classList.toggle("background-only"); this.textContent = hidden ? "🌙" : "☀️"; this.setAttribute("aria-label", hidden ? "Show all controls" : "Show background only"); });
+  document.getElementById("toolsButton").addEventListener("click", function() { var el = document.getElementById("extraTools"); el.hidden = !el.hidden; });
+
+  var TRANSLATIONS = { es:{"Sign out":"Salir","Tools":"Herramientas","Weather":"Clima","Prayer times":"Horas de oración"}, fr:{"Sign out":"Déconnexion","Tools":"Outils","Weather":"Météo","Prayer times":"Heures de prière"}, ar:{"Sign out":"تسجيل الخروج","Tools":"أدوات","Weather":"الطقس","Prayer times":"مواقيت الصلاة"}, ur:{"Sign out":"سائن آؤٹ","Tools":"اوزار","Weather":"موسم","Prayer times":"نماز کے اوقات"} };
+  document.getElementById("languageSelect").addEventListener("change", function() { var lang = this.value; localStorage.setItem("iremember-language", lang); document.documentElement.lang = lang; document.documentElement.dir = (lang === "ar" || lang === "ur") ? "rtl" : "ltr"; var d = TRANSLATIONS[lang] || {}; document.getElementById("signOutBtn").textContent = d["Sign out"] || "Sign out"; document.getElementById("toolsButton").textContent = d.Tools || "Tools"; showToast("Language preference saved. Full dynamic translation requires a translation service."); });
+  var savedLanguage = localStorage.getItem("iremember-language"); if (savedLanguage) { document.getElementById("languageSelect").value = savedLanguage; document.getElementById("languageSelect").dispatchEvent(new Event("change")); }
+
+  document.getElementById("calculateButton").addEventListener("click", function() { var mode = document.getElementById("calcMode").value, l = parseFloat(document.getElementById("calcLength").value) || 0, w = parseFloat(document.getElementById("calcWidth").value) || 0, d = parseFloat(document.getElementById("calcDepth").value) || 0, area = l*w, out; if (mode === "concrete") { var yards = area*(d/12)/27; out = yards.toFixed(2) + " cubic yards; order about " + (yards*1.1).toFixed(2) + " including 10% waste."; } else if (mode === "paint") out = area.toFixed(1) + " sq ft; about " + Math.ceil(area/350) + " gallon(s) per coat."; else if (mode === "drywall") out = area.toFixed(1) + " sq ft; about " + Math.ceil(area/32*1.1) + " 4×8 sheet(s) including 10% waste."; else out = area.toFixed(2) + " square feet; order about " + (area*1.1).toFixed(2) + " sq ft including 10% waste."; document.getElementById("calcResult").textContent = out; });
+
+  var horoscopeLines = ["Focus on one practical step; steady progress will matter more than speed.","A clear conversation can remove uncertainty today. Listen before deciding.","Make room for something restorative, then return to your priorities with fresh attention.","Notice the useful detail others miss. It may guide a better choice.","Protect your time and spend it on the relationship or task that matters most."];
+  function renderHoroscope() { var sign = document.getElementById("zodiacSign").value, date = activeKey || keyFor(today.getFullYear(),today.getMonth(),today.getDate()), seed = (sign + date).split("").reduce(function(a,c){return a+c.charCodeAt(0);},0); document.getElementById("horoscopeText").textContent = sign + " · " + date + ": " + horoscopeLines[seed % horoscopeLines.length]; }
+  document.getElementById("zodiacSign").addEventListener("change", renderHoroscope); document.getElementById("readHoroscope").addEventListener("click", function() { speakText(document.getElementById("horoscopeText").textContent); }); renderHoroscope();
+
+  var countrySelect = document.getElementById("radioCountry"), stationSelect = document.getElementById("radioStation"), radioPlayer = document.getElementById("radioPlayer");
+  fetch("https://de1.api.radio-browser.info/json/countries?order=name&hidebroken=true").then(function(r){return r.json();}).then(function(rows){ rows.forEach(function(c){ var o=document.createElement("option");o.value=c.iso_3166_1;o.textContent=c.name+" ("+c.stationcount+")";countrySelect.appendChild(o);}); }).catch(function(){ document.getElementById("radioStatus").textContent="Radio directory is unavailable right now."; });
+  countrySelect.addEventListener("change", function(){ stationSelect.innerHTML='<option value="">Loading stations…</option>'; fetch("https://de1.api.radio-browser.info/json/stations/bycountrycodeexact/"+encodeURIComponent(this.value)+"?hidebroken=true&order=clickcount&reverse=true&limit=100").then(function(r){return r.json();}).then(function(rows){ stationSelect.innerHTML='<option value="">Choose station</option>'; rows.filter(function(s){return s.url_resolved;}).forEach(function(s){var o=document.createElement("option");o.value=s.url_resolved;o.textContent=s.name;stationSelect.appendChild(o);}); }); });
+  stationSelect.addEventListener("change", function(){ if (!this.value) return; radioPlayer.src=this.value; radioPlayer.play().catch(function(){ document.getElementById("radioStatus").textContent="Press Play to start this station."; }); if ("mediaSession" in navigator) navigator.mediaSession.metadata = new MediaMetadata({title:this.options[this.selectedIndex].text,artist:countrySelect.options[countrySelect.selectedIndex].text,album:"I Remember Radio"}); });
+
+  function refreshRecordingPill() { document.getElementById("recordingPill").classList.toggle("on", anyRecordingActive()); }
+  setInterval(refreshRecordingPill, 500);
+
   // ---------- Toast ----------
   var toast = document.getElementById("toast");
   var toastTimer = null;
   function showToast(msg) {
+    if (!toast) toast = document.getElementById("toast");
+    if (!toast) return;
     toast.textContent = msg; toast.classList.add("show"); clearTimeout(toastTimer);
     toastTimer = setTimeout(function() { toast.classList.remove("show"); }, 2600);
   }
