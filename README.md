@@ -1,12 +1,12 @@
 # I Remember
 
-A day-by-day calendar prototype: click any day to set its mood color, drop in
-up to 50 photos, capture a quick front/back camera moment, record a video
-(runs until you stop it), record a voice note, and jot what happened. Tap
+A day-by-day calendar app: click any day to set its mood color, add up to
+100 photos, capture a quick front/back camera moment, record a video
+(up to 5 minutes / 45 MB), record a voice note (up to 30 minutes / 45 MB), and jot what happened. Tap
 "Play memory reel" to replay a day as a slideshow.
 
-This is a static site — no build step, no backend. `index.html` contains
-everything (HTML, CSS, and JS in one file).
+This is a static frontend with Supabase authentication, database, and private
+storage. `index.html` contains the UI and client code; Supabase is the backend.
 
 ## Run it locally
 
@@ -47,16 +47,13 @@ git push -u origin main
 
 ## Notes on data
 
-- Mood, notes, and photos (up to 50 per day) are saved in the browser's
-  IndexedDB, so they persist across reloads on the same device/browser.
-  IndexedDB was used instead of localStorage specifically because 50
-  photos a day would blow past localStorage's ~5-10MB text-only limit —
-  IndexedDB stores the actual image binary and has a much larger quota.
-- Voice notes, video recordings, and front/back camera "moments" are
-  session-only in this prototype (they live in memory as blob URLs and
-  reset on reload) — persisting those to IndexedDB too is a reasonable
-  next step before this becomes a daily-use app.
-- Photos are downscaled and compressed client-side before saving.
+- Mood, notes, photos, voice notes, videos, and camera moments are saved to the
+  signed-in user's Supabase account and private storage.
+- Photos are downscaled and compressed client-side before upload.
+- A recording must remain in the open browser tab until it finishes uploading.
+  On mobile, locking the screen or switching apps can stop capture early.
+- Run `supabase-migration.sql` in the Supabase SQL editor to apply the app's
+  supporting tables and set the media bucket's server-side limit to 50 MB.
 
 ## Turning this into a native app
 

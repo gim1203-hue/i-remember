@@ -68,6 +68,13 @@ insert into storage.buckets (id, name, public, file_size_limit)
 values ('documents', 'documents', false, 26214400)
 on conflict (id) do update set public = false, file_size_limit = 26214400;
 
+-- Keep the media bucket above the app's 45 MB per-recording safety limit.
+-- This documents the server-side maximum instead of relying on a dashboard
+-- default that can differ between projects.
+update storage.buckets
+set file_size_limit = 52428800
+where id = 'media';
+
 drop policy if exists "own documents select" on storage.objects;
 create policy "own documents select" on storage.objects for select
 using (bucket_id = 'documents' and auth.uid()::text = (storage.foldername(name))[1]);
@@ -99,4 +106,3 @@ drop trigger if exists daily_folders_limit on public.daily_folders;
 create trigger daily_folders_limit before insert on public.daily_folders for each row execute function public.enforce_iremember_limits();
 drop trigger if exists daily_files_limit on public.daily_files;
 create trigger daily_files_limit before insert on public.daily_files for each row execute function public.enforce_iremember_limits();
-

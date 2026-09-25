@@ -397,7 +397,7 @@
 
     <div class="section">
       <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
-      <p class="moment-hint">Records video + audio for as long as this tab stays open and in front — press stop whenever you're done. While recording, the screen is held awake automatically so it won't auto-lock mid-clip.</p>
+      <p class="moment-hint">Records video + audio for up to 5 minutes (45 MB) per clip. Keep this tab open and in front; recording stops automatically at the limit or if a phone locks. The screen is held awake when supported.</p>
       <div class="video-list" id="videoList"></div>
       <button class="capture-btn" id="recordVideo">
         <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="9" height="8" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 6.5l3.4-1.8v6.6l-3.4-1.8" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
@@ -408,6 +408,7 @@
     <div class="section">
       <div class="section-label">Voice notes <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
       <div class="voice-list" id="voiceList"></div>
+      <p class="moment-hint">Voice notes can be up to 30 minutes (45 MB) each. Keep this tab open until the note says it is saved.</p>
       <button class="capture-btn" id="recordVoice">
         <svg viewBox="0 0 16 16" fill="none"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 8a5 5 0 0010 0M8 13v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         <span id="recordLabel">Record a voice note</span>
@@ -514,6 +515,10 @@
   MOODS.forEach(function(m) { moodMap[m.id] = m; });
 
   var MAX_PHOTOS_PER_DAY = 100;
+  var MAX_RECORDING_BYTES = 45 * 1024 * 1024;
+  var RECORDING_STOP_BYTES = 44 * 1024 * 1024;
+  var MAX_VIDEO_SECONDS = 5 * 60;
+  var MAX_AUDIO_SECONDS = 30 * 60;
 
   function newId() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -683,6 +688,11 @@ function showApp() {
   }
 
   async function uploadMedia(entry, kind, blob, contentType, extraFields) {
+    if (!blob || blob.size === 0) throw new Error("Empty media file");
+    if (blob.size > MAX_RECORDING_BYTES && (kind === "video" || kind === "voice")) {
+      showToast("That recording is over the 45 MB upload limit.");
+      throw new Error("Recording exceeds upload limit");
+    }
     var entryId = await ensureEntryRow(entry);
     var ext = contentType === "image/jpeg" ? "jpg" : (contentType.indexOf("mp4") >= 0 ? "mp4" : "webm");
     var path = currentUser.id + "/" + entry.date + "/" + kind + "-" + newId() + "." + ext;
@@ -690,7 +700,11 @@ function showApp() {
     if (upload.error) { showToast("Couldn't upload — try again."); throw upload.error; }
     var row = Object.assign({ entry_id: entryId, user_id: currentUser.id, kind: kind, storage_path: path }, extraFields || {});
     var inserted = await supabase.from("media").insert(row).select("id, storage_path").single();
-    if (inserted.error) { showToast("Uploaded, but couldn't save the record — try again."); throw inserted.error; }
+    if (inserted.error) {
+      await supabase.storage.from(MEDIA_BUCKET).remove([path]);
+      showToast("Couldn't finish saving the record — try again.");
+      throw inserted.error;
+    }
     var urlByPath = await signedUrlsFor([path]);
     return { id: inserted.data.id, path: path, url: urlByPath[path] || null };
   }
@@ -1325,6 +1339,7 @@ function showApp() {
   var lockCutVideo = false;
   var lockCutAudio = false;
   var wakeLock = null;
+  var capturePending = false;
 
   function requestWakeLock() {
     if (!("wakeLock" in navigator)) return;
@@ -1332,13 +1347,14 @@ function showApp() {
   }
   function releaseWakeLock() { if (wakeLock) { wakeLock.release().catch(function() {}); wakeLock = null; } }
   function anyRecordingActive() {
-    return (mediaRecorder && mediaRecorder.state === "recording") || (videoRecorder && videoRecorder.state === "recording");
+    return capturePending || (mediaRecorder && mediaRecorder.state === "recording") || (videoRecorder && videoRecorder.state === "recording");
   }
   document.addEventListener("visibilitychange", function() {
     if (!document.hidden && anyRecordingActive()) requestWakeLock();
   });
 
   var videoChunks = [], videoStream = null, videoStart = 0, videoTimer = null;
+  var videoBytes = 0, videoAutoStopReason = "";
 
   function fmtDuration(secs) { var m = Math.floor(secs / 60), s = secs % 60; return m + ":" + pad(s); }
 
@@ -1377,14 +1393,21 @@ function showApp() {
   function startVideoRecording() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Camera and mic aren't available in this preview."); return; }
     if (!activeEntry) { showToast("Open a day first."); return; }
+    if (anyRecordingActive()) { showToast("Stop the current recording first."); return; }
+    capturePending = true;
+    recordVideoBtn.disabled = true;
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true })
       .then(function(stream) {
-        videoStream = stream; videoChunks = [];
+        videoStream = stream; videoChunks = []; videoBytes = 0; videoAutoStopReason = "";
         var mimeType = pickVideoMimeType();
-        try { videoRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream); }
-        catch(e) { showToast("This browser can't record video — try Chrome, Edge, or Safari 14.3+."); videoStream.getTracks().forEach(function(t) { t.stop(); }); return; }
+        try { videoRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 1000000, audioBitsPerSecond: 64000 }) : new MediaRecorder(stream); }
+        catch(e) { showToast("This browser can't record video — try Chrome, Edge, or Safari 14.3+."); videoStream.getTracks().forEach(function(t) { t.stop(); }); capturePending = false; recordVideoBtn.disabled = false; return; }
         var entry = activeEntry;
-        videoRecorder.ondataavailable = function(e) { if (e.data.size > 0) videoChunks.push(e.data); };
+        videoRecorder.ondataavailable = function(e) {
+          if (e.data.size <= 0) return;
+          videoChunks.push(e.data); videoBytes += e.data.size;
+          if (videoBytes >= RECORDING_STOP_BYTES && videoRecorder.state === "recording") { videoAutoStopReason = "size"; videoRecorder.stop(); }
+        };
         videoRecorder.onstop = function() {
           videoStream.getTracks().forEach(function(t) { t.stop(); });
           recordVideoBtn.classList.remove("recording"); videoRecordLabel.textContent = "Saving…"; recordVideoBtn.disabled = true;
@@ -1400,15 +1423,16 @@ function showApp() {
             item.duration = duration;
             if (activeEntry === entry) { entry.videos.push(item); refreshVideoList(); }
             if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
+            else if (videoAutoStopReason) showToast("Video reached the " + (videoAutoStopReason === "time" ? "5 minute" : "45 MB") + " limit and was saved.");
             else showToast("Video saved.");
           }).catch(function() { showToast("Recording captured, but the save failed — try again."); }).then(finish);
         };
-        videoRecorder.start(); requestWakeLock(); videoStart = Date.now();
+        videoRecorder.start(1000); capturePending = false; requestWakeLock(); videoStart = Date.now(); recordVideoBtn.disabled = false;
         recordVideoBtn.classList.add("recording");
-        videoTimer = setInterval(function() { var secs = Math.round((Date.now() - videoStart) / 1000); videoRecordLabel.textContent = "Recording… " + fmtDuration(secs); }, 500);
+        videoTimer = setInterval(function() { var secs = Math.round((Date.now() - videoStart) / 1000); videoRecordLabel.textContent = "Recording… " + fmtDuration(secs) + " / 5:00"; if (secs >= MAX_VIDEO_SECONDS && videoRecorder.state === "recording") { videoAutoStopReason = "time"; videoRecorder.stop(); } }, 500);
         showToast("Recording — press Stop whenever you're done.");
       })
-      .catch(function() { showToast("Camera/mic access was declined or isn't available."); });
+      .catch(function() { capturePending = false; recordVideoBtn.disabled = false; showToast("Camera/mic access was declined or isn't available."); });
   }
 
   function stopVideoRecordingIfActive() { if (videoRecorder && videoRecorder.state === "recording") videoRecorder.stop(); }
@@ -1418,6 +1442,7 @@ function showApp() {
   var recordBtn = document.getElementById("recordVoice");
   var recordLabel = document.getElementById("recordLabel");
   var mediaRecorder = null, recordChunks = [], recordStream = null, recordStart = 0, recordTimer = null;
+  var recordBytes = 0, audioAutoStopReason = "";
 
   function refreshVoiceList() {
     voiceList.innerHTML = "";
@@ -1449,16 +1474,20 @@ function showApp() {
   function startRecording() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Microphone isn't available in this preview."); return; }
     if (!activeEntry) { showToast("Open a day first."); return; }
+    if (anyRecordingActive()) { showToast("Stop the current recording first."); return; }
+    capturePending = true;
+    recordBtn.disabled = true;
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(function(stream) {
-        recordStream = stream; recordChunks = [];
+        recordStream = stream; recordChunks = []; recordBytes = 0; audioAutoStopReason = "";
         var audioMime = "";
         if (window.MediaRecorder && MediaRecorder.isTypeSupported) {
           ["audio/mp4","audio/webm;codecs=opus","audio/webm"].some(function(t) { if (MediaRecorder.isTypeSupported(t)) { audioMime = t; return true; } return false; });
         }
-        mediaRecorder = audioMime ? new MediaRecorder(stream, { mimeType: audioMime }) : new MediaRecorder(stream);
+        try { mediaRecorder = audioMime ? new MediaRecorder(stream, { mimeType: audioMime, audioBitsPerSecond: 64000 }) : new MediaRecorder(stream); }
+        catch (e) { stream.getTracks().forEach(function(t) { t.stop(); }); capturePending = false; recordBtn.disabled = false; showToast("This browser can't record audio."); return; }
         var entry = activeEntry;
-        mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) recordChunks.push(e.data); };
+        mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) { recordChunks.push(e.data); recordBytes += e.data.size; if (recordBytes >= RECORDING_STOP_BYTES && mediaRecorder.state === "recording") { audioAutoStopReason = "size"; mediaRecorder.stop(); } } };
         mediaRecorder.onstop = function() {
           recordStream.getTracks().forEach(function(t) { t.stop(); });
           recordBtn.classList.remove("recording"); recordBtn.disabled = true; recordLabel.textContent = "Saving…";
@@ -1474,13 +1503,15 @@ function showApp() {
             item.duration = duration; item.seed = seed;
             if (activeEntry === entry) { entry.voices.push(item); refreshVoiceList(); }
             if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
+            else if (audioAutoStopReason) showToast("Voice note reached the " + (audioAutoStopReason === "time" ? "30 minute" : "45 MB") + " limit and was saved.");
+            else showToast("Voice note saved.");
           }).catch(function() { showToast("Recording captured, but the save failed — try again."); }).then(finish);
         };
-        mediaRecorder.start(); requestWakeLock(); recordStart = Date.now();
+        mediaRecorder.start(1000); capturePending = false; requestWakeLock(); recordStart = Date.now(); recordBtn.disabled = false;
         recordBtn.classList.add("recording");
-        recordTimer = setInterval(function() { var secs = Math.round((Date.now() - recordStart) / 1000); recordLabel.textContent = "Recording… " + fmtDuration(secs); }, 300);
+        recordTimer = setInterval(function() { var secs = Math.round((Date.now() - recordStart) / 1000); recordLabel.textContent = "Recording… " + fmtDuration(secs) + " / 30:00"; if (secs >= MAX_AUDIO_SECONDS && mediaRecorder.state === "recording") { audioAutoStopReason = "time"; mediaRecorder.stop(); } }, 300);
       })
-      .catch(function() { showToast("Microphone access was declined or isn't available."); });
+      .catch(function() { capturePending = false; recordBtn.disabled = false; showToast("Microphone access was declined or isn't available."); });
   }
 
   function stopRecordingIfActive() { if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); }
@@ -1837,7 +1868,7 @@ function showApp() {
   });
 
   window.addEventListener("beforeunload", function(e) {
-    if (recordVideoBtn.disabled || recordBtn.disabled) { e.preventDefault(); e.returnValue = ""; }
+    if (anyRecordingActive() || recordVideoBtn.disabled || recordBtn.disabled) { e.preventDefault(); e.returnValue = ""; }
   });
 })();
 </script>
