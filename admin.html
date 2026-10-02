@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#172c35">
+<title>Support desk | I Remember</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+<style>
+  :root { color-scheme: light; --ink: #172c35; --muted: #63747a; --line: #dce4e1; --paper: #f5f7f3; --white: #fff; --green: #28745f; --green-wash: #e4f1e9; --orange: #c36135; --orange-wash: #fff0e5; --shadow: 23 32% 16%; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink); font: 14px "DM Sans", sans-serif; }
+  button, input, textarea { font: inherit; }
+  button { cursor: pointer; }
+  [hidden] { display: none !important; }
+  .auth-screen { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(ellipse at 12% 10%, #dcebe2 0, transparent 38%), radial-gradient(ellipse at 90% 88%, #f8dfcc 0, transparent 35%), var(--paper); }
+  .auth-box { width: min(420px, 100%); padding: 32px; background: var(--white); border: 1px solid var(--line); }
+  .brand { font: italic 500 1.55rem "Fraunces", Georgia, serif; }
+  .brand-mark { color: var(--orange); margin-right: 8px; }
+  .auth-box h1 { font: 500 1.7rem "Fraunces", Georgia, serif; margin: 38px 0 8px; }
+  .auth-box p { color: var(--muted); line-height: 1.55; margin: 0 0 22px; }
+  .button { min-height: 40px; border: 1px solid var(--line); padding: 8px 13px; background: var(--white); color: var(--ink); font-weight: 600; }
+  .button:hover { border-color: var(--green); }
+  .button-primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .button-primary:hover { background: #205e4d; }
+  .error { margin-top: 14px; color: #a43b2a; line-height: 1.45; }
+  .desk { min-height: 100vh; display: grid; grid-template-rows: 60px 1fr; }
+  .topbar { height: 60px; padding: 0 22px; background: var(--ink); color: white; display: flex; justify-content: space-between; align-items: center; }
+  .topbar .brand { font-size: 1.25rem; }
+  .topbar .brand-mark { color: #ef9b69; }
+  .top-actions { display: flex; align-items: center; gap: 16px; }
+  .top-email { color: #c2d0d0; font: 11px "DM Mono", monospace; }
+  .topbar .button { background: transparent; border-color: #597078; color: white; min-height: 34px; font-size: 12px; }
+  .workspace { min-height: 0; display: grid; grid-template-columns: 330px minmax(0, 1fr); }
+  .people { min-height: calc(100vh - 60px); background: var(--white); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+  .people-head { padding: 21px 18px 15px; }
+  .eyebrow { color: var(--muted); font: 10px "DM Mono", monospace; text-transform: uppercase; letter-spacing: .12em; }
+  .people-title-row { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 15px; }
+  .people-title-row h1 { font: 500 1.5rem "Fraunces", Georgia, serif; margin: 0; }
+  .count { color: var(--muted); font: 11px "DM Mono", monospace; }
+  .search { width: 100%; height: 39px; border: 1px solid var(--line); padding: 0 11px; color: var(--ink); background: var(--paper); outline-color: var(--green); }
+  .filter-row { display: flex; justify-content: space-between; align-items: center; margin-top: 13px; color: var(--muted); font-size: 12px; }
+  .filter-row label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+  .filter-row input { accent-color: var(--green); }
+  .people-list { overflow: auto; flex: 1; border-top: 1px solid var(--line); }
+  .person { width: 100%; padding: 13px 17px; border: 0; border-bottom: 1px solid #edf1ee; background: var(--white); color: inherit; text-align: left; display: grid; grid-template-columns: 38px 1fr auto; gap: 10px; align-items: center; }
+  .person:hover { background: #f7faf7; }
+  .person.selected { background: var(--green-wash); box-shadow: inset 3px 0 var(--green); }
+  .avatar { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: #e9efec; color: var(--green); font-weight: 700; }
+  .person-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: 13px; }
+  .person-email { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; margin-top: 3px; }
+  .person-date { color: var(--muted); font: 10px "DM Mono", monospace; text-align: right; white-space: nowrap; }
+  .new-tag { display: inline-block; margin-top: 5px; padding: 2px 5px; background: var(--orange-wash); color: #99502e; font: 9px "DM Mono", monospace; text-transform: uppercase; }
+  .conversation { min-width: 0; min-height: calc(100vh - 60px); display: grid; grid-template-rows: auto 1fr auto; }
+  .conversation-head { min-height: 76px; padding: 15px 24px; border-bottom: 1px solid var(--line); background: var(--white); display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+  .conversation-head h2 { margin: 0 0 4px; font: 500 1.25rem "Fraunces", Georgia, serif; }
+  .conversation-head p { margin: 0; color: var(--muted); font-size: 12px; }
+  .thread { display: flex; flex-direction: column; align-items: stretch; gap: 12px; overflow: auto; padding: 22px clamp(16px, 5vw, 60px); }
+  .thread-empty { margin: auto; max-width: 390px; text-align: center; color: var(--muted); line-height: 1.6; }
+  .thread-empty strong { display: block; color: var(--ink); font: 500 1.5rem "Fraunces", Georgia, serif; margin-bottom: 7px; }
+  .message { width: fit-content; max-width: min(76%, 620px); padding: 10px 13px; background: white; border: 1px solid var(--line); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .message.admin { align-self: flex-end; background: var(--green-wash); border-color: #c7e0d0; }
+  .message-meta { display: block; color: var(--muted); font: 10px "DM Mono", monospace; margin-bottom: 5px; }
+  .composer { padding: 14px 22px 18px; background: var(--white); border-top: 1px solid var(--line); }
+  .composer textarea { width: 100%; min-height: 80px; max-height: 180px; resize: vertical; padding: 11px 12px; border: 1px solid var(--line); background: #fbfcfa; outline-color: var(--green); line-height: 1.5; }
+  .composer-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 8px; }
+  .composer-hint { color: var(--muted); font-size: 11px; }
+  .notice { padding: 14px; color: var(--muted); line-height: 1.5; }
+  @media (max-width: 720px) {
+    .desk { grid-template-rows: 54px 1fr; }
+    .topbar { height: 54px; padding: 0 13px; }
+    .topbar .brand { font-size: 1.05rem; }
+    .top-actions { gap: 8px; }
+    .top-email { display: none; }
+    .workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(190px, 34vh) minmax(55vh, 1fr); }
+    .people { min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+    .people-head { padding: 12px 14px; }
+    .people-title-row { margin: 2px 0 10px; }
+    .people-title-row h1 { font-size: 1.25rem; }
+    .people-list { display: flex; flex: 1; overflow: auto; }
+    .person { flex: 0 0 230px; grid-template-columns: 34px minmax(0, 1fr); padding: 9px 10px; border-right: 1px solid #edf1ee; border-bottom: 0; }
+    .avatar { width: 34px; height: 34px; }
+    .person-date { display: none; }
+    .conversation { min-height: 0; grid-template-rows: auto minmax(120px, 1fr) auto; }
+    .conversation-head { min-height: 63px; padding: 10px 14px; }
+    .conversation-head h2 { font-size: 1.1rem; }
+    .thread { padding: 14px; }
+    .composer { padding: 10px 12px 13px; }
+  }
+</style>
+</head>
+<body>
+<main class="auth-screen" id="authScreen">
+  <section class="auth-box">
+    <div class="brand"><span class="brand-mark">✦</span>I Remember <span style="font:500 .72rem 'DM Mono',monospace;color:#63747a">/ SUPPORT</span></div>
+    <h1 id="authTitle">Sign in to the support desk</h1>
+    <p id="authCopy">Use your I Remember account. Only accounts explicitly granted admin access can view members or conversations.</p>
+    <button class="button button-primary" id="signInButton" type="button">Continue with Google</button>
+    <button class="button" id="retryButton" type="button" hidden>Try again</button>
+    <button class="button" id="switchAccountButton" type="button" hidden>Sign out / switch account</button>
+    <div class="error" id="authError" role="alert" hidden></div>
+  </section>
+</main>
+
+<main class="desk" id="desk" hidden>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">✦</span>I Remember <span style="font:500 .68rem 'DM Mono',monospace;color:#c2d0d0">/ SUPPORT DESK</span></div>
+    <div class="top-actions"><span class="top-email" id="adminEmail"></span><a class="button" href="./index.html">Open app</a><button class="button" id="signOutButton" type="button">Sign out</button></div>
+  </header>
+  <div class="workspace">
+    <aside class="people" aria-label="Members">
+      <div class="people-head">
+        <div class="eyebrow">Member care</div>
+        <div class="people-title-row"><h1>People</h1><span class="count" id="userCount">Loading</span></div>
+        <input class="search" id="userSearch" type="search" placeholder="Find a name or email" autocomplete="off" aria-label="Search members">
+        <div class="filter-row"><label><input type="checkbox" id="newOnly"> Joined in the last 7 days</label><span id="newCount"></span></div>
+      </div>
+      <div class="people-list" id="peopleList"><div class="notice">Loading members…</div></div>
+    </aside>
+    <section class="conversation" aria-label="Support conversation">
+      <header class="conversation-head">
+        <div><h2 id="conversationTitle">Choose a person</h2><p id="conversationMeta">New members and support conversations appear here.</p></div>
+        <div class="head-actions"><button class="button" id="resetPinButton" type="button" hidden>Reset PIN</button><button class="button" id="greetButton" type="button" hidden>Send welcome</button></div>
+      </header>
+      <div class="thread" id="thread" aria-live="polite"><div class="thread-empty"><strong>Your support inbox</strong>Choose a person to view their conversation or send a welcome message.</div></div>
+      <form class="composer" id="messageForm">
+        <textarea id="messageInput" maxlength="4000" placeholder="Write a helpful reply…" aria-label="Message" disabled required></textarea>
+        <div class="composer-foot"><span class="composer-hint">Private conversation with the selected member</span><button class="button button-primary" id="sendButton" type="submit" disabled>Send message</button></div>
+      </form>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function() {
+  "use strict";
+  var SUPABASE_URL = "https://kfpzouisepillpokcfin.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmcHpvdWlzZXBpbGxwb2tjZmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3OTAyNTUsImV4cCI6MjEwNTM2NjI1NX0.1hHsUNnhiExzBnfkzcw0L3xDirHwVlMmEeH3MDee8rU";
+  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var authScreen = document.getElementById("authScreen");
+  var desk = document.getElementById("desk");
+  var authError = document.getElementById("authError");
+  var users = [];
+  var selectedUser = null;
+  var adminUser = null;
+  var activeUserId = null;
+  var authCheck = null;
+  var authorizationRun = 0;
+  var refreshTimer = null;
+
+  function showAuth(message, restricted) {
+    authScreen.hidden = false;
+    desk.hidden = true;
+    authError.hidden = !message;
+    authError.textContent = message || "";
+    document.getElementById("authTitle").textContent = restricted ? "Admin access required" : "Sign in to the support desk";
+    document.getElementById("authCopy").textContent = restricted
+      ? "This account is not on the support admin allowlist. Ask an existing project owner to grant access in Supabase."
+      : "Use your I Remember account. Only accounts explicitly granted admin access can view members or conversations.";
+    document.getElementById("signInButton").hidden = !!restricted;
+    document.getElementById("retryButton").hidden = !message;
+    document.getElementById("switchAccountButton").hidden = !adminUser;
+  }
+
+  function formatDate(value) {
+    return new Date(value).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function formatTime(value) {
+    return new Date(value).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  }
+
+  function isNewUser(user) {
+    return Date.now() - new Date(user.created_at).getTime() <= 7 * 24 * 60 * 60 * 1000;
+  }
+
+  function renderUsers() {
+    var list = document.getElementById("peopleList");
+    var search = document.getElementById("userSearch").value.trim().toLowerCase();
+    var newOnly = document.getElementById("newOnly").checked;
+    var newUsers = users.filter(isNewUser);
+    var visible = users.filter(function(user) {
+      var matchesSearch = (user.full_name + " " + user.email).toLowerCase().indexOf(search) >= 0;
+      return matchesSearch && (!newOnly || isNewUser(user));
+    });
+    document.getElementById("userCount").textContent = users.length + (users.length === 1 ? " member" : " members");
+    document.getElementById("newCount").textContent = newUsers.length ? newUsers.length + " new" : "";
+    list.textContent = "";
+    if (!visible.length) {
+      var empty = document.createElement("div");
+      empty.className = "notice";
+      empty.textContent = users.length ? "No members match this filter." : "No members yet.";
+      list.appendChild(empty);
+      return;
+    }
+    visible.forEach(function(user) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "person" + (selectedUser && selectedUser.id === user.id ? " selected" : "");
+      var avatar = document.createElement("span");
+      avatar.className = "avatar";
+      avatar.textContent = (user.full_name || user.email || "?").trim().charAt(0).toUpperCase();
+      var identity = document.createElement("span");
+      var name = document.createElement("span");
+      name.className = "person-name";
+      name.textContent = user.full_name || "New member";
+      var email = document.createElement("span");
+      email.className = "person-email";
+      email.textContent = user.email || "No email";
+      identity.appendChild(name);
+      identity.appendChild(email);
+      if (isNewUser(user)) {
+        var tag = document.createElement("span");
+        tag.className = "new-tag";
+        tag.textContent = "New";
+        identity.appendChild(tag);
+      }
+      var joined = document.createElement("span");
+      joined.className = "person-date";
+      joined.textContent = formatDate(user.created_at);
+      button.appendChild(avatar);
+      button.appendChild(identity);
+      button.appendChild(joined);
+      button.addEventListener("click", function() { selectUser(user); });
+      list.appendChild(button);
+    });
+  }
+
+  function loadUsers() {
+    return supabase.rpc("admin_list_users").then(function(result) {
+      if (result.error) throw result.error;
+      users = result.data || [];
+      if (selectedUser) {
+        selectedUser = users.find(function(user) { return user.id === selectedUser.id; }) || null;
+      }
+      renderUsers();
+      if (!selectedUser && users.length) selectUser(users[0]);
+      else if (selectedUser) updateConversationHeader();
+    });
+  }
+
+  function updateConversationHeader() {
+    if (!selectedUser) return;
+    document.getElementById("conversationTitle").textContent = selectedUser.full_name || "New member";
+    document.getElementById("conversationMeta").textContent = (selectedUser.email || "No email") + " · Joined " + formatDate(selectedUser.created_at);
+    document.getElementById("messageInput").disabled = false;
+    document.getElementById("sendButton").disabled = false;
+    document.getElementById("resetPinButton").hidden = false;
+  }
+
+  function selectUser(user) {
+    selectedUser = user;
+    renderUsers();
+    updateConversationHeader();
+    document.getElementById("thread").innerHTML = '<div class="thread-empty">Loading conversation…</div>';
+    document.getElementById("greetButton").hidden = true;
+    loadThread();
+  }
+
+  function loadThread() {
+    if (!selectedUser) return Promise.resolve();
+    var userId = selectedUser.id;
+    return supabase.from("support_messages")
+      .select("id, sender_id, body, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(100)
+      .then(function(result) {
+        if (result.error) throw result.error;
+        if (!selectedUser || selectedUser.id !== userId) return;
+        var messages = (result.data || []).reverse();
+        var thread = document.getElementById("thread");
+        thread.textContent = "";
+        if (!messages.length) {
+          var empty = document.createElement("div");
+          empty.className = "thread-empty";
+          empty.innerHTML = "<strong>Say hello</strong>This member has no messages yet. A warm welcome is a good place to start.";
+          thread.appendChild(empty);
+        } else {
+          messages.forEach(function(message) {
+            var bubble = document.createElement("div");
+            bubble.className = "message" + (message.sender_id === adminUser.id ? " admin" : "");
+            var meta = document.createElement("span");
+            meta.className = "message-meta";
+            meta.textContent = (message.sender_id === adminUser.id ? "You" : (selectedUser.full_name || "Member")) + " · " + formatTime(message.created_at);
+            var body = document.createElement("span");
+            body.textContent = message.body;
+            bubble.appendChild(meta);
+            bubble.appendChild(body);
+            thread.appendChild(bubble);
+          });
+        }
+        var welcomed = messages.some(function(message) { return message.sender_id === adminUser.id; });
+        document.getElementById("greetButton").hidden = !isNewUser(selectedUser) || welcomed;
+        thread.scrollTop = thread.scrollHeight;
+      })
+      .catch(function() {
+        if (selectedUser && selectedUser.id === userId) {
+          document.getElementById("thread").textContent = "Couldn’t load this conversation. Check the support migration and try again.";
+        }
+      });
+  }
+
+  function sendMessage(body) {
+    if (!selectedUser || !body.trim() || !adminUser) return Promise.resolve();
+    var targetId = selectedUser.id;
+    document.getElementById("sendButton").disabled = true;
+    document.getElementById("greetButton").disabled = true;
+    return supabase.from("support_messages").insert({
+      user_id: targetId,
+      sender_id: adminUser.id,
+      body: body.trim()
+    }).then(function(result) {
+      if (result.error) throw result.error;
+      if (selectedUser && selectedUser.id === targetId) document.getElementById("messageInput").value = "";
+      return loadThread();
+    }).catch(function() {
+      document.getElementById("thread").textContent = "Message couldn’t be sent. Check your connection and try again.";
+    }).finally(function() {
+      document.getElementById("sendButton").disabled = !selectedUser;
+      document.getElementById("greetButton").disabled = false;
+    });
+  }
+
+  function authorizeUser(user) {
+    if (activeUserId === user.id && !desk.hidden) return Promise.resolve();
+    if (authCheck && activeUserId === user.id) return authCheck;
+    activeUserId = user.id;
+    adminUser = user;
+    var run = ++authorizationRun;
+    authCheck = supabase.rpc("is_support_admin").then(function(result) {
+      if (result.error) throw result.error;
+      if (authorizationRun !== run || activeUserId !== user.id) return;
+      if (!result.data) {
+        activeUserId = null;
+        showAuth("Signed in as " + (user.email || "an unknown account") + ". This account is not authorized to use the support desk.", true);
+        return;
+      }
+      authScreen.hidden = true;
+      desk.hidden = false;
+      document.getElementById("adminEmail").textContent = user.email || "";
+      return loadUsers().then(function() {
+        if (authorizationRun !== run || activeUserId !== user.id) return;
+        if (refreshTimer) window.clearInterval(refreshTimer);
+        refreshTimer = window.setInterval(function() {
+          loadUsers();
+          loadThread();
+        }, 8000);
+      });
+    }).catch(function() {
+      if (authorizationRun !== run || activeUserId !== user.id) return;
+      activeUserId = null;
+      showAuth("Admin setup is incomplete. Apply supabase-migration.sql and add your account to support_admins, then try again.", false);
+    }).finally(function() { if (authorizationRun === run) authCheck = null; });
+    return authCheck;
+  }
+
+  function handleSession(session) {
+    if (!session || !session.user) {
+      authorizationRun++;
+      activeUserId = null;
+      adminUser = null;
+      selectedUser = null;
+      if (refreshTimer) window.clearInterval(refreshTimer);
+      refreshTimer = null;
+      showAuth("", false);
+      return;
+    }
+    authorizeUser(session.user);
+  }
+
+  document.getElementById("signInButton").addEventListener("click", function() {
+    supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    }).then(function(result) {
+      if (result.error) showAuth("Couldn’t start Google sign-in. Try again.", false);
+    });
+  });
+  document.getElementById("retryButton").addEventListener("click", function() {
+    authError.hidden = true;
+    supabase.auth.getSession().then(function(result) { handleSession(result.data.session); });
+  });
+  document.getElementById("signOutButton").addEventListener("click", function() { supabase.auth.signOut(); });
+  document.getElementById("switchAccountButton").addEventListener("click", function() {
+    supabase.auth.signOut().then(function(result) {
+      if (result.error) {
+        authError.textContent = "Couldn’t sign out. Check your connection and try again.";
+        authError.hidden = false;
+      }
+    });
+  });
+  document.getElementById("userSearch").addEventListener("input", renderUsers);
+  document.getElementById("newOnly").addEventListener("change", renderUsers);
+  document.getElementById("messageForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    sendMessage(document.getElementById("messageInput").value);
+  });
+  document.getElementById("greetButton").addEventListener("click", function() {
+    sendMessage("Welcome to I Remember! We’re glad you’re here. If you need a hand getting started, reply here and we’ll help.");
+  });
+  document.getElementById("resetPinButton").addEventListener("click", function() {
+    if (!selectedUser || !window.confirm("Only reset this PIN after verifying the member by phone at 347-825-9983. Reset the selected member's PIN now?")) return;
+    var button = document.getElementById("resetPinButton");
+    button.disabled = true;
+    supabase.rpc("admin_reset_user_pin", { target_user_id: selectedUser.id }).then(function(result) {
+      if (result.error) throw result.error;
+      document.getElementById("conversationMeta").textContent = result.data
+        ? "PIN reset. The member can set a new PIN in the app."
+        : "This member has no PIN set.";
+    }).catch(function() {
+      document.getElementById("conversationMeta").textContent = "Couldn’t reset the PIN. Confirm admin access and apply the latest migration.";
+    }).finally(function() { button.disabled = false; });
+  });
+  supabase.auth.onAuthStateChange(function(_event, session) { handleSession(session); });
+  supabase.auth.getSession().then(function(result) { handleSession(result.data.session); });
+})();
+</script>
+</body>
+</html>

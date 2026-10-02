@@ -66,7 +66,8 @@
   .nav-btn { width: 34px; height: 34px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; display: grid; place-items: center; transition: background 0.15s ease, border-color 0.15s ease; }
   .nav-btn:hover { background: var(--accent-wash); border-color: var(--accent-soft); }
   .nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .account-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 20px; }
+  .account-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 20px; }
+  .account-bar a.action-btn { text-decoration: none; }
   .account-bar .email { font-size: 0.74rem; color: var(--ink-faint); }
   .account-bar .signout-btn { border: none; background: none; color: var(--ink-soft); font-size: 0.74rem; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; padding: 2px 0; }
   .account-bar .signout-btn:hover { color: var(--accent); }
@@ -112,9 +113,22 @@
   .strip::-webkit-scrollbar { height: 6px; }
   .strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   .thumb-tile { position: relative; flex: 0 0 auto; width: 84px; height: 84px; border-radius: 10px; overflow: hidden; background: var(--surface-raised); border: 1px solid var(--border); }
-  .thumb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
   .thumb-tile .remove { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(20,14,8,0.55); color: #fff; font-size: 11px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
   .thumb-tile .tag { position: absolute; left: 4px; bottom: 3px; font-size: 0.58rem; background: rgba(20,14,8,0.55); color: #fff; padding: 1px 4px; border-radius: 4px; letter-spacing: 0.03em; }
+  .photo-viewer { position: fixed; inset: 0; z-index: 170; display: grid; grid-template-rows: 54px 1fr 48px; background: rgba(19, 17, 15, .96); color: #fff; padding: 12px 18px 18px; }
+  .photo-viewer[hidden] { display: none; }
+  .photo-viewer-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .photo-viewer-count { color: rgba(255,255,255,.8); font: 12px "IBM Plex Mono", monospace; }
+  .photo-viewer-close, .photo-viewer-arrow { width: 44px; height: 44px; border: 1px solid rgba(255,255,255,.36); background: rgba(255,255,255,.08); color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .photo-viewer-close:hover, .photo-viewer-arrow:hover:not(:disabled) { background: rgba(255,255,255,.2); }
+  .photo-viewer-close:focus-visible, .photo-viewer-arrow:focus-visible { outline: 2px solid #f3c97a; outline-offset: 2px; }
+  .photo-viewer-body { min-height: 0; display: grid; grid-template-columns: 54px minmax(0, 1fr) 54px; align-items: center; justify-items: center; gap: 16px; }
+  .photo-viewer-arrow { width: 50px; height: 62px; }
+  .photo-viewer-arrow:disabled { opacity: .35; cursor: not-allowed; }
+  .photo-viewer-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .photo-viewer-caption { align-self: center; text-align: center; color: rgba(255,255,255,.7); font-size: .76rem; }
+  @media (max-width: 520px) { .photo-viewer { padding: 8px; grid-template-rows: 48px 1fr 42px; } .photo-viewer-body { grid-template-columns: 42px minmax(0, 1fr) 42px; gap: 6px; } .photo-viewer-arrow { width: 40px; height: 54px; } }
   .add-tile { flex: 0 0 auto; width: 84px; height: 84px; border-radius: 10px; border: 1.5px dashed var(--border); background: none; color: var(--ink-faint); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.66rem; transition: border-color 0.15s ease, color 0.15s ease; }
   .add-tile:hover { border-color: var(--accent); color: var(--accent); }
   .add-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -183,7 +197,44 @@
   .google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
   .auth-error { margin-top: 14px; font-size: 0.8rem; color: var(--mood-angry); }
   [hidden] { display: none !important; }
-  @media (max-width: 520px) { .panel { width: 100vw; } .month-nav .month-label { min-width: 130px; } }
+  @media (max-width: 650px) {
+    .app { padding: max(14px, env(safe-area-inset-top)) 12px calc(96px + env(safe-area-inset-bottom)); }
+    .topbar { align-items: center; gap: 12px; }
+    .wordmark { gap: 7px; }
+    .wordmark .glyph, .wordmark h1 { font-size: 1.55rem; }
+    .month-nav { gap: 8px; }
+    .month-nav .month-label { min-width: 118px; font-size: 1rem; }
+    .account-bar { justify-content: space-between; margin: 10px 0 16px; min-width: 0; }
+    .account-bar .email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .weekday-row, .grid { gap: 4px; }
+    .weekday-row span { font-size: .62rem; letter-spacing: .03em; }
+    .day { aspect-ratio: .78; border-radius: 8px; }
+    .day .num { top: 4px; left: 4px; font-size: .64rem; padding: 1px 3px; }
+    .toolbar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 7px; margin-top: 12px; }
+    .search-wrap { grid-column: 1 / -1; }
+    .field, .action-btn { min-width: 0; min-height: 42px; font-size: .76rem; }
+    .tool-launcher { gap: 6px; }
+    .tool-launcher .action-btn { flex-basis: calc(50% - 4px); }
+    .panel { width: 100vw; border-left: 0; padding-bottom: env(safe-area-inset-bottom); }
+    .panel-head { padding: max(14px, env(safe-area-inset-top)) 16px 12px; }
+    .panel-scroll { padding: 16px 16px calc(32px + env(safe-area-inset-bottom)); }
+    .moment-row { align-items: flex-start; flex-wrap: wrap; }
+    .capture-btn { min-height: 42px; }
+    .support-launch { left: 12px; bottom: calc(68px + env(safe-area-inset-bottom)); min-height: 42px; }
+    .support-panel { left: 8px; bottom: calc(120px + env(safe-area-inset-bottom)); width: calc(100vw - 16px); height: min(460px, calc(100dvh - 150px - env(safe-area-inset-bottom))); }
+    .pip-btn { right: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); }
+    .recording-pill { left: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); }
+    .visibility-switch { top: auto; right: 12px; bottom: calc(68px + env(safe-area-inset-bottom)); width: 42px; height: 42px; font-size: 1.15rem; }
+    .radio-lock-button { top: max(10px, env(safe-area-inset-top)); left: 10px; width: 42px; height: 42px; }
+  }
+  @media (max-width: 380px) {
+    .app { padding-left: 9px; padding-right: 9px; }
+    .wordmark .glyph, .wordmark h1 { font-size: 1.38rem; }
+    .month-nav .month-label { min-width: 108px; font-size: .92rem; }
+    .grid, .weekday-row { gap: 3px; }
+    .weekday-row span { font-size: .56rem; }
+    .day .num { top: 3px; left: 3px; }
+  }
 
   /* ---- Weather ---- */
   .weather-card { background: var(--surface-raised); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
@@ -266,8 +317,37 @@
   .limit-note { color: var(--ink-faint); font-size: .7rem; line-height: 1.4; margin: 7px 0 0; }
   .recording-pill { display: none; position: fixed; left: 16px; bottom: 18px; z-index: 55; border-radius: 999px; padding: 8px 12px; color: #fff; background: #a72f25; font-size: .72rem; font-weight: 700; box-shadow: 0 4px 18px rgba(0,0,0,.2); }
   .recording-pill.on { display: block; }
-  .visibility-switch { position: fixed; top: 14px; right: 14px; z-index: 200; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; font-size: 1.35rem; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
-  body.background-only > *:not(.visibility-switch) { visibility: hidden !important; pointer-events: none !important; }
+  .visibility-switch { position: fixed; top: 14px; right: 14px; z-index: 220; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; font-size: 1.35rem; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
+  .radio-lock-button { display: none; position: fixed; top: 14px; left: 14px; z-index: 220; width: 48px; height: 48px; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
+  #radioModal { z-index: 210; }
+  .pin-overlay { position: fixed; inset: 0; z-index: 240; display: grid; place-items: center; padding: 18px; background: rgba(20, 18, 16, .82); backdrop-filter: blur(5px); }
+  .pin-overlay[hidden] { display: none; }
+  .pin-dialog { width: min(360px, 100%); padding: 22px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,.32); }
+  .pin-dialog h2 { font-size: 1.35rem; margin: 0 0 8px; }
+  .pin-dialog p { color: var(--ink-soft); font-size: .82rem; line-height: 1.5; margin: 0 0 16px; }
+  .pin-dialog label { display: block; color: var(--ink-soft); font-size: .75rem; margin: 12px 0 5px; }
+  .pin-dialog input { width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font: 1.25rem "IBM Plex Mono", monospace; letter-spacing: .25em; text-align: center; }
+  .pin-dialog input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pin-error { color: var(--mood-angry); font-size: .78rem; line-height: 1.4; margin-top: 10px; }
+  .pin-help { display: block; margin-top: 13px; color: var(--accent); font-size: .78rem; line-height: 1.5; }
+  .pin-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .pin-actions .action-btn { flex: 1; }
+  .support-launch { position: fixed; left: 18px; bottom: 22px; z-index: 55; min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 15px; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 600 .82rem "Work Sans", sans-serif; cursor: pointer; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
+  .support-launch:hover { filter: brightness(1.06); }
+  .support-panel { position: fixed; left: 18px; bottom: 78px; z-index: 56; width: min(360px, calc(100vw - 36px)); height: min(480px, calc(100dvh - 110px)); display: flex; flex-direction: column; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 18px 50px hsl(var(--shadow) / .28); }
+  .support-panel[hidden] { display: none; }
+  .support-head { padding: 14px 16px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .support-head h2 { font-size: 1.05rem; }
+  .support-thread { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+  .support-message { max-width: 86%; align-self: flex-start; padding: 9px 11px; background: var(--surface-raised); border: 1px solid var(--border-soft); font-size: .82rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .support-message.mine { align-self: flex-end; background: var(--accent-wash); border-color: var(--accent-soft); }
+  .support-message-meta { display: block; color: var(--ink-faint); font-size: .65rem; margin-bottom: 4px; }
+  .support-compose { padding: 12px; border-top: 1px solid var(--border-soft); display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .support-compose textarea { min-height: 42px; max-height: 100px; resize: vertical; font-size: .82rem; }
+  @media (max-width: 520px) { .support-launch { bottom: 76px; left: 14px; } .support-panel { left: 10px; bottom: 130px; width: calc(100vw - 20px); height: min(460px, calc(100dvh - 150px)); } }
+  body.background-only > *:not(.visibility-switch):not(.radio-lock-button):not(#pinOverlay):not(#radioModal) { visibility: hidden !important; pointer-events: none !important; }
+  body.background-only #radioModal, body.background-only #pinOverlay { visibility: visible !important; pointer-events: auto !important; }
+  body.background-only .radio-lock-button { display: grid; visibility: visible !important; pointer-events: auto !important; }
   body.background-only::before { background: transparent; }
   body.background-only .visibility-switch { visibility: visible !important; pointer-events: auto !important; }
   .tool-modal { position: fixed; inset: 0; z-index: 180; background: hsl(var(--shadow) / .58); display: grid; place-items: center; padding: 18px; }
@@ -320,6 +400,8 @@
   </header>
   <div class="account-bar">
     <span class="mono email" id="accountEmail"></span>
+    <a class="action-btn" id="adminLink" href="./admin.html" hidden>Admin · Member messages</a>
+    <button class="action-btn" id="accountMessages" type="button" aria-controls="supportPanel" aria-expanded="false">✉ Messages</button>
     <button class="signout-btn" id="signOutBtn">Sign out</button>
   </div>
   <div class="toolbar" aria-label="App tools">
@@ -345,6 +427,13 @@
   </div>
   <div class="grid" id="grid"></div>
 </div>
+
+<button class="support-launch" id="supportLaunch" type="button" aria-expanded="false" aria-controls="supportPanel" hidden>✉ Messages</button>
+<section class="support-panel" id="supportPanel" role="dialog" aria-label="Support chat" hidden>
+  <div class="support-head"><div><h2>Messages</h2><span class="item-meta">Your private conversation with I Remember support.</span></div><button class="close-btn" id="supportClose" type="button" aria-label="Close support chat">×</button></div>
+  <div class="support-thread" id="supportThread" aria-live="polite"><div class="empty-note">Loading your conversation…</div></div>
+  <form class="support-compose" id="supportForm"><textarea id="supportInput" maxlength="4000" rows="2" placeholder="Write a message…" aria-label="Your message" required></textarea><button class="action-btn" type="submit" aria-label="Send message">Send</button></form>
+</section>
 
 <div class="backdrop" id="backdrop"></div>
 <aside class="panel" id="panel" aria-hidden="true">
@@ -449,6 +538,22 @@
 
 <div class="tool-modal" id="radioModal" hidden><section class="tool-dialog" role="dialog" aria-modal="true" aria-labelledby="radioTitle"><div class="tool-dialog-head"><h2 id="radioTitle">Worldwide live radio</h2><button class="action-btn tool-close" data-close-tool>✕ Close</button></div><div class="form-row"><select class="field" id="radioCountry"><option value="">Choose country</option></select><select class="field" id="radioStation"><option value="">Choose station</option></select></div><audio id="radioPlayer" controls preload="none" style="width:100%;margin-top:12px"></audio><div class="volume-row"><button class="action-btn" id="radioMute">Mute</button><input id="radioVolume" type="range" min="0" max="100" value="70" aria-label="Radio volume"><output id="radioVolumeValue">70%</output></div><div class="radio-status" id="radioStatus">Countries are alphabetical. Station data comes from the community Radio Browser directory.</div><p class="limit-note">Radio can continue while you use this page. After a full refresh, browsers require you to press Play again.</p></section></div>
 
+<div class="pin-overlay" id="pinOverlay" hidden>
+  <section class="pin-dialog" role="dialog" aria-modal="true" aria-labelledby="pinTitle" aria-describedby="pinDescription">
+    <h2 id="pinTitle">Enter your PIN</h2>
+    <p id="pinDescription">Enter your four-digit PIN to change the screen mode.</p>
+    <form id="pinForm">
+      <label for="pinInput">Four-digit PIN</label>
+      <input id="pinInput" type="password" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}" required>
+      <label for="pinConfirmInput" id="pinConfirmLabel" hidden>Confirm PIN</label>
+      <input id="pinConfirmInput" type="password" inputmode="numeric" autocomplete="new-password" maxlength="4" pattern="[0-9]{4}" hidden>
+      <div class="pin-error" id="pinError" role="alert" hidden></div>
+      <a class="pin-help" id="pinHelp" href="tel:3478259983" hidden>Forgot your PIN? Call 347-825-9983. Only an admin can reset it.</a>
+      <div class="pin-actions"><button class="action-btn" id="pinCancel" type="button">Cancel</button><button class="action-btn" id="pinSubmit" type="submit">Continue</button></div>
+    </form>
+  </section>
+</div>
+
 <div class="tool-modal" id="alarmModal" hidden><section class="tool-dialog" role="dialog" aria-modal="true" aria-labelledby="alarmTitle"><div class="tool-dialog-head"><h2 id="alarmTitle">Smart alarms</h2><button class="action-btn tool-close" data-close-tool>✕ Close</button></div><div class="form-row"><input class="field" id="alarmDate" type="date"><input class="field" id="alarmTime" type="time"><input class="field" id="alarmLabel" maxlength="120" placeholder="Work meeting, gym, family…"><button class="action-btn" id="addAlarmButton">Set alarm</button></div><div class="stack-list" id="alarmList"></div><button class="action-btn" id="testAlarmButton" type="button">Test sound and voice</button><p class="limit-note">Every alarm sounds and speaks its label 10 minutes early while the app is running. The operating system may suspend a closed or locked browser.</p></section></div>
 
 <div class="tool-modal" id="horoscopeModal" hidden><section class="tool-dialog" role="dialog" aria-modal="true" aria-labelledby="horoscopeTitle"><div class="tool-dialog-head"><h2 id="horoscopeTitle">Daily horoscope</h2><button class="action-btn tool-close" data-close-tool>✕ Close</button></div><div class="form-row"><select class="field" id="zodiacSign"><option>Aries</option><option>Taurus</option><option>Gemini</option><option>Cancer</option><option>Leo</option><option>Virgo</option><option>Libra</option><option>Scorpio</option><option>Sagittarius</option><option>Capricorn</option><option>Aquarius</option><option>Pisces</option></select><button class="action-btn" id="readHoroscope">🔊 Read aloud</button></div><div class="result-box" id="horoscopeText"></div></section></div>
@@ -486,7 +591,21 @@
 </button>
 
 <button class="visibility-switch" id="visibilitySwitch" aria-label="Show background only" title="Background-only mode">☀️</button>
+<button class="radio-lock-button" id="radioLockButton" type="button" aria-label="Open radio" title="Open radio"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="5" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6 5l8-3M6 9h8M6 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="13.5" cy="13" r="1" fill="currentColor"/></svg></button>
 <div class="recording-pill" id="recordingPill">● RECORDING</div>
+
+<div class="photo-viewer" id="photoViewer" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
+  <div class="photo-viewer-head">
+    <span class="photo-viewer-count" id="photoViewerCount"></span>
+    <button class="photo-viewer-close" id="photoViewerClose" type="button" aria-label="Close photo viewer" title="Close">×</button>
+  </div>
+  <div class="photo-viewer-body">
+    <button class="photo-viewer-arrow" id="photoViewerPrevious" type="button" aria-label="Previous photo" title="Previous photo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <img class="photo-viewer-image" id="photoViewerImage" alt="">
+    <button class="photo-viewer-arrow" id="photoViewerNext" type="button" aria-label="Next photo" title="Next photo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+  <div class="photo-viewer-caption">Use the arrow keys to move between photos</div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -560,6 +679,15 @@
 }
 
   function showAuthScreen(message) {
+    document.getElementById("adminLink").hidden = true;
+    document.getElementById("supportLaunch").hidden = true;
+    document.getElementById("supportPanel").hidden = true;
+    document.getElementById("supportThread").textContent = "";
+    document.getElementById("supportInput").value = "";
+    document.getElementById("accountMessages").setAttribute("aria-expanded", "false");
+    document.getElementById("supportLaunch").setAttribute("aria-expanded", "false");
+    if (supportPollTimer) window.clearInterval(supportPollTimer);
+    supportPollTimer = null;
     appRoot.hidden = true;
     authOverlay.hidden = false;
     if (message) { authError.textContent = message; authError.hidden = false; }
@@ -571,6 +699,14 @@ function showApp() {
     document.getElementById("accountEmail").textContent = currentUser.email || "";
 
     ensureProfile();
+    document.getElementById("supportLaunch").hidden = false;
+    document.getElementById("adminLink").hidden = true;
+    var accountId = currentUser.id;
+    supabase.rpc("is_support_admin").then(function(result) {
+      if (currentUser && currentUser.id === accountId) {
+        document.getElementById("adminLink").hidden = !!result.error || result.data !== true;
+      }
+    }).catch(function() {});
 
     renderCalendar();
     startPrayerReminder();
@@ -580,6 +716,89 @@ function showApp() {
     });
 }
 
+  var supportPanel = document.getElementById("supportPanel");
+  var supportThread = document.getElementById("supportThread");
+  var supportPollTimer = null;
+
+  function formatSupportTime(value) {
+    return new Date(value).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  }
+
+  function loadSupportMessages() {
+    if (!currentUser) return Promise.resolve();
+    var userId = currentUser.id;
+    return supabase.from("support_messages")
+      .select("id, sender_id, body, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(100)
+      .then(function(res) {
+        if (!currentUser || currentUser.id !== userId) return;
+        if (res.error) throw res.error;
+        supportThread.textContent = "";
+        if (!res.data || !res.data.length) {
+          var welcome = document.createElement("div");
+          welcome.className = "empty-note";
+          welcome.textContent = "No messages yet. Send a note and we’ll get back to you here.";
+          supportThread.appendChild(welcome);
+          return;
+        }
+        res.data.reverse().forEach(function(message) {
+          var bubble = document.createElement("div");
+          bubble.className = "support-message" + (message.sender_id === currentUser.id ? " mine" : "");
+          var meta = document.createElement("span");
+          meta.className = "support-message-meta";
+          meta.textContent = (message.sender_id === currentUser.id ? "You" : "I Remember support") + " · " + formatSupportTime(message.created_at);
+          var body = document.createElement("span");
+          body.textContent = message.body;
+          bubble.appendChild(meta);
+          bubble.appendChild(body);
+          supportThread.appendChild(bubble);
+        });
+        supportThread.scrollTop = supportThread.scrollHeight;
+      });
+  }
+
+  function openSupportChat() {
+    if (!currentUser) return;
+    supportPanel.hidden = false;
+    document.getElementById("accountMessages").setAttribute("aria-expanded", "true");
+    document.getElementById("supportLaunch").setAttribute("aria-expanded", "true");
+    loadSupportMessages().catch(function() {
+      supportThread.textContent = "Support chat is unavailable. Please try again later.";
+    });
+    if (!supportPollTimer) supportPollTimer = window.setInterval(function() {
+      if (!supportPanel.hidden) loadSupportMessages().catch(function() {});
+    }, 6000);
+    document.getElementById("supportInput").focus();
+  }
+
+  document.getElementById("supportLaunch").addEventListener("click", openSupportChat);
+  document.getElementById("accountMessages").addEventListener("click", openSupportChat);
+  document.getElementById("supportClose").addEventListener("click", function() {
+    supportPanel.hidden = true;
+    document.getElementById("accountMessages").setAttribute("aria-expanded", "false");
+    if (supportPollTimer) window.clearInterval(supportPollTimer);
+    supportPollTimer = null;
+    document.getElementById("supportLaunch").setAttribute("aria-expanded", "false");
+  });
+  document.getElementById("supportForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    var input = document.getElementById("supportInput");
+    var body = input.value.trim();
+    if (!body || !currentUser) return;
+    var submit = event.currentTarget.querySelector("button[type=submit]");
+    submit.disabled = true;
+    supabase.from("support_messages").insert({ user_id: currentUser.id, sender_id: currentUser.id, body: body })
+      .then(function(res) {
+        if (res.error) throw res.error;
+        input.value = "";
+        return loadSupportMessages();
+      })
+      .catch(function() { showToast("Message couldn’t be sent. Try again."); })
+      .finally(function() { submit.disabled = false; input.focus(); });
+  });
+
   document.getElementById("googleSignIn").addEventListener("click", function() {
     supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } })
       .then(function(res) { if (res.error) showAuthScreen("Couldn't start Google sign-in — try again."); });
@@ -587,7 +806,7 @@ function showApp() {
   document.getElementById("signOutBtn").addEventListener("click", function() { closePanel(); supabase.auth.signOut(); });
   supabase.auth.onAuthStateChange(function(_event, session) {
     currentUser = session ? session.user : null;
-    if (currentUser) showApp(); else showAuthScreen();
+    if (currentUser) showApp(); else { setBackgroundOnly(false); showAuthScreen(); }
   });
   supabase.auth.getSession().then(function(res) {
     currentUser = res.data.session ? res.data.session.user : null;
@@ -1184,7 +1403,12 @@ function showApp() {
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
       if (reelOverlay.classList.contains("open")) closeReel();
+      else if (!photoViewer.hidden) closePhotoViewer();
       else if (panel.classList.contains("open")) closePanel();
+    } else if (!photoViewer.hidden && e.key === "ArrowLeft") {
+      e.preventDefault(); showPhotoAt(photoViewerIndex - 1);
+    } else if (!photoViewer.hidden && e.key === "ArrowRight") {
+      e.preventDefault(); showPhotoAt(photoViewerIndex + 1);
     }
   });
 
@@ -1207,6 +1431,41 @@ function showApp() {
   // ---------- Photos ----------
   var photoStrip = document.getElementById("photoStrip");
   var photoInput = document.getElementById("photoInput");
+  var photoViewer = document.getElementById("photoViewer");
+  var photoViewerImage = document.getElementById("photoViewerImage");
+  var photoViewerIndex = 0;
+  var photoViewerReturnFocus = null;
+
+  function showPhotoAt(index) {
+    var photos = activeEntry ? activeEntry.photos : [];
+    if (index < 0 || index >= photos.length) return;
+    photoViewerIndex = index;
+    photoViewerImage.src = photos[index].url || "";
+    photoViewerImage.alt = "Photo " + (index + 1) + " of " + photos.length + " from " + activeKey;
+    document.getElementById("photoViewerCount").textContent = (index + 1) + " / " + photos.length;
+    document.getElementById("photoViewerPrevious").disabled = index === 0;
+    document.getElementById("photoViewerNext").disabled = index === photos.length - 1;
+  }
+
+  function openPhotoViewer(index, source) {
+    if (!activeEntry || !activeEntry.photos.length) return;
+    photoViewerReturnFocus = source || document.activeElement;
+    photoViewer.hidden = false;
+    showPhotoAt(index);
+    document.getElementById("photoViewerClose").focus();
+  }
+
+  function closePhotoViewer() {
+    if (photoViewer.hidden) return;
+    photoViewer.hidden = true;
+    photoViewerImage.removeAttribute("src");
+    if (photoViewerReturnFocus && photoViewerReturnFocus.focus) photoViewerReturnFocus.focus();
+  }
+
+  document.getElementById("photoViewerPrevious").addEventListener("click", function() { showPhotoAt(photoViewerIndex - 1); });
+  document.getElementById("photoViewerNext").addEventListener("click", function() { showPhotoAt(photoViewerIndex + 1); });
+  document.getElementById("photoViewerClose").addEventListener("click", closePhotoViewer);
+  photoViewer.addEventListener("click", function(event) { if (event.target === photoViewer) closePhotoViewer(); });
 
   function refreshPhotoStrip() {
     if (!activeEntry) return;
@@ -1216,6 +1475,7 @@ function showApp() {
     activeEntry.photos.forEach(function(item, idx) {
       var tile = document.createElement("div"); tile.className = "thumb-tile";
       var img = document.createElement("img"); img.src = item.url || ""; img.alt = "Photo from " + activeKey;
+      img.addEventListener("click", function() { openPhotoViewer(idx, img); });
       tile.appendChild(img);
       var rm = document.createElement("button"); rm.className = "remove"; rm.setAttribute("aria-label", "Remove photo"); rm.textContent = "✕";
       rm.addEventListener("click", function(ev) {
@@ -1777,16 +2037,109 @@ function showApp() {
   function applyBackground(data) { document.body.style.setProperty("--custom-background", data ? 'url("' + data + '")' : "none"); }
   applyBackground(localStorage.getItem("iremember-background"));
 
+  var pinOverlay = document.getElementById("pinOverlay");
+  var pinMode = "verify";
+  var pinBusy = false;
+
   function setBackgroundOnly(hidden) {
     var button = document.getElementById("visibilitySwitch");
     document.body.classList.toggle("background-only", hidden);
     button.textContent = hidden ? "🌙" : "☀️";
     button.setAttribute("aria-label", hidden ? "Show all controls" : "Show background only");
     button.title = hidden ? "Click to show the app" : "Click to show only the background";
+    try { localStorage.setItem("iremember-background-only", hidden ? "true" : "false"); } catch(ignore) {}
   }
-  setBackgroundOnly(false);
-  window.addEventListener("pageshow", function() { setBackgroundOnly(false); });
-  document.getElementById("visibilitySwitch").addEventListener("click", function() { setBackgroundOnly(!document.body.classList.contains("background-only")); });
+
+  function closePinDialog() {
+    pinOverlay.hidden = true;
+    document.getElementById("pinForm").reset();
+    document.getElementById("pinError").hidden = true;
+    document.getElementById("visibilitySwitch").focus();
+  }
+
+  function showPinDialog(mode) {
+    pinMode = mode;
+    pinOverlay.hidden = false;
+    document.getElementById("pinTitle").textContent = mode === "setup" ? "Create your four-digit PIN" : "Enter your PIN";
+    document.getElementById("pinDescription").textContent = mode === "setup"
+      ? "Choose a four-digit PIN. You’ll need it every time you change the screen mode."
+      : "Enter your four-digit PIN to change the screen mode.";
+    document.getElementById("pinConfirmLabel").hidden = mode !== "setup";
+    document.getElementById("pinConfirmInput").hidden = mode !== "setup";
+    document.getElementById("pinHelp").hidden = mode === "setup";
+    document.getElementById("pinSubmit").textContent = mode === "setup" ? "Save PIN" : "Continue";
+    document.getElementById("pinError").hidden = true;
+    document.getElementById("pinInput").focus();
+  }
+
+  function syncPinDigits(input) { input.value = input.value.replace(/\\D/g, "").slice(0, 4); }
+  document.getElementById("pinInput").addEventListener("input", function() { syncPinDigits(this); });
+  document.getElementById("pinConfirmInput").addEventListener("input", function() { syncPinDigits(this); });
+  document.getElementById("pinCancel").addEventListener("click", closePinDialog);
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape" && !pinOverlay.hidden) { event.stopImmediatePropagation(); closePinDialog(); }
+  }, true);
+
+  document.getElementById("pinForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    if (pinBusy) return;
+    var pin = document.getElementById("pinInput").value;
+    var error = document.getElementById("pinError");
+    if (!/^[0-9]{4}$/.test(pin)) { error.textContent = "Enter exactly four numbers."; error.hidden = false; return; }
+
+    var request;
+    if (pinMode === "setup") {
+      var confirmation = document.getElementById("pinConfirmInput").value;
+      if (pin !== confirmation) { error.textContent = "The PINs don’t match."; error.hidden = false; return; }
+      request = supabase.rpc("set_app_pin", { pin_value: pin }).then(function(result) {
+        if (result.error) throw result.error;
+        closePinDialog();
+        setBackgroundOnly(true);
+        showToast("PIN saved. The screen is now hidden.");
+      });
+    } else {
+      request = supabase.rpc("verify_app_pin", { pin_value: pin }).then(function(result) {
+        if (result.error) throw result.error;
+        if (!result.data) {
+          error.textContent = "PIN is incorrect or temporarily locked. Five wrong attempts lock entry for 15 minutes.";
+          error.hidden = false;
+          return;
+        }
+        var hide = !document.body.classList.contains("background-only");
+        closePinDialog();
+        setBackgroundOnly(hide);
+      });
+    }
+
+    pinBusy = true;
+    document.getElementById("pinSubmit").disabled = true;
+    request.catch(function() {
+      error.textContent = "PIN service is unavailable. Check your connection or contact support.";
+      error.hidden = false;
+    }).finally(function() {
+      pinBusy = false;
+      document.getElementById("pinSubmit").disabled = false;
+    });
+  });
+
+  function restoreBackgroundOnly() {
+    var hidden = false;
+    try { hidden = localStorage.getItem("iremember-background-only") === "true"; } catch(ignore) {}
+    setBackgroundOnly(hidden);
+  }
+  restoreBackgroundOnly();
+  window.addEventListener("pageshow", restoreBackgroundOnly);
+  document.getElementById("visibilitySwitch").addEventListener("click", function() {
+    if (pinBusy) return;
+    supabase.rpc("has_app_pin").then(function(result) {
+      if (result.error) throw result.error;
+      showPinDialog(result.data ? "verify" : "setup");
+    }).catch(function() { showToast("PIN service is unavailable. Run the latest Supabase migration first."); });
+  });
+  document.getElementById("radioLockButton").addEventListener("click", function() {
+    document.getElementById("radioModal").hidden = false;
+    document.querySelector("#radioModal [data-close-tool]").focus();
+  });
   function setToolsButtonLabel(isOpen) {
     var lang = document.getElementById("languageSelect").value;
     var label = (TRANSLATIONS[lang] && TRANSLATIONS[lang].Tools) || "Tools";
