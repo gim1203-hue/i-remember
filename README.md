@@ -7,6 +7,7 @@ A day-by-day calendar app: click any day to set its mood color, add up to
 
 This is a static frontend with Supabase authentication, database, and private
 storage. `index.html` contains the UI and client code; Supabase is the backend.
+`admin.html` is the support desk for approved administrators.
 
 ## Run it locally
 
@@ -54,6 +55,14 @@ git push -u origin main
   On mobile, locking the screen or switching apps can stop capture early.
 - Run `supabase-migration.sql` in the Supabase SQL editor to apply the app's
   supporting tables and set the media bucket's server-side limit to 50 MB.
+- To enable the support desk, run the updated `supabase-migration.sql` in the
+  Supabase SQL editor. Sign in to the app once with the Google account you want
+  to use as an administrator, then run the commented `support_admins` insert at
+  the bottom of that SQL file after replacing `YOUR_ADMIN_EMAIL` with that
+  account's email. Only allowlisted accounts can use `admin.html` or list
+  members. Users can open **Get help** in the app to message support; replies
+  appear in the same private conversation. The admin page is available at
+  `/admin.html` after deployment.
 
 ## Turning this into a native app
 

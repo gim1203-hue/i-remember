@@ -106,3 +106,209 @@ drop trigger if exists daily_folders_limit on public.daily_folders;
 create trigger daily_folders_limit before insert on public.daily_folders for each row execute function public.enforce_iremember_limits();
 drop trigger if exists daily_files_limit on public.daily_files;
 create trigger daily_files_limit before insert on public.daily_files for each row execute function public.enforce_iremember_limits();
+
+-- Private support inbox and admin access.
+create table if not exists public.support_admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.support_messages (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  sender_id uuid not null references auth.users(id) on delete cascade,
+  body text not null check (char_length(body) between 1 and 4000),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.app_pins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  pin_hash text not null,
+  failed_attempts integer not null default 0 check (failed_attempts >= 0),
+  locked_until timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists support_messages_thread_idx
+  on public.support_messages(user_id, created_at);
+
+alter table public.support_admins enable row level security;
+alter table public.support_messages enable row level security;
+alter table public.app_pins enable row level security;
+revoke all on public.app_pins from anon, authenticated;
+
+create or replace function public.is_support_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.support_admins
+    where user_id = (select auth.uid())
+  );
+$$;
+
+revoke all on function public.is_support_admin() from public;
+grant execute on function public.is_support_admin() to authenticated;
+
+drop policy if exists "support thread participants can read" on public.support_messages;
+create policy "support thread participants can read"
+  on public.support_messages for select to authenticated
+  using (user_id = (select auth.uid()) or (select public.is_support_admin()));
+
+drop policy if exists "users and admins can send support messages" on public.support_messages;
+create policy "users and admins can send support messages"
+  on public.support_messages for insert to authenticated
+  with check (
+    sender_id = (select auth.uid())
+    and (
+      user_id = (select auth.uid())
+      or (select public.is_support_admin())
+    )
+  );
+
+grant select, insert on public.support_messages to authenticated;
+
+create or replace function public.admin_list_users()
+returns table (
+  id uuid,
+  email text,
+  full_name text,
+  created_at timestamptz,
+  last_sign_in_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_support_admin() then
+    raise exception 'Not authorized';
+  end if;
+
+  return query
+    select
+      u.id,
+      u.email::text,
+      coalesce(
+        nullif(p.full_name, ''),
+        nullif(u.raw_user_meta_data ->> 'full_name', ''),
+        nullif(u.raw_user_meta_data ->> 'name', ''),
+        ''
+      ),
+      u.created_at,
+      u.last_sign_in_at
+    from auth.users as u
+    left join public.profiles as p on p.id = u.id
+    order by u.created_at desc;
+end;
+$$;
+
+revoke all on function public.admin_list_users() from public;
+grant execute on function public.admin_list_users() to authenticated;
+
+create or replace function public.has_app_pin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.app_pins
+    where user_id = (select auth.uid())
+  );
+$$;
+
+create or replace function public.set_app_pin(pin_value text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor_id uuid := auth.uid();
+begin
+  if actor_id is null then raise exception 'Authentication required'; end if;
+  if pin_value !~ '^[0-9]{4}$' then raise exception 'PIN must be four digits'; end if;
+
+  insert into public.app_pins (user_id, pin_hash)
+  values (actor_id, public.crypt(pin_value, public.gen_salt('bf', 12)))
+  on conflict (user_id) do nothing;
+
+  if not found then raise exception 'PIN is already set'; end if;
+end;
+$$;
+
+create or replace function public.verify_app_pin(pin_value text)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor_id uuid := auth.uid();
+  pin_record public.app_pins%rowtype;
+  next_failures integer;
+begin
+  if actor_id is null or pin_value !~ '^[0-9]{4}$' then return false; end if;
+
+  select * into pin_record
+  from public.app_pins
+  where user_id = actor_id
+  for update;
+
+  if not found then return false; end if;
+  if pin_record.locked_until is not null and pin_record.locked_until > now() then return false; end if;
+
+  if pin_record.pin_hash = public.crypt(pin_value, pin_record.pin_hash) then
+    update public.app_pins
+    set failed_attempts = 0, locked_until = null
+    where user_id = actor_id;
+    return true;
+  end if;
+
+  next_failures := case
+    when pin_record.locked_until is not null and pin_record.locked_until <= now() then 1
+    else pin_record.failed_attempts + 1
+  end;
+
+  update public.app_pins
+  set failed_attempts = case when next_failures >= 5 then 0 else next_failures end,
+      locked_until = case when next_failures >= 5 then now() + interval '15 minutes' else null end
+  where user_id = actor_id;
+  return false;
+end;
+$$;
+
+create or replace function public.admin_reset_user_pin(target_user_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_support_admin() then raise exception 'Not authorized'; end if;
+  delete from public.app_pins where user_id = target_user_id;
+  return found;
+end;
+$$;
+
+revoke all on function public.has_app_pin() from public;
+revoke all on function public.set_app_pin(text) from public;
+revoke all on function public.verify_app_pin(text) from public;
+revoke all on function public.admin_reset_user_pin(uuid) from public;
+grant execute on function public.has_app_pin() to authenticated;
+grant execute on function public.set_app_pin(text) to authenticated;
+grant execute on function public.verify_app_pin(text) to authenticated;
+grant execute on function public.admin_reset_user_pin(uuid) to authenticated;
+
+-- Run once in the Supabase SQL editor after replacing the email below.
+-- The account must already have signed in at least once.
+-- insert into public.support_admins (user_id)
+-- select id from auth.users where lower(email) = lower('YOUR_ADMIN_EMAIL')
+-- on conflict (user_id) do nothing;
