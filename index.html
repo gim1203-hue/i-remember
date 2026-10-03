@@ -618,7 +618,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="recording.js?v=20261003-camera-source"></script>
+<script src="recording.js?v=20261003-local-camera"></script>
 <script>
 (function () {
   "use strict";
@@ -1465,9 +1465,10 @@ function showApp() {
   var photoViewerImage = document.getElementById("photoViewerImage");
   var photoViewerIndex = 0;
   var photoViewerReturnFocus = null;
+  var momentViewerPhotos = null;
 
   function showPhotoAt(index) {
-    var photos = activeEntry ? activeEntry.photos : [];
+    var photos = momentViewerPhotos || (activeEntry ? activeEntry.photos : []);
     if (index < 0 || index >= photos.length) return;
     photoViewerIndex = index;
     photoViewerImage.src = photos[index].url || "";
@@ -1479,6 +1480,7 @@ function showApp() {
 
   function openPhotoViewer(index, source) {
     if (!activeEntry || !activeEntry.photos.length) return;
+    momentViewerPhotos = null;
     photoViewerReturnFocus = source || document.activeElement;
     photoViewer.hidden = false;
     showPhotoAt(index);
@@ -1488,6 +1490,7 @@ function showApp() {
   function closePhotoViewer() {
     if (photoViewer.hidden) return;
     photoViewer.hidden = true;
+    momentViewerPhotos = null;
     photoViewerImage.removeAttribute("src");
     if (photoViewerReturnFocus && photoViewerReturnFocus.focus) photoViewerReturnFocus.focus();
   }
@@ -1576,6 +1579,14 @@ function showApp() {
       if (!pair[side]) return;
       var tile = document.createElement("div"); tile.className = "thumb-tile";
       var img = document.createElement("img"); img.src = pair[side].url || "";
+      img.alt = side + " camera photo"; img.tabIndex = 0; img.setAttribute("role", "button");
+      function enlargeMoment() {
+        momentViewerPhotos = [pair[side]];
+        photoViewerReturnFocus = img; photoViewer.hidden = false; showPhotoAt(0);
+        document.getElementById("photoViewerClose").focus();
+      }
+      img.addEventListener("click", enlargeMoment);
+      img.addEventListener("keydown", function(event) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); enlargeMoment(); } });
       tile.appendChild(img);
       var tag = document.createElement("span"); tag.className = "tag"; tag.textContent = side;
       tile.appendChild(tag); momentPreview.appendChild(tile);
@@ -1607,7 +1618,7 @@ function showApp() {
     try {
       await refreshCameraChoices();
       captureCameraSelect.disabled = true;
-      var front = await LongRecording.capturePhoto({ getUserMedia: getUserMedia, facingMode: "user", deviceId: captureCameraSelect.value });
+      var front = await LongRecording.capturePhoto({ getUserMedia: getUserMedia, enumerateDevices: navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices), facingMode: "user", deviceId: captureCameraSelect.value });
       await saveMoment(entry, "front", front); frontSaved = true;
       showToast("Front photo saved — trying the back camera…");
       var back = await LongRecording.capturePhoto({ getUserMedia: getUserMedia, facingMode: { exact: "environment" } });
@@ -1638,10 +1649,10 @@ function showApp() {
       var devices = await navigator.mediaDevices.enumerateDevices();
       var preferred = captureCameraSelect.value;
       if (!preferred) { try { preferred = localStorage.getItem("iremember-camera-device") || ""; } catch (error) {} }
-      var cameras = devices.filter(function(device) { return device.kind === "videoinput"; });
+      var cameras = LongRecording.localCameras(devices);
       captureCameraSelect.textContent = "";
       if (!cameras.length) {
-        var fallback = document.createElement("option"); fallback.value = ""; fallback.textContent = "Default camera"; captureCameraSelect.appendChild(fallback);
+        var fallback = document.createElement("option"); fallback.value = ""; fallback.textContent = "This device's camera"; captureCameraSelect.appendChild(fallback);
       }
       cameras.forEach(function(camera, index) {
         var option = document.createElement("option"); option.value = camera.deviceId;
@@ -1785,6 +1796,13 @@ function showApp() {
         constraints.video.deviceId = { exact: captureCameraSelect.value };
       }
       stream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (kind === "video" && !LongRecording.localCameras(stream.getVideoTracks().map(function(track) { return { kind: "videoinput", label: track.label }; })).length) {
+        stream.getTracks().forEach(function(track) { track.stop(); });
+        await refreshCameraChoices();
+        if (!captureCameraSelect.value) throw new Error("No local camera is available. Connect or enable this device's camera.");
+        constraints.video.deviceId = { exact: captureCameraSelect.value }; delete constraints.video.facingMode;
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      }
       if (!currentUser || currentUser.id !== userId) throw new Error("Account changed before recording started");
       if (kind === "video") {
         label.textContent = "Starting camera…"; recordingCameraView.hidden = false;

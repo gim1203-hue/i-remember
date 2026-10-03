@@ -247,6 +247,15 @@
     if (options.deviceId) constraints.deviceId = { exact: options.deviceId };
     else constraints.facingMode = options.facingMode;
     var stream = await options.getUserMedia({ video: constraints, audio: false });
+    var tracks = stream.getVideoTracks ? stream.getVideoTracks() : [];
+    if (tracks.length && !localCameras(tracks.map(function(track) { return { kind: "videoinput", label: track.label }; })).length) {
+      stream.getTracks().forEach(function(track) { track.stop(); });
+      var devices = options.enumerateDevices ? await options.enumerateDevices() : [];
+      var deviceId = chooseCamera(devices, "");
+      if (!deviceId) throw new Error("No local camera is available. Connect or enable this device's camera.");
+      constraints.deviceId = { exact: deviceId }; delete constraints.facingMode;
+      stream = await options.getUserMedia({ video: constraints, audio: false });
+    }
     var video = doc.createElement("video");
     var schedule = options.setTimeout || setTimeout, cancel = options.clearTimeout || clearTimeout;
     try {
@@ -321,15 +330,21 @@
     });
   }
 
+  function localCameras(devices) {
+    return devices.filter(function(device) {
+      return device.kind === "videoinput" && !/virtual|obs|snap camera|manycam|droidcam|iriun|continuity|link to windows|camo|infrared|\bIR camera\b/i.test(device.label || "");
+    });
+  }
+
   function chooseCamera(devices, preferredId) {
-    var cameras = devices.filter(function(device) { return device.kind === "videoinput"; });
+    var cameras = localCameras(devices);
     var preferred = cameras.find(function(camera) { return camera.deviceId === preferredId; });
     if (preferred) return preferred.deviceId;
     // Phone/virtual cameras can advertise a video track while supplying a
-    // disconnected-device placeholder. Prefer an available local webcam unless
-    // the user explicitly selected another source.
+    // disconnected-device placeholder. Only offer local cameras; remembered
+    // choices from linked or virtual devices cannot override this restriction.
     var physical = cameras.find(function(camera) {
-      return camera.label && !/virtual|obs|snap camera|manycam|droidcam|iriun|phone|continuity|link to windows|camo|infrared|\bIR camera\b/i.test(camera.label);
+      return camera.label;
     });
     return physical ? physical.deviceId : (cameras[0] ? cameras[0].deviceId : "");
   }
@@ -338,5 +353,5 @@
     formatDuration: formatDuration, partPath: partPath, parsePartPath: parsePartPath,
     groupParts: groupParts, RecorderSession: RecorderSession,
     createIndexedDBStore: createIndexedDBStore, DurableQueue: DurableQueue, capturePhoto: capturePhoto,
-    waitForCamera: waitForCamera, chooseCamera: chooseCamera };
+    waitForCamera: waitForCamera, chooseCamera: chooseCamera, localCameras: localCameras };
 });
