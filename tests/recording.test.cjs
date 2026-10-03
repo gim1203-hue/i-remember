@@ -240,3 +240,28 @@ test('camera selection prefers a local webcam over phone placeholders and honors
   assert.equal(R.chooseCamera([{ kind: 'videoinput', deviceId: 'front', label: 'Phone front camera' }], ''), 'front');
   assert.equal(R.chooseCamera([devices[1]], 'phone'), '');
 });
+
+test('playback rewind and fast forward seek ten seconds and clamp at the start', () => {
+  const h = playlistHarness(async () => ({}));
+  h.player.duration = 60; h.player.currentTime = 20;
+  h.controls.children[4].dispatchEvent(new Event('click'));
+  assert.equal(h.player.currentTime, 10);
+  h.controls.children[5].dispatchEvent(new Event('click'));
+  assert.equal(h.player.currentTime, 20);
+  h.player.currentTime = 3;
+  h.controls.children[4].dispatchEvent(new Event('click'));
+  assert.equal(h.player.currentTime, 0);
+});
+
+test('fast forward crosses a recording part and retains the playback position', async () => {
+  const h = playlistHarness(async paths => ({ [paths[0]]: 'blob:next-part' }));
+  h.player.duration = 60; h.player.currentTime = 55;
+  h.controls.children[5].dispatchEvent(new Event('click')); await settle();
+  h.player.dispatchEvent(new Event('loadedmetadata'));
+  assert.equal(h.player.currentTime, 5);
+  assert.equal(h.seek.value, '1');
+  h.controls.children[4].dispatchEvent(new Event('click')); await settle();
+  h.player.dispatchEvent(new Event('loadedmetadata'));
+  assert.equal(h.player.currentTime, 55);
+  assert.equal(h.seek.value, '0');
+});

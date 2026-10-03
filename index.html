@@ -1882,15 +1882,20 @@ function showApp() {
     var index = 0, loading = false, sourceAt = Date.now(), requestId = 0;
     var previous = document.createElement("button"), next = document.createElement("button"), position = document.createElement("span");
     previous.type = next.type = "button"; previous.className = next.className = "action-btn";
-    previous.textContent = "‹"; next.textContent = "›";
+    previous.textContent = "‹ Previous"; next.textContent = "Next ›";
     previous.setAttribute("aria-label", "Previous recording part"); next.setAttribute("aria-label", "Next recording part");
     var seek = document.createElement("input");
     seek.type = "range"; seek.min = "0"; seek.max = String(group.parts.length - 1); seek.step = "1"; seek.value = "0";
     seek.setAttribute("aria-label", "Choose recording part");
     seek.style.width = "80px";
+    var rewind = document.createElement("button"), forward = document.createElement("button");
+    rewind.type = forward.type = "button"; rewind.className = forward.className = "action-btn";
+    rewind.textContent = "−10s"; forward.textContent = "+10s";
+    rewind.setAttribute("aria-label", "Rewind 10 seconds"); forward.setAttribute("aria-label", "Fast forward 10 seconds");
     function update() {
       previous.disabled = loading || index === 0; next.disabled = loading || index === group.parts.length - 1;
       seek.disabled = loading; seek.value = String(index);
+      rewind.disabled = forward.disabled = loading;
       var part = LongRecording.parsePartPath(group.parts[index].path);
       position.textContent = "Part " + (index + 1) + "/" + group.parts.length + (part ? " · " + fmtDuration(Math.floor(part.startMs / 1000)) : "") + " · Total " + group.duration + (group.missing ? " · Some parts are still missing" : "");
     }
@@ -1933,8 +1938,26 @@ function showApp() {
     previous.addEventListener("click", function() { loadPart(index - 1, !player.paused); });
     next.addEventListener("click", function() { loadPart(index + 1, !player.paused); });
     seek.addEventListener("change", function() { loadPart(Number(seek.value), !player.paused); });
+    function skipSeconds(delta) {
+      if (loading) return;
+      var target = index, time = (player.currentTime || 0) + delta;
+      function duration(partIndex) {
+        if (partIndex === index && Number.isFinite(player.duration) && player.duration > 0) return player.duration;
+        var parsed = LongRecording.parsePartPath(group.parts[partIndex].path);
+        return parsed ? (parsed.endMs - parsed.startMs) / 1000 : 0;
+      }
+      while (time < 0 && target > 0) { target--; time += duration(target); }
+      while (duration(target) > 0 && time >= duration(target) && target + 1 < group.parts.length) { time -= duration(target); target++; }
+      time = Math.max(0, time);
+      if (duration(target) > 0) time = Math.min(time, duration(target));
+      if (target === index) player.currentTime = time;
+      else loadPart(target, !player.paused, time);
+    }
+    rewind.addEventListener("click", function() { skipSeconds(-10); });
+    forward.addEventListener("click", function() { skipSeconds(10); });
     controls.appendChild(position);
     if (group.sessionId) { controls.appendChild(previous); controls.appendChild(seek); controls.appendChild(next); }
+    controls.appendChild(rewind); controls.appendChild(forward);
     update();
   }
 
