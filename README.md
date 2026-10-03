@@ -51,8 +51,11 @@ git push -u origin main
 - Mood, notes, photos, voice notes, videos, and camera moments are saved to the
   signed-in user's Supabase account and private storage.
 - Photos are downscaled and compressed client-side before upload.
-- The app's PIN/background-only lock keeps recording, its indicator, and live
-  camera preview running. Switching tabs does not deliberately stop capture.
+- The app's PIN/background-only lock hides all recording controls and the inline
+  camera preview while keeping recording and saving running. There is no floating
+  recording window. Video starts only after the camera supplies an image;
+  failure to supply one times out and releases the camera. Switching tabs does
+  not deliberately stop capture.
   The operating system can still suspend a browser or end camera/microphone
   access when the device itself locks; this web app cannot guarantee recording
   through a physical phone lock. Screen wake lock is requested when supported.

@@ -83,6 +83,24 @@ test('failed photo upload does not delete the old moment or falsely report succe
   expect(errors).toEqual([]);
 });
 
+test('camera startup without an image times out and releases the camera instead of spinning', async ({ page }) => {
+  const errors = await openApp(page);
+  await page.evaluate(() => {
+    const wait = LongRecording.waitForCamera;
+    LongRecording.waitForCamera = (stream, video) => {
+      Object.defineProperty(video, 'readyState', { value: 0, configurable: true });
+      return wait(stream, video, { timeoutMs: 100 });
+    };
+  });
+  await page.locator('#recordVideo').click();
+  await expect(page.locator('#recordVideo')).toBeEnabled();
+  await expect(page.locator('#toast')).toContainText('Camera did not deliver an image');
+  await expect(page.locator('#recordingCameraView')).toBeHidden();
+  expect(await savedCount(page, 'video')).toBe(0);
+  expect(await page.evaluate(() => window.__cameraStreams.every(stream => stream.getTracks().every(track => track.readyState === 'ended')))).toBe(true);
+  expect(errors).toEqual([]);
+});
+
 for (const [kind, button, label, list, player] of [
   ['video', '#recordVideo', '#videoRecordLabel', '#videoList', 'video'],
   ['voice', '#recordVoice', '#recordLabel', '#voiceList', 'audio']
@@ -99,6 +117,14 @@ for (const [kind, button, label, list, player] of [
     await expect.poll(() => media.evaluate(element => element.readyState)).toBeGreaterThanOrEqual(1);
     expect(await media.evaluate(element => element.error)).toBeNull();
     await media.evaluate(element => element.play());
+    if (kind === 'video') {
+      await expect.poll(() => media.evaluate(element => {
+        if (element.readyState < 2 || !element.videoWidth) return false;
+        const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32;
+        const context = canvas.getContext('2d'); context.drawImage(element, 0, 0, 32, 32);
+        return context.getImageData(0, 0, 32, 32).data.some((value, index) => index % 4 !== 3 && value > 20);
+      })).toBe(true);
+    }
     await expect(page.locator(list)).toContainText('Part 2/');
     await media.evaluate(element => element.pause());
     await page.locator(`${list} input[type=range]`).fill(String(count - 1));
@@ -169,13 +195,14 @@ for (const kind of ['video', 'voice']) {
     const label = page.locator(kind === 'video' ? '#videoRecordLabel' : '#recordLabel');
     await button.click(); await expect(label).toContainText('Stop recording');
     if (kind === 'video') {
-      await expect(page.locator('#liveCameraView')).toBeVisible();
-      await expect.poll(() => page.locator('#liveCameraVideo').evaluate(video => video.videoWidth)).toBeGreaterThan(0);
+      await expect(page.locator('#recordingCameraView')).toBeVisible();
+      await expect.poll(() => page.locator('#recordingCameraVideo').evaluate(video => video.videoWidth)).toBeGreaterThan(0);
     }
     await page.locator('#visibilitySwitch').click(); await page.locator('#pinInput').fill('1234'); await page.locator('#pinSubmit').click();
     await expect(page.locator('body')).toHaveClass(/background-only/);
-    await expect(page.locator('#recordingPill')).toBeVisible();
-    if (kind === 'video') await expect(page.locator('#liveCameraView')).toBeVisible();
+    await expect(page.locator('#recordingPill')).toBeHidden();
+    await expect(page.locator('#liveCameraView')).toHaveCount(0);
+    if (kind === 'video') await expect(page.locator('#recordingCameraView')).toBeHidden();
     await expect.poll(() => savedCount(page, kind)).toBeGreaterThanOrEqual(1);
     const count = await savedCount(page, kind);
     await page.evaluate(() => {
@@ -190,7 +217,7 @@ for (const kind of ['video', 'voice']) {
     await expect(page.locator('body')).not.toHaveClass(/background-only/);
     await button.click(); await expect(button).toBeEnabled();
     await expect(page.locator('#recordingSaveStatus')).toContainText('All finished recording parts are saved');
-    if (kind === 'video') await expect(page.locator('#liveCameraView')).toBeHidden();
+    if (kind === 'video') await expect(page.locator('#recordingCameraView')).toBeHidden();
     expect(errors).toEqual([]);
   });
 }
@@ -203,7 +230,7 @@ test('recording exclusivity, permission failure, notes, moods, photos and PIN co
   await page.locator('#recordVoice').click(); await expect(page.locator('#recordVoice')).toBeEnabled();
   await page.evaluate(() => { navigator.mediaDevices.getUserMedia = async () => { throw new DOMException('Permission denied', 'NotAllowedError'); }; });
   await page.locator('#recordVideo').click(); await expect(page.locator('#recordVideo')).toBeEnabled();
-  await expect(page.locator('#toast')).toContainText("Couldn't start recording");
+  await expect(page.locator('#toast')).toContainText('permission was denied');
   await page.locator('#textNote').fill('Camera testing day');
   await expect.poll(() => page.evaluate(() => (window.__mock.tables.entries || []).some(row => row.note === 'Camera testing day'))).toBe(true);
   await page.locator('.mood-chip').first().click();

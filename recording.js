@@ -278,8 +278,49 @@
     }
   }
 
+  function waitForCamera(stream, video, options) {
+    options = options || {};
+    var schedule = options.setTimeout || setTimeout, cancel = options.clearTimeout || clearTimeout;
+    var track = stream.getVideoTracks()[0];
+    if (!track || track.readyState === "ended") return Promise.reject(new Error("Camera has no active video track"));
+    video.muted = true; video.playsInline = true;
+    video.setAttribute("muted", ""); video.setAttribute("playsinline", "");
+    return new Promise(function(resolve, reject) {
+      var finished = false;
+      var timer = schedule(function() { finish(new Error("Camera did not deliver an image. Close other camera apps and try again.")); }, options.timeoutMs || 15000);
+      function cleanup() {
+        cancel(timer);
+        video.removeEventListener("loadeddata", ready);
+        video.removeEventListener("resize", ready);
+        video.removeEventListener("error", failed);
+        track.removeEventListener("ended", failed);
+        track.removeEventListener("unmute", ready);
+      }
+      function finish(error) {
+        if (finished) return;
+        finished = true; cleanup();
+        if (error) { video.pause(); video.srcObject = null; reject(error); }
+        else resolve();
+      }
+      function ready() {
+        if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0 && !track.muted) finish();
+      }
+      function failed() { finish(new Error("Camera stopped before an image was available")); }
+      video.addEventListener("loadeddata", ready);
+      video.addEventListener("resize", ready);
+      video.addEventListener("error", failed);
+      track.addEventListener("ended", failed);
+      track.addEventListener("unmute", ready);
+      video.srcObject = stream;
+      try { Promise.resolve(video.play()).then(ready).catch(finish); }
+      catch (error) { finish(error); }
+      ready();
+    });
+  }
+
   return { MAX_SECONDS: MAX_SECONDS, PART_SECONDS: PART_SECONDS, PART_BYTES: PART_BYTES,
     formatDuration: formatDuration, partPath: partPath, parsePartPath: parsePartPath,
     groupParts: groupParts, RecorderSession: RecorderSession,
-    createIndexedDBStore: createIndexedDBStore, DurableQueue: DurableQueue, capturePhoto: capturePhoto };
+    createIndexedDBStore: createIndexedDBStore, DurableQueue: DurableQueue, capturePhoto: capturePhoto,
+    waitForCamera: waitForCamera };
 });

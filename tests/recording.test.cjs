@@ -148,3 +148,80 @@ test('empty camera photos fail without leaving the camera running', async () => 
   const h = cameraHarness({ empty: true }); await assert.rejects(R.capturePhoto(h.options), /empty/);
   assert.equal(h.stopped, true); assert.equal(h.removed, true);
 });
+
+function frameHarness() {
+  const track = new EventTarget(); track.readyState = 'live'; track.muted = false;
+  const video = new EventTarget();
+  Object.assign(video, { readyState: 0, videoWidth: 0, videoHeight: 0, muted: false, playsInline: false,
+    setAttribute() {}, play: () => Promise.resolve(), pause() { this.paused = true; } });
+  return { track, video, stream: { getVideoTracks: () => [track] } };
+}
+
+test('video recording readiness waits for an actual camera image', async () => {
+  const h = frameHarness(); let ready = false;
+  const waiting = R.waitForCamera(h.stream, h.video, { timeoutMs: 1000 }).then(() => { ready = true; });
+  await settle(); assert.equal(ready, false);
+  Object.assign(h.video, { readyState: 2, videoWidth: 640, videoHeight: 360 });
+  h.video.dispatchEvent(new Event('loadeddata')); await waiting;
+  assert.equal(ready, true); assert.equal(h.video.srcObject, h.stream); assert.equal(h.video.muted, true);
+});
+
+test('camera that never supplies an image times out instead of loading forever', async () => {
+  const h = frameHarness();
+  await assert.rejects(R.waitForCamera(h.stream, h.video, { timeoutMs: 10 }), /did not deliver an image/);
+  assert.equal(h.video.srcObject, null); assert.equal(h.video.paused, true);
+});
+
+test('camera preview playback failure returns a recoverable error', async () => {
+  const h = frameHarness(); h.video.play = () => Promise.reject(new Error('Playback blocked'));
+  await assert.rejects(R.waitForCamera(h.stream, h.video), /Playback blocked/);
+  assert.equal(h.video.srcObject, null);
+});
+
+test('missing camera video track cannot be mistaken for successful video recording', async () => {
+  const h = frameHarness();
+  await assert.rejects(R.waitForCamera({ getVideoTracks: () => [] }, h.video), /no active video track/);
+});
+
+function playlistHarness(sign) {
+  const fs = require('node:fs'), vm = require('node:vm');
+  const html = fs.readFileSync(require('node:path').join(__dirname, '../index.html'), 'utf8');
+  const start = html.indexOf('  function recordingPlaylist(');
+  const end = html.indexOf('  async function deleteRecordingGroup(', start);
+  const createElement = () => Object.assign(new EventTarget(), {
+    children: [], style: {}, value: '', setAttribute() {}, getAttribute() { return this.src; },
+    appendChild(child) { this.children.push(child); }
+  });
+  const player = createElement();
+  Object.assign(player, { paused: true, currentTime: 0, pause() { this.paused = true; },
+    play() { this.paused = false; this.dispatchEvent(new Event('play')); return Promise.resolve(); } });
+  const controls = createElement(), messages = [];
+  const items = [0, 1, 2].map(index => ({
+    path: R.partPath('owner', '2026-10-03', 'video', 'playlist', { index, startMs: index * 60000, endMs: (index + 1) * 60000, type: 'video/webm' }), url: 'blob:part-' + index
+  }));
+  const group = R.groupParts(items)[0];
+  vm.runInNewContext(html.slice(start, end) + '\nrecordingPlaylist(player, group, controls);', {
+    player, group, controls, document: { createElement }, LongRecording: R, activeEntry: null,
+    fmtDuration: R.formatDuration, signedUrlsFor: sign, showToast: message => messages.push(message)
+  });
+  return { player, controls, items, messages, seek: controls.children[2], position: controls.children[0] };
+}
+
+test('playlist selection keeps the chosen part during loading and ignores stale URL requests', async () => {
+  const requests = [];
+  const h = playlistHarness(paths => new Promise(resolve => requests.push({ paths, resolve })));
+  h.seek.value = '2'; h.seek.dispatchEvent(new Event('change'));
+  assert.equal(h.seek.value, '2');
+  h.seek.dispatchEvent(new Event('change'));
+  requests[0].resolve({ [requests[0].paths[0]]: 'blob:stale' }); await settle();
+  requests[1].resolve({ [requests[1].paths[0]]: 'blob:last-part' }); await settle();
+  assert.equal(h.player.src, 'blob:last-part'); assert.equal(h.seek.value, '2');
+  assert.match(h.position.textContent, /Part 3\/3/); assert.equal(h.seek.disabled, false);
+});
+
+test('playlist URL failure restores the previous part and enables retry', async () => {
+  const h = playlistHarness(async () => { throw new Error('Network unavailable'); });
+  h.seek.value = '2'; h.seek.dispatchEvent(new Event('change')); await settle();
+  assert.equal(h.player.src, 'blob:part-0'); assert.equal(h.seek.value, '0');
+  assert.equal(h.seek.disabled, false); assert.equal(h.messages.length, 1);
+});
