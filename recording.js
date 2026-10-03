@@ -243,7 +243,10 @@
 
   async function capturePhoto(options) {
     var doc = options.document || document;
-    var stream = await options.getUserMedia({ video: { facingMode: options.facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    var constraints = { width: { ideal: 1280 }, height: { ideal: 720 } };
+    if (options.deviceId) constraints.deviceId = { exact: options.deviceId };
+    else constraints.facingMode = options.facingMode;
+    var stream = await options.getUserMedia({ video: constraints, audio: false });
     var video = doc.createElement("video");
     var schedule = options.setTimeout || setTimeout, cancel = options.clearTimeout || clearTimeout;
     try {
@@ -318,9 +321,22 @@
     });
   }
 
+  function chooseCamera(devices, preferredId) {
+    var cameras = devices.filter(function(device) { return device.kind === "videoinput"; });
+    var preferred = cameras.find(function(camera) { return camera.deviceId === preferredId; });
+    if (preferred) return preferred.deviceId;
+    // Phone/virtual cameras can advertise a video track while supplying a
+    // disconnected-device placeholder. Prefer an available local webcam unless
+    // the user explicitly selected another source.
+    var physical = cameras.find(function(camera) {
+      return camera.label && !/virtual|obs|snap camera|manycam|droidcam|iriun|phone|continuity|link to windows|camo|infrared|\bIR camera\b/i.test(camera.label);
+    });
+    return physical ? physical.deviceId : (cameras[0] ? cameras[0].deviceId : "");
+  }
+
   return { MAX_SECONDS: MAX_SECONDS, PART_SECONDS: PART_SECONDS, PART_BYTES: PART_BYTES,
     formatDuration: formatDuration, partPath: partPath, parsePartPath: parsePartPath,
     groupParts: groupParts, RecorderSession: RecorderSession,
     createIndexedDBStore: createIndexedDBStore, DurableQueue: DurableQueue, capturePhoto: capturePhoto,
-    waitForCamera: waitForCamera };
+    waitForCamera: waitForCamera, chooseCamera: chooseCamera };
 });

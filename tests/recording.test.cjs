@@ -225,3 +225,16 @@ test('playlist URL failure restores the previous part and enables retry', async 
   assert.equal(h.player.src, 'blob:part-0'); assert.equal(h.seek.value, '0');
   assert.equal(h.seek.disabled, false); assert.equal(h.messages.length, 1);
 });
+
+test('camera selection prefers a local webcam over phone placeholders and honors user choice', () => {
+  const devices = [
+    { kind: 'audioinput', deviceId: 'mic', label: 'Microphone' },
+    { kind: 'videoinput', deviceId: 'phone', label: 'Phone camera' },
+    { kind: 'videoinput', deviceId: 'ir', label: 'IR Camera' },
+    { kind: 'videoinput', deviceId: 'webcam', label: 'Integrated Webcam' }
+  ];
+  assert.equal(R.chooseCamera(devices, ''), 'webcam');
+  assert.equal(R.chooseCamera(devices, 'phone'), 'phone');
+  assert.equal(R.chooseCamera(devices, 'disconnected'), 'webcam');
+  assert.equal(R.chooseCamera([], ''), '');
+});
