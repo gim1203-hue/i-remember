@@ -317,6 +317,10 @@
   .limit-note { color: var(--ink-faint); font-size: .7rem; line-height: 1.4; margin: 7px 0 0; }
   .recording-pill { display: none; position: fixed; left: 16px; bottom: 18px; z-index: 55; border-radius: 999px; padding: 8px 12px; color: #fff; background: #a72f25; font-size: .72rem; font-weight: 700; box-shadow: 0 4px 18px rgba(0,0,0,.2); }
   .recording-pill.on { display: block; }
+  .live-camera { position: fixed; right: 16px; bottom: 18px; z-index: 70; width: min(240px, calc(100vw - 32px)); padding: 8px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: 0 4px 18px rgba(0,0,0,.25); }
+  .live-camera[hidden] { display: none; }
+  .live-camera video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #000; border-radius: 6px; transform: scaleX(-1); }
+  .live-camera-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: .72rem; color: var(--ink); }
   .visibility-switch { position: fixed; top: 14px; right: 14px; z-index: 220; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; font-size: 1.35rem; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
   .radio-lock-button { display: none; position: fixed; top: 14px; left: 14px; z-index: 220; width: 48px; height: 48px; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
   #radioModal { z-index: 210; }
@@ -345,7 +349,7 @@
   .support-compose { padding: 12px; border-top: 1px solid var(--border-soft); display: grid; grid-template-columns: 1fr auto; gap: 8px; }
   .support-compose textarea { min-height: 42px; max-height: 100px; resize: vertical; font-size: .82rem; }
   @media (max-width: 520px) { .support-launch { bottom: 76px; left: 14px; } .support-panel { left: 10px; bottom: 130px; width: calc(100vw - 20px); height: min(460px, calc(100dvh - 150px)); } }
-  body.background-only > *:not(.visibility-switch):not(.radio-lock-button):not(#pinOverlay):not(#radioModal) { visibility: hidden !important; pointer-events: none !important; }
+  body.background-only > *:not(.visibility-switch):not(.radio-lock-button):not(#pinOverlay):not(#radioModal):not(#liveCameraView):not(.recording-pill) { visibility: hidden !important; pointer-events: none !important; }
   body.background-only #radioModal, body.background-only #pinOverlay { visibility: visible !important; pointer-events: auto !important; }
   body.background-only .radio-lock-button { display: grid; visibility: visible !important; pointer-events: auto !important; }
   body.background-only::before { background: transparent; }
@@ -486,7 +490,7 @@
 
     <div class="section">
       <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
-      <p class="moment-hint">Records video + audio for up to 5 minutes (45 MB) per clip. Keep this tab open and in front; recording stops automatically at the limit or if a phone locks. The screen is held awake when supported.</p>
+      <p class="moment-hint">Record video + audio for up to 12 hours. Compressed one-minute files save as one recording and play in order. The app's PIN lock keeps recording and live view running. Keep the device powered and this tab open; your phone's system lock can suspend the camera.</p>
       <div class="video-list" id="videoList"></div>
       <button class="capture-btn" id="recordVideo">
         <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="9" height="8" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 6.5l3.4-1.8v6.6l-3.4-1.8" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
@@ -497,11 +501,14 @@
     <div class="section">
       <div class="section-label">Voice notes <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
       <div class="voice-list" id="voiceList"></div>
-      <p class="moment-hint">Voice notes can be up to 30 minutes (45 MB) each. Keep this tab open until the note says it is saved.</p>
+      <p class="moment-hint">Record voice for up to 12 hours, saved in small one-minute files that play as one note. The app's PIN lock keeps recording running. Keep this tab open and your device powered; the phone's system lock can suspend the microphone.</p>
       <button class="capture-btn" id="recordVoice">
         <svg viewBox="0 0 16 16" fill="none"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 8a5 5 0 0010 0M8 13v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         <span id="recordLabel">Record a voice note</span>
       </button>
+      <p class="moment-hint" id="recordingSaveStatus" role="status" aria-live="polite"></p>
+      <button class="action-btn" id="retryRecordingUploads" type="button" hidden>Retry recording uploads</button>
+      <div id="recordingRecovery"></div>
     </div>
 
     <div class="section">
@@ -593,6 +600,10 @@
 <button class="visibility-switch" id="visibilitySwitch" aria-label="Show background only" title="Background-only mode">☀️</button>
 <button class="radio-lock-button" id="radioLockButton" type="button" aria-label="Open radio" title="Open radio"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="5" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6 5l8-3M6 9h8M6 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="13.5" cy="13" r="1" fill="currentColor"/></svg></button>
 <div class="recording-pill" id="recordingPill">● RECORDING</div>
+<div class="live-camera" id="liveCameraView" hidden>
+  <video id="liveCameraVideo" autoplay muted playsinline aria-label="Live recording camera preview"></video>
+  <div class="live-camera-controls"><span id="liveCameraStatus" role="status">● LIVE camera</span><button class="action-btn" id="stopLiveVideo" type="button">Stop</button></div>
+</div>
 
 <div class="photo-viewer" id="photoViewer" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
   <div class="photo-viewer-head">
@@ -610,6 +621,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="recording.js"></script>
 <script>
 (function () {
   "use strict";
@@ -635,9 +647,6 @@
 
   var MAX_PHOTOS_PER_DAY = 100;
   var MAX_RECORDING_BYTES = 45 * 1024 * 1024;
-  var RECORDING_STOP_BYTES = 44 * 1024 * 1024;
-  var MAX_VIDEO_SECONDS = 5 * 60;
-  var MAX_AUDIO_SECONDS = 30 * 60;
 
   function newId() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -697,6 +706,7 @@ function showApp() {
     authOverlay.hidden = true;
     appRoot.hidden = false;
     document.getElementById("accountEmail").textContent = currentUser.email || "";
+    if (recordingQueue) recordingQueue.flush();
 
     ensureProfile();
     document.getElementById("supportLaunch").hidden = false;
@@ -803,10 +813,15 @@ function showApp() {
     supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } })
       .then(function(res) { if (res.error) showAuthScreen("Couldn't start Google sign-in — try again."); });
   });
-  document.getElementById("signOutBtn").addEventListener("click", function() { closePanel(); supabase.auth.signOut(); });
+  document.getElementById("signOutBtn").addEventListener("click", function() {
+    if (anyRecordingActive()) { showToast("Stop the recording and wait for its local save before signing out."); return; }
+    closePanel(); supabase.auth.signOut();
+  });
   supabase.auth.onAuthStateChange(function(_event, session) {
+    if (!session) { stopRecordingIfActive("auth"); stopVideoRecordingIfActive("auth"); }
     currentUser = session ? session.user : null;
     if (currentUser) showApp(); else { setBackgroundOnly(false); showAuthScreen(); }
+    if (recordingQueue) recordingQueue.flush();
   });
   supabase.auth.getSession().then(function(res) {
     currentUser = res.data.session ? res.data.session.user : null;
@@ -829,12 +844,15 @@ function showApp() {
   }
 
   function signedUrlsFor(paths) {
-    if (!paths.length) return Promise.resolve({});
-    return supabase.storage.from(MEDIA_BUCKET).createSignedUrls(paths, SIGNED_URL_TTL).then(function(res) {
+    return (async function() {
       var map = {};
-      (res.data || []).forEach(function(row) { if (row.signedUrl) map[row.path] = row.signedUrl; });
+      for (var i = 0; i < paths.length; i += 100) {
+        var res = await supabase.storage.from(MEDIA_BUCKET).createSignedUrls(paths.slice(i, i + 100), SIGNED_URL_TTL);
+        if (res.error) throw res.error;
+        (res.data || []).forEach(function(row) { if (row.signedUrl) map[row.path] = row.signedUrl; });
+      }
       return map;
-    });
+    })();
   }
 
   function loadEntry(dateKey) {
@@ -846,8 +864,7 @@ function showApp() {
         entry.mood = res.data.mood;
         entry.note = res.data.note || "";
         entry.weather = res.data.weather || null;
-        return supabase.from("media").select("id, kind, storage_path, duration, seed, position")
-          .eq("entry_id", entry.id).order("position", { ascending: true })
+        return loadMediaRows(entry.id)
           .then(function(mediaRes) {
             var rows = mediaRes.data || [];
             return signedUrlsFor(rows.map(function(r) { return r.storage_path; })).then(function(urlByPath) {
@@ -863,6 +880,19 @@ function showApp() {
             });
           });
       });
+  }
+
+  async function loadMediaRows(entryId) {
+    var rows = [], offset = 0, pageSize = 1000;
+    while (true) {
+      var page = await supabase.from("media").select("id, kind, storage_path, duration, seed, position")
+        .eq("entry_id", entryId).order("position", { ascending: true }).order("id", { ascending: true })
+        .range(offset, offset + pageSize - 1);
+      if (page.error) throw page.error;
+      rows = rows.concat(page.data || []);
+      if (!page.data || page.data.length < pageSize) return { data: rows };
+      offset += pageSize;
+    }
   }
 
   function loadCalendarIndex() {
@@ -929,8 +959,11 @@ function showApp() {
   }
 
   function deleteMedia(item) {
-    return supabase.storage.from(MEDIA_BUCKET).remove([item.path]).then(function() {
+    return supabase.storage.from(MEDIA_BUCKET).remove([item.path]).then(function(result) {
+      if (result.error) throw result.error;
       return supabase.from("media").delete().eq("id", item.id);
+    }).then(function(result) {
+      if (result.error) throw result.error;
     });
   }
 
@@ -1552,229 +1585,359 @@ function showApp() {
     });
   }
 
-  captureBtn.addEventListener("click", function() { captureFacing("user", "front"); });
+  captureBtn.addEventListener("click", captureMoment);
 
   function saveMoment(entry, side, blob) {
     var kind = side === "front" ? "moment_front" : "moment_back";
     var existing = entry.moments[side];
-    var afterDelete = existing ? deleteMedia(existing) : Promise.resolve();
-    return afterDelete.then(function() { return uploadMedia(entry, kind, blob, "image/jpeg", {}); })
-      .then(function(item) { if (activeEntry === entry) { entry.moments[side] = item; refreshMomentPreview(); } });
+    return uploadMedia(entry, kind, blob, "image/jpeg", {}).then(async function(item) {
+      entry.moments[side] = item;
+      if (activeEntry === entry) refreshMomentPreview();
+      if (existing) {
+        try { await deleteMedia(existing); }
+        catch (error) { showToast("New photo saved. The old photo could not be removed."); }
+      }
+    });
   }
 
-  function captureFacing(facingMode, label) {
+  async function captureMoment() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Camera isn't available in this preview."); return; }
-    captureBtn.disabled = true;
-    var entry = activeEntry;
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } })
-      .then(function(stream) {
-        var video = document.createElement("video"); video.srcObject = stream; video.playsInline = true; video.muted = true; video.play();
-        video.addEventListener("loadeddata", function() {
-          setTimeout(function() {
-            var canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth || 480; canvas.height = video.videoHeight || 360;
-            var ctx = canvas.getContext("2d"); ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            stream.getTracks().forEach(function(t) { t.stop(); });
-            canvas.toBlob(function(blob) {
-              if (!blob || !entry) return;
-              saveMoment(entry, label, blob).catch(function() { showToast("Couldn't save that moment — try again."); });
-            }, "image/jpeg", 0.8);
-            if (label === "front") { showToast("Front captured — trying the back camera…"); captureFacing("environment", "back"); }
-            else { captureBtn.disabled = false; showToast("Moment saved."); }
-          }, 260);
-        });
-      })
-      .catch(function() {
-        captureBtn.disabled = false;
-        if (label === "back") showToast("Only a front-facing camera is available here — front shot saved.");
-        else showToast("Camera access was declined or isn't available.");
-      });
+    if (!activeEntry || !currentUser) { showToast("Sign in and open a day first."); return; }
+    if (anyRecordingActive()) { showToast("Stop the current recording before capturing a moment."); return; }
+    captureBtn.disabled = true; capturePending = true;
+    var entry = activeEntry, frontSaved = false;
+    var getUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    try {
+      var front = await LongRecording.capturePhoto({ getUserMedia: getUserMedia, facingMode: "user" });
+      await saveMoment(entry, "front", front); frontSaved = true;
+      showToast("Front photo saved — trying the back camera…");
+      var back = await LongRecording.capturePhoto({ getUserMedia: getUserMedia, facingMode: { exact: "environment" } });
+      await saveMoment(entry, "back", back);
+      showToast("Front and back photos saved.");
+    } catch (error) {
+      if (frontSaved && (error.name === "OverconstrainedError" || error.name === "NotFoundError")) showToast("Front photo saved. This device has no available back camera.");
+      else showToast(frontSaved ? "Front photo saved; the back photo couldn't be captured or saved. Try again." : "Couldn't capture or save the photo. Check camera permission and connection.");
+    } finally { captureBtn.disabled = false; capturePending = false; }
   }
 
-  // ---------- Video recording ----------
+  // ---------- Long video and voice recording ----------
   var videoList = document.getElementById("videoList");
+  var voiceList = document.getElementById("voiceList");
   var recordVideoBtn = document.getElementById("recordVideo");
   var videoRecordLabel = document.getElementById("videoRecordLabel");
-  var videoRecorder = null;
-  var lockCutVideo = false;
-  var lockCutAudio = false;
-  var wakeLock = null;
-  var capturePending = false;
+  var recordBtn = document.getElementById("recordVoice");
+  var recordLabel = document.getElementById("recordLabel");
+  var videoSession = null, voiceSession = null, capturePending = false;
+  var wakeLock = null, wakeLockPending = false;
+  var liveCameraView = document.getElementById("liveCameraView");
+  var liveCameraVideo = document.getElementById("liveCameraVideo");
+  var liveCameraStatus = document.getElementById("liveCameraStatus");
+  var recordingStore = window.indexedDB ? LongRecording.createIndexedDBStore(window.indexedDB) : null;
+  var recordingSaveStatus = document.getElementById("recordingSaveStatus");
+  var retryRecordingUploads = document.getElementById("retryRecordingUploads");
+  var recordingUploadFailed = false, recoveryFiles = 0;
 
-  function requestWakeLock() {
-    if (!("wakeLock" in navigator)) return;
-    navigator.wakeLock.request("screen").then(function(lock) { wakeLock = lock; }).catch(function() {});
-  }
-  function releaseWakeLock() { if (wakeLock) { wakeLock.release().catch(function() {}); wakeLock = null; } }
   function anyRecordingActive() {
-    return capturePending || (mediaRecorder && mediaRecorder.state === "recording") || (videoRecorder && videoRecorder.state === "recording");
+    return capturePending || !!(videoSession && videoSession.active) || !!(voiceSession && voiceSession.active);
+  }
+  function requestWakeLock() {
+    if (!("wakeLock" in navigator) || wakeLockPending || (wakeLock && !wakeLock.released)) return;
+    wakeLockPending = true;
+    navigator.wakeLock.request("screen").then(function(lock) {
+      if (!anyRecordingActive()) { lock.release().catch(function() {}); return; }
+      wakeLock = lock;
+    }).catch(function() {}).finally(function() { wakeLockPending = false; });
+  }
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release().catch(function() {}); wakeLock = null; }
   }
   document.addEventListener("visibilitychange", function() {
     if (!document.hidden && anyRecordingActive()) requestWakeLock();
   });
+  function fmtDuration(seconds) { return LongRecording.formatDuration(seconds); }
 
-  var videoChunks = [], videoStream = null, videoStart = 0, videoTimer = null;
-  var videoBytes = 0, videoAutoStopReason = "";
+  function recordingId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+      var n = Math.floor(Math.random() * 16); return (c === "x" ? n : (n & 3) | 8).toString(16);
+    });
+  }
 
-  function fmtDuration(secs) { var m = Math.floor(secs / 60), s = secs % 60; return m + ":" + pad(s); }
+  async function uploadRecordingPart(part) {
+    if (!currentUser || currentUser.id !== part.userId) throw new Error("Sign in to the recording's account to finish saving");
+    var existing = await supabase.from("media").select("id,storage_path").eq("id", part.id).maybeSingle();
+    if (existing.error) throw existing.error;
+    if (existing.data && existing.data.storage_path !== part.path) throw new Error("Recording path mismatch");
+    if (!existing.data) {
+      var upload = await supabase.storage.from(MEDIA_BUCKET).upload(part.path, part.blob, { contentType: part.type });
+      if (upload.error && !(String(upload.error.statusCode) === "409" || /already exists|duplicate/i.test(upload.error.message))) throw upload.error;
+      var inserted = await supabase.from("media").insert({
+        id: part.id, entry_id: part.entryId, user_id: part.userId, kind: part.kind,
+        storage_path: part.path, duration: part.duration
+      });
+      if (inserted.error && inserted.error.code !== "23505") throw inserted.error;
+      if (inserted.error) {
+        var check = await supabase.from("media").select("id,storage_path").eq("id", part.id).single();
+        if (check.error || check.data.storage_path !== part.path) throw check.error || new Error("Recording path mismatch");
+      }
+    }
+    var urls = await signedUrlsFor([part.path]);
+    return { id: part.id, path: part.path, duration: part.duration, url: urls[part.path] || null };
+  }
 
-  function pickVideoMimeType() {
-    var candidates = ["video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+  async function refreshRecordingSaveStatus() {
+    if (!recordingStore || !currentUser) { recordingSaveStatus.textContent = ""; retryRecordingUploads.hidden = true; return; }
+    var userId = currentUser.id;
+    try {
+      var count = await recordingStore.count(userId);
+      if (!currentUser || currentUser.id !== userId) return;
+      retryRecordingUploads.hidden = count === 0;
+      recordingSaveStatus.textContent = count
+        ? count + " recording part" + (count === 1 ? " is" : "s are") + " saved on this device, " + (recordingUploadFailed ? "waiting to upload. Reconnect and retry; keep this site's data." : "uploading to your account…")
+        : (recoveryFiles ? "Download the unsaved parts below before closing this tab." : "All finished recording parts are saved to your account.");
+    } catch (error) { recordingSaveStatus.textContent = "Local recording storage is unavailable."; }
+  }
+
+  var recordingQueue = recordingStore ? new LongRecording.DurableQueue({
+    store: recordingStore,
+    getUserId: function() { return currentUser && currentUser.id; },
+    upload: uploadRecordingPart,
+    onChange: refreshRecordingSaveStatus,
+    onError: function() { recordingUploadFailed = true; refreshRecordingSaveStatus(); },
+    onUploaded: function(part, item) {
+      recordingUploadFailed = false;
+      if (activeEntry && activeEntry.id === part.entryId) {
+        var list = part.kind === "video" ? activeEntry.videos : activeEntry.voices;
+        if (!list.some(function(existing) { return existing.id === item.id; })) list.push(item);
+        var container = part.kind === "video" ? videoList : voiceList;
+        var playing = Array.from(container.querySelectorAll("video,audio")).some(function(player) { return !player.paused && !player.ended; });
+        if (!playing) { if (part.kind === "video") refreshVideoList(); else refreshVoiceList(); }
+      }
+    }
+  }) : null;
+  retryRecordingUploads.addEventListener("click", function() { if (recordingQueue) recordingQueue.flush(); });
+  window.addEventListener("online", function() { if (recordingQueue) recordingQueue.flush(); });
+  setInterval(function() { if (recordingQueue) recordingQueue.flush(); }, 30000);
+
+  function offerRecordingDownload(blob, part, kind) {
+    recoveryFiles++;
+    var link = document.createElement("a");
+    link.className = "pin-help";
+    link.href = URL.createObjectURL(blob);
+    link.download = kind + "-unsaved-part-" + (part.index + 1) + (blob.type.indexOf("mp4") >= 0 ? ".mp4" : ".webm");
+    link.textContent = "Download unsaved " + kind + " part " + (part.index + 1);
+    document.getElementById("recordingRecovery").appendChild(link);
+    recordingSaveStatus.textContent = "Device storage is full or unavailable. Download the unsaved parts before closing this tab.";
+  }
+
+  function pickRecordingMimeType(kind) {
+    var candidates = kind === "video"
+      ? ["video/webm;codecs=vp8,opus", "video/webm", "video/mp4"]
+      : ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
     if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return "";
-    for (var i = 0; i < candidates.length; i++) { if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i]; }
-    return "";
+    return candidates.find(function(type) { return MediaRecorder.isTypeSupported(type); }) || "";
+  }
+
+  async function startLongRecording(kind) {
+    var button = kind === "video" ? recordVideoBtn : recordBtn;
+    var label = kind === "video" ? videoRecordLabel : recordLabel;
+    var defaultLabel = kind === "video" ? "Start recording" : "Record a voice note";
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { showToast("This browser can't record " + kind + "."); return; }
+    if (!activeEntry || !currentUser) { showToast("Sign in and open a day first."); return; }
+    if (anyRecordingActive()) { showToast("Stop the current recording first."); return; }
+    if (!recordingQueue || !recordingStore) { showToast("Local storage is required to safely save long recordings."); return; }
+    var entry = activeEntry, userId = currentUser.id, stream = null;
+    capturePending = true; button.disabled = true; label.textContent = "Preparing…";
+    try {
+      await recordingStore.ready();
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function() {});
+      var entryId = await ensureEntryRow(entry);
+      var constraints = kind === "video" ? {
+        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 15, max: 24 } }, audio: true
+      } : { audio: true };
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (!currentUser || currentUser.id !== userId) throw new Error("Account changed before recording started");
+      var sessionId = recordingId(), mimeType = pickRecordingMimeType(kind);
+      var options = kind === "video" ? { videoBitsPerSecond: 500000, audioBitsPerSecond: 32000 } : { audioBitsPerSecond: 32000 };
+      if (mimeType) options.mimeType = mimeType;
+      var partsCaptured = 0;
+      var session = new LongRecording.RecorderSession({
+        stream: stream, mimeType: mimeType || (kind === "video" ? "video/webm" : "audio/webm"), recorderOptions: options,
+        onTick: function(seconds) { label.textContent = "Stop recording · " + fmtDuration(seconds) + " / 12:00:00"; },
+        onPart: async function(blob, part) {
+          if (blob.size > MAX_RECORDING_BYTES) throw new Error("Browser produced an oversized recording part");
+          await recordingQueue.enqueue({
+            id: recordingId(), userId: userId, entryId: entryId, kind: kind, blob: blob, type: part.type,
+            path: LongRecording.partPath(userId, entry.date, kind, sessionId, part),
+            duration: fmtDuration(Math.max(1, Math.round((part.endMs - part.startMs) / 1000)))
+          });
+          partsCaptured++;
+        },
+        onStopping: function() {
+          button.disabled = true; label.textContent = "Saving final part…"; button.classList.remove("recording");
+          if (kind === "video") { liveCameraVideo.pause(); liveCameraVideo.srcObject = null; liveCameraView.hidden = true; }
+        },
+        onError: function(error, blob, part) {
+          if (blob) offerRecordingDownload(blob, part, kind);
+          showToast("Recording stopped: " + (blob ? "download the unsaved part below." : "the recording device failed."));
+        },
+        onFinish: function(reason) {
+          button.disabled = false; label.textContent = defaultLabel; button.classList.remove("recording");
+          if (!anyRecordingActive()) releaseWakeLock();
+          if (reason === "time") showToast("12-hour recording finished. Its files are saved locally and upload automatically.");
+          else if (reason === "lock" || reason === "device") showToast("Recording stopped when device access ended. Captured parts are kept.");
+          else if (reason !== "storage" && reason !== "error") showToast(partsCaptured ? "Recording stopped. Finished parts upload automatically." : "Nothing was captured. Try recording again.");
+          refreshRecordingSaveStatus();
+        }
+      });
+      if (kind === "video") videoSession = session; else voiceSession = session;
+      session.sessionId = sessionId;
+      session.start(); capturePending = false; button.disabled = false;
+      button.classList.add("recording"); label.textContent = "Stop recording · 0:00 / 12:00:00";
+      if (kind === "video") {
+        liveCameraVideo.srcObject = stream; liveCameraView.hidden = false;
+        liveCameraVideo.play().catch(function() { liveCameraStatus.textContent = "Recording · tap preview for live view"; });
+        function refreshLiveCameraStatus() {
+          liveCameraStatus.textContent = stream.getTracks().some(function(track) { return track.muted; }) ? "Device paused camera/mic" : "● LIVE camera · recording";
+        }
+        stream.getTracks().forEach(function(track) { track.addEventListener("mute", refreshLiveCameraStatus); track.addEventListener("unmute", refreshLiveCameraStatus); });
+        refreshLiveCameraStatus();
+      }
+      requestWakeLock();
+      showToast("Recording started. Small files save automatically; press Stop when done.");
+    } catch (error) {
+      if (stream) stream.getTracks().forEach(function(track) { track.stop(); });
+      capturePending = false; button.disabled = false; label.textContent = defaultLabel;
+      console.error("Recording could not start:", error);
+      showToast("Couldn't start recording. Check device permissions, connection, and available storage.");
+    }
+  }
+  recordVideoBtn.addEventListener("click", function() {
+    if (videoSession && videoSession.active) videoSession.stop(); else startLongRecording("video");
+  });
+  recordBtn.addEventListener("click", function() {
+    if (voiceSession && voiceSession.active) voiceSession.stop(); else startLongRecording("voice");
+  });
+  document.getElementById("stopLiveVideo").addEventListener("click", function() { stopVideoRecordingIfActive(); });
+  liveCameraVideo.addEventListener("click", function() { if (liveCameraVideo.srcObject) liveCameraVideo.play().catch(function() {}); });
+  function stopVideoRecordingIfActive(reason) { if (videoSession) videoSession.stop(reason); }
+  function stopRecordingIfActive(reason) { if (voiceSession) voiceSession.stop(reason); }
+
+  // Fetch a fresh private URL for every part so 12-hour playback does not rely
+  // on the one-hour URLs created when a day was first opened.
+  function recordingPlaylist(player, group, controls) {
+    var index = 0, loading = false, sourceAt = Date.now(), requestId = 0;
+    var previous = document.createElement("button"), next = document.createElement("button"), position = document.createElement("span");
+    previous.type = next.type = "button"; previous.className = next.className = "action-btn";
+    previous.textContent = "‹"; next.textContent = "›";
+    previous.setAttribute("aria-label", "Previous recording part"); next.setAttribute("aria-label", "Next recording part");
+    var seek = document.createElement("input");
+    seek.type = "range"; seek.min = "0"; seek.max = String(group.parts.length - 1); seek.step = "1"; seek.value = "0";
+    seek.setAttribute("aria-label", "Choose recording part");
+    seek.style.width = "80px";
+    function update() {
+      previous.disabled = loading || index === 0; next.disabled = loading || index === group.parts.length - 1;
+      seek.disabled = loading; seek.value = String(index);
+      var part = LongRecording.parsePartPath(group.parts[index].path);
+      position.textContent = "Part " + (index + 1) + "/" + group.parts.length + (part ? " · " + fmtDuration(Math.floor(part.startMs / 1000)) : "") + " · Total " + group.duration + (group.missing ? " · Some parts are still missing" : "");
+    }
+    async function loadPart(target, play, atTime) {
+      if (target < 0 || target >= group.parts.length) return;
+      var token = ++requestId;
+      loading = true; update();
+      try {
+        var part = group.parts[target], urls = await signedUrlsFor([part.path]);
+        if (token !== requestId) return;
+        if (!urls[part.path]) throw new Error("Playback URL unavailable");
+        index = target; player.src = urls[part.path]; sourceAt = Date.now();
+        if (atTime) player.addEventListener("loadedmetadata", function restorePosition() { player.currentTime = atTime; }, { once: true });
+        if (play) await player.play();
+      } catch (error) { showToast("Couldn't load this recording part. Reconnect and try again."); }
+      finally { if (token === requestId) { loading = false; update(); } }
+    }
+    player.src = group.parts[0].url || "";
+    player.addEventListener("ended", function() {
+      if (group.sessionId && activeEntry) {
+        var list = LongRecording.parsePartPath(group.parts[0].path).kind === "video" ? activeEntry.videos : activeEntry.voices;
+        var updated = LongRecording.groupParts(list).find(function(candidate) { return candidate.sessionId === group.sessionId; });
+        if (updated) { group = updated; seek.max = String(group.parts.length - 1); }
+      }
+      if (!loading && index + 1 < group.parts.length) loadPart(index + 1, true);
+    });
+    player.addEventListener("play", function() {
+      if (!loading && (!player.getAttribute("src") || Date.now() - sourceAt >= 50 * 60 * 1000)) {
+        var time = player.currentTime; player.pause(); loadPart(index, true, time);
+      }
+    });
+    player.addEventListener("error", function() {
+      if (!loading) showToast("This recording part couldn't load. Use its part selector to retry.");
+    });
+    previous.addEventListener("click", function() { loadPart(index - 1, !player.paused); });
+    next.addEventListener("click", function() { loadPart(index + 1, !player.paused); });
+    seek.addEventListener("change", function() { loadPart(Number(seek.value), !player.paused); });
+    controls.appendChild(position);
+    if (group.sessionId) { controls.appendChild(previous); controls.appendChild(seek); controls.appendChild(next); }
+    update();
+  }
+
+  async function deleteRecordingGroup(group, kind, button) {
+    if ((videoSession && videoSession.active && videoSession.sessionId === group.sessionId) ||
+        (voiceSession && voiceSession.active && voiceSession.sessionId === group.sessionId)) { showToast("Stop this recording before removing it."); return; }
+    button.disabled = true;
+    var entry = activeEntry;
+    try {
+      if (recordingStore && currentUser && await recordingStore.count(currentUser.id)) {
+        showToast("Finish uploading your saved recording parts before removing a recording."); return;
+      }
+      for (var i = 0; i < group.parts.length; i++) {
+        var item = group.parts[i];
+        var removed = await supabase.storage.from(MEDIA_BUCKET).remove([item.path]);
+        if (removed.error) throw removed.error;
+        var deleted = await supabase.from("media").delete().eq("id", item.id);
+        if (deleted.error) throw deleted.error;
+        var list = kind === "video" ? entry.videos : entry.voices;
+        var itemIndex = list.findIndex(function(saved) { return saved.id === item.id; });
+        if (itemIndex >= 0) list.splice(itemIndex, 1);
+      }
+    } catch (error) { showToast("Couldn't remove every part. Remaining parts are still listed; try again."); }
+    finally { button.disabled = false; if (kind === "video") refreshVideoList(); else refreshVoiceList(); }
   }
 
   function refreshVideoList() {
+    videoList.querySelectorAll("video").forEach(function(player) { player.pause(); player.removeAttribute("src"); player.load(); });
     videoList.innerHTML = "";
-    var list = activeEntry ? activeEntry.videos : [];
-    if (!list || list.length === 0) return;
-    list.forEach(function(clip, idx) {
+    LongRecording.groupParts(activeEntry ? activeEntry.videos : []).forEach(function(group) {
       var item = document.createElement("div"); item.className = "video-item";
-      var video = document.createElement("video"); video.controls = true; video.playsInline = true; video.preload = "metadata"; video.src = clip.url || "";
-      video.addEventListener("error", function() { showToast("This clip didn't load correctly — try reopening the day."); });
-      item.appendChild(video);
-      var meta = document.createElement("div"); meta.className = "video-meta";
-      var dur = document.createElement("span"); dur.className = "mono"; dur.textContent = clip.duration; meta.appendChild(dur);
-      var del = document.createElement("button"); del.className = "del"; del.setAttribute("aria-label", "Delete recording"); del.textContent = "✕ remove";
-      del.addEventListener("click", function() {
-        list.splice(idx, 1); refreshVideoList();
-        deleteMedia(clip).catch(function() { showToast("Couldn't delete that clip — try again."); });
-      });
+      var player = document.createElement("video"); player.controls = true; player.playsInline = true; player.preload = "metadata";
+      item.appendChild(player);
+      var meta = document.createElement("div"); meta.className = "video-meta"; meta.style.flexWrap = "wrap"; meta.style.gap = "6px";
+      recordingPlaylist(player, group, meta);
+      var del = document.createElement("button"); del.className = "del"; del.textContent = "✕ remove"; del.setAttribute("aria-label", "Delete complete recording");
+      del.addEventListener("click", function() { deleteRecordingGroup(group, "video", del); });
       meta.appendChild(del); item.appendChild(meta); videoList.appendChild(item);
     });
   }
-
-  recordVideoBtn.addEventListener("click", function() {
-    if (videoRecorder && videoRecorder.state === "recording") { videoRecorder.stop(); return; }
-    startVideoRecording();
-  });
-
-  function startVideoRecording() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Camera and mic aren't available in this preview."); return; }
-    if (!activeEntry) { showToast("Open a day first."); return; }
-    if (anyRecordingActive()) { showToast("Stop the current recording first."); return; }
-    capturePending = true;
-    recordVideoBtn.disabled = true;
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true })
-      .then(function(stream) {
-        videoStream = stream; videoChunks = []; videoBytes = 0; videoAutoStopReason = "";
-        var mimeType = pickVideoMimeType();
-        try { videoRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 1000000, audioBitsPerSecond: 64000 }) : new MediaRecorder(stream); }
-        catch(e) { showToast("This browser can't record video — try Chrome, Edge, or Safari 14.3+."); videoStream.getTracks().forEach(function(t) { t.stop(); }); capturePending = false; recordVideoBtn.disabled = false; return; }
-        var entry = activeEntry;
-        videoRecorder.ondataavailable = function(e) {
-          if (e.data.size <= 0) return;
-          videoChunks.push(e.data); videoBytes += e.data.size;
-          if (videoBytes >= RECORDING_STOP_BYTES && videoRecorder.state === "recording") { videoAutoStopReason = "size"; videoRecorder.stop(); }
-        };
-        videoRecorder.onstop = function() {
-          videoStream.getTracks().forEach(function(t) { t.stop(); });
-          recordVideoBtn.classList.remove("recording"); videoRecordLabel.textContent = "Saving…"; recordVideoBtn.disabled = true;
-          clearInterval(videoTimer);
-          var wasLockCut = lockCutVideo; lockCutVideo = false;
-          if (!anyRecordingActive()) releaseWakeLock();
-          var finish = function() { recordVideoBtn.disabled = false; videoRecordLabel.textContent = "Start recording"; };
-          if (videoChunks.length === 0) { showToast(wasLockCut ? "Screen locked before anything was captured — nothing to save." : "That recording came out empty — try again."); finish(); return; }
-          var blob = new Blob(videoChunks, { type: (videoRecorder && videoRecorder.mimeType) || mimeType || "video/webm" });
-          var secs = Math.max(1, Math.round((Date.now() - videoStart) / 1000));
-          var duration = fmtDuration(secs);
-          uploadMedia(entry, "video", blob, blob.type || "video/webm", { duration: duration }).then(function(item) {
-            item.duration = duration;
-            if (activeEntry === entry) { entry.videos.push(item); refreshVideoList(); }
-            if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
-            else if (videoAutoStopReason) showToast("Video reached the " + (videoAutoStopReason === "time" ? "5 minute" : "45 MB") + " limit and was saved.");
-            else showToast("Video saved.");
-          }).catch(function() { showToast("Recording captured, but the save failed — try again."); }).then(finish);
-        };
-        videoRecorder.start(1000); capturePending = false; requestWakeLock(); videoStart = Date.now(); recordVideoBtn.disabled = false;
-        recordVideoBtn.classList.add("recording");
-        videoTimer = setInterval(function() { var secs = Math.round((Date.now() - videoStart) / 1000); videoRecordLabel.textContent = "Recording… " + fmtDuration(secs) + " / 5:00"; if (secs >= MAX_VIDEO_SECONDS && videoRecorder.state === "recording") { videoAutoStopReason = "time"; videoRecorder.stop(); } }, 500);
-        showToast("Recording — press Stop whenever you're done.");
-      })
-      .catch(function() { capturePending = false; recordVideoBtn.disabled = false; showToast("Camera/mic access was declined or isn't available."); });
-  }
-
-  function stopVideoRecordingIfActive() { if (videoRecorder && videoRecorder.state === "recording") videoRecorder.stop(); }
-
-  // ---------- Voice notes ----------
-  var voiceList = document.getElementById("voiceList");
-  var recordBtn = document.getElementById("recordVoice");
-  var recordLabel = document.getElementById("recordLabel");
-  var mediaRecorder = null, recordChunks = [], recordStream = null, recordStart = 0, recordTimer = null;
-  var recordBytes = 0, audioAutoStopReason = "";
-
   function refreshVoiceList() {
+    voiceList.querySelectorAll("audio").forEach(function(player) { player.pause(); player.removeAttribute("src"); player.load(); });
     voiceList.innerHTML = "";
-    var list = activeEntry ? activeEntry.voices : [];
-    if (!list || list.length === 0) {
+    var groups = LongRecording.groupParts(activeEntry ? activeEntry.voices : []);
+    if (!groups.length) {
       var empty = document.createElement("div"); empty.className = "empty-note";
       empty.textContent = "No voice notes yet — record one to hear this day back later."; voiceList.appendChild(empty); return;
     }
-    list.forEach(function(note, idx) {
+    groups.forEach(function(group) {
       var row = document.createElement("div"); row.className = "voice-item";
-      var audio = document.createElement("audio");
-      audio.controls = true;
-      audio.preload = "metadata";
-      audio.src = note.url || "";
-      audio.setAttribute("aria-label", "Voice note playback");
-      audio.onerror = function() { showToast("Couldn't load that voice note — try again."); };
-      row.appendChild(audio);
-      var del = document.createElement("button"); del.className = "del"; del.setAttribute("aria-label", "Delete voice note"); del.textContent = "✕";
-      del.addEventListener("click", function() { list.splice(idx, 1); refreshVoiceList(); deleteMedia(note).catch(function() { showToast("Couldn't delete that voice note — try again."); }); });
+      var wrap = document.createElement("div"); wrap.style.flex = "1"; wrap.style.minWidth = "0";
+      var player = document.createElement("audio"); player.controls = true; player.preload = "metadata"; player.style.width = "100%";
+      player.setAttribute("aria-label", "Voice note playback"); wrap.appendChild(player);
+      var controls = document.createElement("div"); controls.className = "video-meta";
+      controls.style.fontSize = ".72rem"; controls.style.display = "flex"; controls.style.flexWrap = "wrap"; controls.style.gap = "6px"; controls.style.alignItems = "center";
+      recordingPlaylist(player, group, controls); wrap.appendChild(controls); row.appendChild(wrap);
+      var del = document.createElement("button"); del.className = "del"; del.textContent = "✕"; del.setAttribute("aria-label", "Delete complete voice note");
+      del.addEventListener("click", function() { deleteRecordingGroup(group, "voice", del); });
       row.appendChild(del); voiceList.appendChild(row);
     });
   }
-
-  recordBtn.addEventListener("click", function() {
-    if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); return; }
-    startRecording();
-  });
-
-  function startRecording() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast("Microphone isn't available in this preview."); return; }
-    if (!activeEntry) { showToast("Open a day first."); return; }
-    if (anyRecordingActive()) { showToast("Stop the current recording first."); return; }
-    capturePending = true;
-    recordBtn.disabled = true;
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(function(stream) {
-        recordStream = stream; recordChunks = []; recordBytes = 0; audioAutoStopReason = "";
-        var audioMime = "";
-        if (window.MediaRecorder && MediaRecorder.isTypeSupported) {
-          ["audio/mp4","audio/webm;codecs=opus","audio/webm"].some(function(t) { if (MediaRecorder.isTypeSupported(t)) { audioMime = t; return true; } return false; });
-        }
-        try { mediaRecorder = audioMime ? new MediaRecorder(stream, { mimeType: audioMime, audioBitsPerSecond: 64000 }) : new MediaRecorder(stream); }
-        catch (e) { stream.getTracks().forEach(function(t) { t.stop(); }); capturePending = false; recordBtn.disabled = false; showToast("This browser can't record audio."); return; }
-        var entry = activeEntry;
-        mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) { recordChunks.push(e.data); recordBytes += e.data.size; if (recordBytes >= RECORDING_STOP_BYTES && mediaRecorder.state === "recording") { audioAutoStopReason = "size"; mediaRecorder.stop(); } } };
-        mediaRecorder.onstop = function() {
-          recordStream.getTracks().forEach(function(t) { t.stop(); });
-          recordBtn.classList.remove("recording"); recordBtn.disabled = true; recordLabel.textContent = "Saving…";
-          clearInterval(recordTimer);
-          var wasLockCut = lockCutAudio; lockCutAudio = false;
-          if (!anyRecordingActive()) releaseWakeLock();
-          var finish = function() { recordBtn.disabled = false; recordLabel.textContent = "Record a voice note"; };
-          if (recordChunks.length === 0) { if (wasLockCut) showToast("Screen locked before anything was captured — nothing to save."); finish(); return; }
-          var blob = new Blob(recordChunks, { type: (mediaRecorder && mediaRecorder.mimeType) || audioMime || "audio/webm" });
-          var secs = Math.max(1, Math.round((Date.now() - recordStart) / 1000));
-          var duration = fmtDuration(secs), seed = 1 + Math.random() * 2;
-          uploadMedia(entry, "voice", blob, blob.type || "audio/webm", { duration: duration, seed: seed }).then(function(item) {
-            item.duration = duration; item.seed = seed;
-            if (activeEntry === entry) { entry.voices.push(item); refreshVoiceList(); }
-            if (wasLockCut) showToast("Screen locked, so the recording stopped there — saved what was captured.");
-            else if (audioAutoStopReason) showToast("Voice note reached the " + (audioAutoStopReason === "time" ? "30 minute" : "45 MB") + " limit and was saved.");
-            else showToast("Voice note saved.");
-          }).catch(function() { showToast("Recording captured, but the save failed — try again."); }).then(finish);
-        };
-        mediaRecorder.start(1000); capturePending = false; requestWakeLock(); recordStart = Date.now(); recordBtn.disabled = false;
-        recordBtn.classList.add("recording");
-        recordTimer = setInterval(function() { var secs = Math.round((Date.now() - recordStart) / 1000); recordLabel.textContent = "Recording… " + fmtDuration(secs) + " / 30:00"; if (secs >= MAX_AUDIO_SECONDS && mediaRecorder.state === "recording") { audioAutoStopReason = "time"; mediaRecorder.stop(); } }, 300);
-      })
-      .catch(function() { capturePending = false; recordBtn.disabled = false; showToast("Microphone access was declined or isn't available."); });
-  }
-
-  function stopRecordingIfActive() { if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); }
 
   // ---------- Reel ----------
   var reelOverlay = document.getElementById("reelOverlay");
@@ -2208,20 +2371,11 @@ function showApp() {
     toastTimer = setTimeout(function() { toast.classList.remove("show"); }, 2600);
   }
 
-  // Desktop: keep recording in background — only stop on mobile
-  document.addEventListener("visibilitychange", function() {
-    if (document.hidden) {
-      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        if (mediaRecorder && mediaRecorder.state === "recording") lockCutAudio = true;
-        if (videoRecorder && videoRecorder.state === "recording") lockCutVideo = true;
-        stopRecordingIfActive(); stopVideoRecordingIfActive();
-      }
-    }
-  });
+  // App locking and tab visibility do not deliberately stop capture. The OS
+  // can still suspend a browser or end its camera/microphone tracks.
 
   window.addEventListener("beforeunload", function(e) {
-    if (anyRecordingActive() || recordVideoBtn.disabled || recordBtn.disabled) { e.preventDefault(); e.returnValue = ""; }
+    if (anyRecordingActive() || recordVideoBtn.disabled || recordBtn.disabled || recoveryFiles) { e.preventDefault(); e.returnValue = ""; }
   });
 })();
 </script>

@@ -68,7 +68,7 @@ insert into storage.buckets (id, name, public, file_size_limit)
 values ('documents', 'documents', false, 26214400)
 on conflict (id) do update set public = false, file_size_limit = 26214400;
 
--- Keep the media bucket above the app's 45 MB per-recording safety limit.
+-- Keep the media bucket above the app's 45 MB per-file safety limit.
 -- This documents the server-side maximum instead of relying on a dashboard
 -- default that can differ between projects.
 update storage.buckets
@@ -228,7 +228,7 @@ create or replace function public.set_app_pin(pin_value text)
 returns void
 language plpgsql
 security definer
-set search_path = ''
+set search_path = pg_catalog, extensions, public, pg_temp
 as $$
 declare
   actor_id uuid := auth.uid();
@@ -237,7 +237,7 @@ begin
   if pin_value !~ '^[0-9]{4}$' then raise exception 'PIN must be four digits'; end if;
 
   insert into public.app_pins (user_id, pin_hash)
-  values (actor_id, public.crypt(pin_value, public.gen_salt('bf', 12)))
+  values (actor_id, crypt(pin_value, gen_salt('bf', 12)))
   on conflict (user_id) do nothing;
 
   if not found then raise exception 'PIN is already set'; end if;
@@ -248,7 +248,7 @@ create or replace function public.verify_app_pin(pin_value text)
 returns boolean
 language plpgsql
 security definer
-set search_path = ''
+set search_path = pg_catalog, extensions, public, pg_temp
 as $$
 declare
   actor_id uuid := auth.uid();
@@ -265,7 +265,7 @@ begin
   if not found then return false; end if;
   if pin_record.locked_until is not null and pin_record.locked_until > now() then return false; end if;
 
-  if pin_record.pin_hash = public.crypt(pin_value, pin_record.pin_hash) then
+  if pin_record.pin_hash = crypt(pin_value, pin_record.pin_hash) then
     update public.app_pins
     set failed_attempts = 0, locked_until = null
     where user_id = actor_id;

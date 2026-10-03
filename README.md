@@ -2,7 +2,7 @@
 
 A day-by-day calendar app: click any day to set its mood color, add up to
 100 photos, capture a quick front/back camera moment, record a video
-(up to 5 minutes / 45 MB), record a voice note (up to 30 minutes / 45 MB), and jot what happened. Tap
+(up to 12 hours), record a voice note (up to 12 hours), and jot what happened. Tap
 "Play memory reel" to replay a day as a slideshow.
 
 This is a static frontend with Supabase authentication, database, and private
@@ -51,8 +51,29 @@ git push -u origin main
 - Mood, notes, photos, voice notes, videos, and camera moments are saved to the
   signed-in user's Supabase account and private storage.
 - Photos are downscaled and compressed client-side before upload.
-- A recording must remain in the open browser tab until it finishes uploading.
-  On mobile, locking the screen or switching apps can stop capture early.
+- The app's PIN/background-only lock keeps recording, its indicator, and live
+  camera preview running. Switching tabs does not deliberately stop capture.
+  The operating system can still suspend a browser or end camera/microphone
+  access when the device itself locks; this web app cannot guarantee recording
+  through a physical phone lock. Screen wake lock is requested when supported.
+- Video and voice recordings use compressed, independently playable one-minute
+  parts (also rotated near 5 MB). The camera/microphone stream stays open across
+  parts. Playback groups them into one session with automatic next-part playback
+  and a part selector; file transitions can have a brief playback pause.
+- Finished parts are stored in IndexedDB before account upload. Offline parts
+  retry every 30 seconds, on reconnection, and when the same account signs in.
+  **Retry recording uploads** retries immediately. Do not clear site data while
+  uploads are pending. A crash can lose the unfinished current minute.
+- Video targets 640 × 360 at 15 fps, 500 kbps video and 32 kbps audio; voice
+  targets 32 kbps. Twelve hours is approximately 2.9 GB of video or 173 MB of
+  voice, plus container overhead. Actual size varies by browser. Small files
+  keep memory and individual uploads manageable; they do not remove the total
+  storage requirement. Keep the device powered and allow enough account/device
+  storage. If local storage fails, recording stops and exposes download links
+  for unsaved finished parts.
+- Capture moment takes and saves a front photo followed by an exact rear-camera
+  photo, when the device has one. Video recording is the separate **Start
+  recording** control. Capture and recording cannot use the camera concurrently.
 - Run `supabase-migration.sql` in the Supabase SQL editor to apply the app's
   supporting tables and set the media bucket's server-side limit to 50 MB.
 - To enable the support desk, run the updated `supabase-migration.sql` in the
@@ -63,6 +84,23 @@ git push -u origin main
   members. Users can open **Get help** in the app to message support; replies
   appear in the same private conversation. The admin page is available at
   `/admin.html` after deployment.
+
+## Recording checks
+
+```bash
+npm test
+npm run test:browser
+```
+
+The unit suite simulates the complete 12-hour video/voice timelines and tests
+file rotation, final-part saving, durable upload recovery, and photo cleanup.
+The browser suite uses headless Microsoft Edge with simulated camera/microphone
+input and a local mock backend; it never writes to the production account.
+It checks real JPEG/video/audio generation, playback, capture controls,
+reopening saved media, offline recovery, and basic mood/note/photo/PIN controls.
+Install Edge or change the Playwright browser channel for your machine.
+These tests do not replace a physical-device endurance test or validation of
+the live Supabase policies and available storage.
 
 ## Turning this into a native app
 

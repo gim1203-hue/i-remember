@@ -5,6 +5,8 @@
   "private": true,
   "scripts": {
     "start": "npx serve .",
+    "test": "node --test tests/recording.test.cjs",
+    "test:browser": "playwright test",
     "cap:sync": "npx cap copy",
     "cap:ios": "npx cap open ios",
     "cap:android": "npx cap open android"
@@ -16,7 +18,8 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
+    "@playwright/test": "^1.63.0",
+    "fake-indexeddb": "^6.2.5",
     "supabase": "^2.117.0"
   }
 }
-
