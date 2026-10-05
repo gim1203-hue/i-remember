@@ -341,7 +341,8 @@
   .support-launch:hover { filter: brightness(1.06); }
   .support-panel { position: fixed; left: 18px; bottom: 78px; z-index: 56; width: min(360px, calc(100vw - 36px)); height: min(480px, calc(100dvh - 110px)); display: flex; flex-direction: column; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 18px 50px hsl(var(--shadow) / .28); }
   .support-panel[hidden] { display: none; }
-  .support-head { padding: 14px 16px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .support-head { padding: 14px 16px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: grab; touch-action: none; user-select: none; }
+  .support-panel.dragging .support-head { cursor: grabbing; }
   .support-head h2 { font-size: 1.05rem; }
   .support-thread { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px; }
   .support-message { max-width: 86%; align-self: flex-start; padding: 9px 11px; background: var(--surface-raised); border: 1px solid var(--border-soft); font-size: .82rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -729,6 +730,64 @@ function showApp() {
   var supportPanel = document.getElementById("supportPanel");
   var supportThread = document.getElementById("supportThread");
   var supportPollTimer = null;
+  var supportPanelDragReady = false;
+
+  function enableSupportPanelDragging() {
+    if (supportPanelDragReady) return;
+    var header = supportPanel.querySelector(".support-head");
+    var savedPosition = null;
+    try { savedPosition = JSON.parse(localStorage.getItem("iremember-support-panel-position") || "null"); } catch (ignore) {}
+    var rect = supportPanel.getBoundingClientRect();
+    function clampPosition(left, top) {
+      return {
+        left: Math.min(Math.max(8, left), Math.max(8, window.innerWidth - supportPanel.offsetWidth - 8)),
+        top: Math.min(Math.max(8, top), Math.max(8, window.innerHeight - supportPanel.offsetHeight - 8))
+      };
+    }
+    function movePanel(left, top) {
+      var position = clampPosition(left, top);
+      supportPanel.style.left = position.left + "px";
+      supportPanel.style.top = position.top + "px";
+      supportPanel.style.right = "auto";
+      supportPanel.style.bottom = "auto";
+      try { localStorage.setItem("iremember-support-panel-position", JSON.stringify(position)); } catch (ignore) {}
+    }
+    supportPanel.style.left = rect.left + "px";
+    supportPanel.style.top = rect.top + "px";
+    supportPanel.style.right = "auto";
+    supportPanel.style.bottom = "auto";
+    if (savedPosition && Number.isFinite(savedPosition.left) && Number.isFinite(savedPosition.top)) {
+      movePanel(savedPosition.left, savedPosition.top);
+    }
+    var drag = null;
+    header.addEventListener("pointerdown", function(event) {
+      if (event.target.closest("button") || (event.button !== 0 && event.pointerType !== "touch")) return;
+      drag = { x: event.clientX, y: event.clientY, left: supportPanel.offsetLeft, top: supportPanel.offsetTop, moved: false };
+      header.setPointerCapture(event.pointerId);
+    });
+    header.addEventListener("pointermove", function(event) {
+      if (!drag) return;
+      var dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+      if (!drag.moved && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      drag.moved = true;
+      supportPanel.classList.add("dragging");
+      movePanel(drag.left + dx, drag.top + dy);
+    });
+    function finishDrag(event) {
+      if (!drag) return;
+      drag = null;
+      supportPanel.classList.remove("dragging");
+      if (header.hasPointerCapture && header.hasPointerCapture(event.pointerId)) header.releasePointerCapture(event.pointerId);
+    }
+    header.addEventListener("pointerup", finishDrag);
+    header.addEventListener("pointercancel", finishDrag);
+    window.addEventListener("resize", function() {
+      if (supportPanel.hidden) return;
+      var current = supportPanel.getBoundingClientRect();
+      movePanel(current.left, current.top);
+    });
+    supportPanelDragReady = true;
+  }
 
   function formatSupportTime(value) {
     return new Date(value).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -772,6 +831,7 @@ function showApp() {
   function openSupportChat() {
     if (!currentUser) return;
     supportPanel.hidden = false;
+    enableSupportPanelDragging();
     document.getElementById("accountMessages").setAttribute("aria-expanded", "true");
     document.getElementById("supportLaunch").setAttribute("aria-expanded", "true");
     loadSupportMessages().catch(function() {
