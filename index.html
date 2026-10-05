@@ -318,6 +318,7 @@
   .limit-note { color: var(--ink-faint); font-size: .7rem; line-height: 1.4; margin: 7px 0 0; }
   .recording-pill { display: none; position: fixed; left: 16px; bottom: 18px; z-index: 55; border-radius: 999px; padding: 8px 12px; color: #fff; background: #a72f25; font-size: .72rem; font-weight: 700; box-shadow: 0 4px 18px rgba(0,0,0,.2); }
   .recording-pill.on { display: block; }
+  .wall-clock { position: fixed; left: max(8px, env(safe-area-inset-left)); top: 50%; z-index: 220; transform: translateY(-50%); padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px; background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--ink); font: 500 .72rem/1.2 "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 3px 12px hsl(var(--shadow) / .16); pointer-events: none; }
   #recordingCameraView { margin-bottom: 10px; }
   #recordingCameraView[hidden] { display: none; }
   .floating-control { position: fixed; z-index: 220; width: 48px; height: 48px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: grab; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); touch-action: none; user-select: none; }
@@ -325,6 +326,33 @@
   .visibility-switch { top: 14px; right: 14px; font-size: 1.35rem; }
   .radio-lock-button { display: none; top: 14px; left: 14px; place-items: center; }
   #radioModal { z-index: 210; }
+  #radioModal .radio-dialog { width: min(620px, 100%); overflow: hidden; padding: 0; border-color: #40524a; background: #17211e; color: #f5f0e6; color-scheme: dark; }
+  .radio-dialog .tool-dialog-head { margin: 0; padding: 22px 22px 16px; border-bottom: 1px solid #34443e; }
+  .radio-kicker { margin-bottom: 6px; color: #e6a461; font: 600 .64rem/1.2 "IBM Plex Mono", monospace; letter-spacing: .08em; text-transform: uppercase; }
+  .radio-console { margin: 18px; padding: 16px; border: 1px solid #34443e; background: #111916; }
+  .radio-console-top, .radio-now-playing, .radio-volume { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .radio-console-top { padding-bottom: 13px; border-bottom: 1px solid #2b3934; color: #a8b7ad; font: 500 .66rem/1.2 "IBM Plex Mono", monospace; letter-spacing: .04em; text-transform: uppercase; }
+  .radio-on-air { display: inline-flex; align-items: center; gap: 7px; color: #e6a461; }
+  .radio-on-air::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #e66f55; box-shadow: 0 0 0 3px rgba(230,111,85,.15); }
+  .radio-frequency { color: #d3d9ce; }
+  .radio-controls { display: grid; grid-template-columns: 1fr 1.15fr; gap: 12px; margin-top: 16px; }
+  .radio-field { display: grid; gap: 6px; min-width: 0; color: #a8b7ad; font: 600 .63rem/1.2 "IBM Plex Mono", monospace; letter-spacing: .05em; text-transform: uppercase; }
+  .radio-dialog .field { width: 100%; min-width: 0; border-color: #40524a; background: #1d2924; color: #f5f0e6; }
+  .radio-now-playing { min-height: 64px; margin-top: 15px; padding: 10px 12px; border: 1px solid #2d3d36; background: #18231f; }
+  .radio-now-label { color: #e6a461; font: 600 .62rem/1.2 "IBM Plex Mono", monospace; letter-spacing: .06em; text-transform: uppercase; }
+  .radio-now-copy { margin: 5px 0 0; color: #d7ded5; font-size: .8rem; }
+  .radio-equalizer { display: flex; align-items: center; gap: 3px; height: 26px; }
+  .radio-equalizer span { width: 3px; border-radius: 2px; background: #e6a461; }
+  .radio-equalizer span:nth-child(1), .radio-equalizer span:nth-child(5) { height: 9px; }
+  .radio-equalizer span:nth-child(2), .radio-equalizer span:nth-child(4) { height: 17px; background: #80a89a; }
+  .radio-equalizer span:nth-child(3) { height: 24px; }
+  #radioPlayer { display: block; width: 100%; margin-top: 9px; accent-color: #e6a461; }
+  .radio-volume { display: grid; grid-template-columns: auto minmax(0, 1fr) 42px; margin-top: 13px; }
+  .radio-volume .action-btn { min-width: 82px; border-color: #40524a; background: #1d2924; color: #f5f0e6; }
+  .radio-volume output { color: #d7ded5; font: 500 .7rem/1 "IBM Plex Mono", monospace; text-align: right; }
+  #radioStatus { margin: -5px 18px 0; padding: 0 0 14px; color: #b5c1b8; }
+  #radioModal .radio-note { margin: 0; padding: 12px 18px 16px; border-top: 1px solid #34443e; color: #9ba99f; }
+  @media (max-width: 520px) { .radio-dialog .tool-dialog-head { padding: 18px 16px 14px; } .radio-console { margin: 14px 12px; padding: 12px; } .radio-controls { grid-template-columns: 1fr; gap: 10px; } #radioStatus { margin: -3px 12px 0; } #radioModal .radio-note { padding: 10px 12px 14px; } }
   .pin-overlay { position: fixed; inset: 0; z-index: 240; display: grid; place-items: center; padding: 18px; background: rgba(20, 18, 16, .82); backdrop-filter: blur(5px); }
   .pin-overlay[hidden] { display: none; }
   .pin-dialog { width: min(360px, 100%); padding: 22px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,.32); }
@@ -337,8 +365,12 @@
   .pin-help { display: block; margin-top: 13px; color: var(--accent); font-size: .78rem; line-height: 1.5; }
   .pin-actions { display: flex; gap: 8px; margin-top: 16px; }
   .pin-actions .action-btn { flex: 1; }
-  .support-launch { position: fixed; left: 18px; bottom: 22px; z-index: 55; min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 15px; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 600 .82rem "Work Sans", sans-serif; cursor: pointer; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
+  .support-launch { position: fixed; left: 18px; bottom: 22px; z-index: 55; min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 15px; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 600 .82rem "Work Sans", sans-serif; cursor: grab; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); touch-action: none; user-select: none; }
   .support-launch:hover { filter: brightness(1.06); }
+  .support-launch.dragging { cursor: grabbing; }
+  .support-launch.has-new-message::after { content: "New"; position: absolute; top: -8px; right: -8px; padding: 3px 6px; border-radius: 10px; background: var(--mood-angry); color: #fff; font: 700 .58rem/1 "Work Sans", sans-serif; }
+  .support-launch.has-new-message, .account-bar #accountMessages.has-new-message { animation: support-message-pulse 1.3s ease-in-out infinite; }
+  @keyframes support-message-pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 30%, transparent); } }
   .support-panel { position: fixed; left: 18px; bottom: 78px; z-index: 56; width: min(360px, calc(100vw - 36px)); height: min(480px, calc(100dvh - 110px)); display: flex; flex-direction: column; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 18px 50px hsl(var(--shadow) / .28); }
   .support-panel[hidden] { display: none; }
   .support-head { padding: 14px 16px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: grab; touch-action: none; user-select: none; }
@@ -351,7 +383,7 @@
   .support-compose { padding: 12px; border-top: 1px solid var(--border-soft); display: grid; grid-template-columns: 1fr auto; gap: 8px; }
   .support-compose textarea { min-height: 42px; max-height: 100px; resize: vertical; font-size: .82rem; }
   @media (max-width: 520px) { .support-launch { bottom: 76px; left: 14px; } .support-panel { left: 10px; bottom: 130px; width: calc(100vw - 20px); height: min(460px, calc(100dvh - 150px)); } }
-  body.background-only > *:not(.visibility-switch):not(.radio-lock-button):not(#pinOverlay):not(#radioModal) { visibility: hidden !important; pointer-events: none !important; }
+  body.background-only > *:not(.visibility-switch):not(.radio-lock-button):not(#wallClock):not(#pinOverlay):not(#radioModal) { visibility: hidden !important; pointer-events: none !important; }
   body.background-only #radioModal, body.background-only #pinOverlay { visibility: visible !important; pointer-events: auto !important; }
   body.background-only .radio-lock-button { display: grid; visibility: visible !important; pointer-events: auto !important; }
   body.background-only::before { background: transparent; }
@@ -548,7 +580,26 @@
 
 <div class="tool-modal" id="calculatorModal" hidden><section class="tool-dialog" role="dialog" aria-modal="true" aria-labelledby="calculatorTitle"><div class="tool-dialog-head"><h2 id="calculatorTitle">Construction calculator</h2><button class="action-btn tool-close" data-close-tool>✕ Close</button></div><div class="calc-grid"><select class="field" id="calcMode"><option value="area">Area / flooring</option><option value="concrete">Concrete volume</option><option value="paint">Paint</option><option value="drywall">Drywall</option><option value="roofing">Roofing bundles</option><option value="block">Concrete block wall</option><option value="studs">Wall studs</option><option value="gravel">Gravel / fill</option></select><input class="field" id="calcLength" type="number" min="0" step="any" placeholder="Length (feet)"><input class="field" id="calcWidth" type="number" min="0" step="any" placeholder="Width/height (feet)"><input class="field" id="calcDepth" type="number" min="0" step="any" placeholder="Depth (inches)"><input class="field" id="calcWaste" type="number" min="0" max="50" step="1" value="10" placeholder="Waste %"><input class="field" id="calcCost" type="number" min="0" step="any" placeholder="Optional cost per unit"></div><div class="inline-actions" style="margin-top:10px"><button class="action-btn" id="calculateButton">Calculate materials</button><button class="action-btn" id="clearCalculator">Clear</button></div><div class="result-box" id="calcResult" aria-live="polite">Choose a task and enter measurements.</div></section></div>
 
-<div class="tool-modal" id="radioModal" hidden><section class="tool-dialog" role="dialog" aria-modal="true" aria-labelledby="radioTitle"><div class="tool-dialog-head"><h2 id="radioTitle">Worldwide live radio</h2><button class="action-btn tool-close" data-close-tool>✕ Close</button></div><div class="form-row"><select class="field" id="radioCountry"><option value="">Choose country</option></select><select class="field" id="radioStation"><option value="">Choose station</option></select></div><audio id="radioPlayer" controls preload="none" style="width:100%;margin-top:12px"></audio><div class="volume-row"><button class="action-btn" id="radioMute">Mute</button><input id="radioVolume" type="range" min="0" max="100" value="70" aria-label="Radio volume"><output id="radioVolumeValue">70%</output></div><div class="radio-status" id="radioStatus">Countries are alphabetical. Station data comes from the community Radio Browser directory.</div><p class="limit-note">Radio can continue while you use this page. After a full refresh, browsers require you to press Play again.</p></section></div>
+<div class="tool-modal" id="radioModal" hidden>
+  <section class="tool-dialog radio-dialog" role="dialog" aria-modal="true" aria-labelledby="radioTitle">
+    <div class="tool-dialog-head">
+      <div><div class="radio-kicker">Worldwide broadcast</div><h2 id="radioTitle">Worldwide live radio</h2></div>
+      <button class="action-btn tool-close" data-close-tool>✕ Close</button>
+    </div>
+    <div class="radio-console">
+      <div class="radio-console-top"><span class="radio-on-air">Tuning desk</span><span class="radio-frequency">GLOBAL · FM</span></div>
+      <div class="radio-controls">
+        <label class="radio-field">Country<select class="field" id="radioCountry"><option value="">Choose country</option></select></label>
+        <label class="radio-field">Station<select class="field" id="radioStation"><option value="">Choose station</option></select></label>
+      </div>
+      <div class="radio-now-playing"><div><div class="radio-now-label">Now playing</div><p class="radio-now-copy">Choose a station to start listening</p></div><div class="radio-equalizer" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div></div>
+      <audio id="radioPlayer" controls preload="none" aria-label="Radio station playback"></audio>
+      <div class="radio-volume"><button class="action-btn" id="radioMute" type="button">Mute</button><input id="radioVolume" type="range" min="0" max="100" value="70" aria-label="Radio volume"><output id="radioVolumeValue">70%</output></div>
+    </div>
+    <div class="radio-status" id="radioStatus" role="status" aria-live="polite">Countries are alphabetical. Station data comes from the community Radio Browser directory.</div>
+    <p class="limit-note radio-note">Radio can continue while you use this page. After a full refresh, browsers require you to press Play again.</p>
+  </section>
+</div>
 
 <div class="pin-overlay" id="pinOverlay" hidden>
   <section class="pin-dialog" role="dialog" aria-modal="true" aria-labelledby="pinTitle" aria-describedby="pinDescription">
@@ -602,8 +653,9 @@
   <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="7" width="6" height="4" rx="1" fill="currentColor"/></svg>
 </button>
 
-<button class="visibility-switch" id="visibilitySwitch" aria-label="Show background only" title="Background-only mode">☀️</button>
-<button class="radio-lock-button" id="radioLockButton" type="button" aria-label="Open radio" title="Open radio"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="5" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6 5l8-3M6 9h8M6 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="13.5" cy="13" r="1" fill="currentColor"/></svg></button>
+<div class="wall-clock mono" id="wallClock" role="timer" aria-label="Current local time"></div>
+<button class="visibility-switch floating-control" id="visibilitySwitch" aria-label="Show background only" title="Background-only mode">☀️</button>
+<button class="radio-lock-button floating-control" id="radioLockButton" type="button" aria-label="Open radio" title="Open radio"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="5" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6 5l8-3M6 9h8M6 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="13.5" cy="13" r="1" fill="currentColor"/></svg></button>
 <div class="recording-pill" id="recordingPill">● RECORDING</div>
 
 <div class="photo-viewer" id="photoViewer" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
@@ -689,8 +741,10 @@
 }
 
   function showAuthScreen(message) {
+    setBackgroundOnly(false);
     document.getElementById("adminLink").hidden = true;
     document.getElementById("supportLaunch").hidden = true;
+    clearSupportMessageAlert();
     document.getElementById("supportPanel").hidden = true;
     document.getElementById("supportThread").textContent = "";
     document.getElementById("supportInput").value = "";
@@ -698,6 +752,9 @@
     document.getElementById("supportLaunch").setAttribute("aria-expanded", "false");
     if (supportPollTimer) window.clearInterval(supportPollTimer);
     supportPollTimer = null;
+    supportPollUserId = null;
+    supportInboxReady = false;
+    lastSupportInboundId = null;
     appRoot.hidden = true;
     authOverlay.hidden = false;
     if (message) { authError.textContent = message; authError.hidden = false; }
@@ -711,6 +768,7 @@ function showApp() {
 
     ensureProfile();
     document.getElementById("supportLaunch").hidden = false;
+    startSupportInboxPolling();
     document.getElementById("adminLink").hidden = true;
     var accountId = currentUser.id;
     supabase.rpc("is_support_admin").then(function(result) {
@@ -730,14 +788,34 @@ function showApp() {
   var supportPanel = document.getElementById("supportPanel");
   var supportThread = document.getElementById("supportThread");
   var supportPollTimer = null;
+  var supportPollUserId = null;
+  var supportInboxReady = false;
+  var lastSupportInboundId = null;
   var supportPanelDragReady = false;
+  var wallClock = document.getElementById("wallClock");
+
+  function updateWallClock() {
+    wallClock.textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true });
+  }
+  updateWallClock();
+  window.setInterval(updateWallClock, 1000);
+
+  function resetSupportPanelPosition() {
+    supportPanel.style.left = "";
+    supportPanel.style.top = "";
+    supportPanel.style.right = "";
+    supportPanel.style.bottom = "";
+    var rect = supportPanel.getBoundingClientRect();
+    supportPanel.style.left = rect.left + "px";
+    supportPanel.style.top = rect.top + "px";
+    supportPanel.style.right = "auto";
+    supportPanel.style.bottom = "auto";
+  }
 
   function enableSupportPanelDragging() {
+    resetSupportPanelPosition();
     if (supportPanelDragReady) return;
     var header = supportPanel.querySelector(".support-head");
-    var savedPosition = null;
-    try { savedPosition = JSON.parse(localStorage.getItem("iremember-support-panel-position") || "null"); } catch (ignore) {}
-    var rect = supportPanel.getBoundingClientRect();
     function clampPosition(left, top) {
       return {
         left: Math.min(Math.max(8, left), Math.max(8, window.innerWidth - supportPanel.offsetWidth - 8)),
@@ -750,14 +828,6 @@ function showApp() {
       supportPanel.style.top = position.top + "px";
       supportPanel.style.right = "auto";
       supportPanel.style.bottom = "auto";
-      try { localStorage.setItem("iremember-support-panel-position", JSON.stringify(position)); } catch (ignore) {}
-    }
-    supportPanel.style.left = rect.left + "px";
-    supportPanel.style.top = rect.top + "px";
-    supportPanel.style.right = "auto";
-    supportPanel.style.bottom = "auto";
-    if (savedPosition && Number.isFinite(savedPosition.left) && Number.isFinite(savedPosition.top)) {
-      movePanel(savedPosition.left, savedPosition.top);
     }
     var drag = null;
     header.addEventListener("pointerdown", function(event) {
@@ -828,30 +898,69 @@ function showApp() {
       });
   }
 
+  function clearSupportMessageAlert() {
+    document.getElementById("supportLaunch").classList.remove("has-new-message");
+    document.getElementById("accountMessages").classList.remove("has-new-message");
+  }
+
+  function checkSupportInbox() {
+    if (!currentUser) return;
+    var userId = currentUser.id;
+    supabase.from("support_messages").select("id, sender_id")
+      .eq("user_id", userId).neq("sender_id", userId)
+      .order("created_at", { ascending: false }).limit(1)
+      .then(function(res) {
+        if (!currentUser || currentUser.id !== userId || res.error) return;
+        var latest = res.data && res.data[0];
+        if (!supportInboxReady) {
+          lastSupportInboundId = latest ? latest.id : null;
+          supportInboxReady = true;
+          return;
+        }
+        if (!latest || latest.id === lastSupportInboundId) return;
+        lastSupportInboundId = latest.id;
+        if (supportPanel.hidden) {
+          document.getElementById("supportLaunch").classList.add("has-new-message");
+          document.getElementById("accountMessages").classList.add("has-new-message");
+        }
+        showToast("You have a new support message.");
+        if (!supportPanel.hidden) loadSupportMessages().catch(function() {});
+      }).catch(function() {});
+  }
+
+  function startSupportInboxPolling() {
+    if (!currentUser || (supportPollTimer && supportPollUserId === currentUser.id)) return;
+    if (supportPollTimer) window.clearInterval(supportPollTimer);
+    supportPollUserId = currentUser.id;
+    supportInboxReady = false;
+    lastSupportInboundId = null;
+    checkSupportInbox();
+    supportPollTimer = window.setInterval(checkSupportInbox, 10000);
+  }
+
   function openSupportChat() {
     if (!currentUser) return;
+    if (!supportPanel.hidden) { closeSupportChat(); return; }
     supportPanel.hidden = false;
     enableSupportPanelDragging();
+    clearSupportMessageAlert();
     document.getElementById("accountMessages").setAttribute("aria-expanded", "true");
     document.getElementById("supportLaunch").setAttribute("aria-expanded", "true");
     loadSupportMessages().catch(function() {
       supportThread.textContent = "Support chat is unavailable. Please try again later.";
     });
-    if (!supportPollTimer) supportPollTimer = window.setInterval(function() {
-      if (!supportPanel.hidden) loadSupportMessages().catch(function() {});
-    }, 6000);
     document.getElementById("supportInput").focus();
+  }
+
+  function closeSupportChat() {
+    supportPanel.hidden = true;
+    document.getElementById("accountMessages").setAttribute("aria-expanded", "false");
+    document.getElementById("supportLaunch").setAttribute("aria-expanded", "false");
   }
 
   document.getElementById("supportLaunch").addEventListener("click", openSupportChat);
   document.getElementById("accountMessages").addEventListener("click", openSupportChat);
-  document.getElementById("supportClose").addEventListener("click", function() {
-    supportPanel.hidden = true;
-    document.getElementById("accountMessages").setAttribute("aria-expanded", "false");
-    if (supportPollTimer) window.clearInterval(supportPollTimer);
-    supportPollTimer = null;
-    document.getElementById("supportLaunch").setAttribute("aria-expanded", "false");
-  });
+  document.getElementById("supportClose").addEventListener("click", closeSupportChat);
   document.getElementById("supportForm").addEventListener("submit", function(event) {
     event.preventDefault();
     var input = document.getElementById("supportInput");
@@ -2220,6 +2329,25 @@ function showApp() {
     speechSynthesis.speak(utterance);
   }
 
+  var clockAnnouncementTimes = { "00:00": true, "03:00": true, "06:00": true, "15:00": true, "18:00": true, "22:00": true };
+  var lastClockAnnouncementKey = null;
+  function checkClockAnnouncement() {
+    var now = new Date();
+    if (now.getSeconds() > 30) return;
+    var minute = pad(now.getHours()) + ":" + pad(now.getMinutes());
+    if (!clockAnnouncementTimes[minute]) return;
+    var date = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
+    var announcementKey = date + "T" + minute;
+    var lastSavedAnnouncement = null;
+    try { lastSavedAnnouncement = localStorage.getItem("iremember-last-clock-announcement"); } catch (ignore) {}
+    if (announcementKey === lastClockAnnouncementKey || announcementKey === lastSavedAnnouncement) return;
+    lastClockAnnouncementKey = announcementKey;
+    try { localStorage.setItem("iremember-last-clock-announcement", announcementKey); } catch (ignore) {}
+    speakText("The time is " + now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }));
+  }
+  checkClockAnnouncement();
+  window.setInterval(checkClockAnnouncement, 15000);
+
   function additionsError(res) {
     if (res && res.error) console.warn("I Remember addition:", res.error.message);
     return res && res.error;
@@ -2489,10 +2617,7 @@ function showApp() {
       persist();
     }
     button.__dragMoved = false;
-    button.style.left = state.left + "px";
-    button.style.top = state.top + "px";
-    button.style.right = "auto";
-    button.style.bottom = "auto";
+    moveTo(state.left, state.top);
     var drag = null;
     button.addEventListener("click", function(event) {
       if (button.__dragMoved) {
@@ -2524,6 +2649,9 @@ function showApp() {
       button.classList.remove("dragging");
       drag = null;
     });
+    window.addEventListener("resize", function() {
+      moveTo(parseFloat(button.style.left) || state.left, parseFloat(button.style.top) || state.top);
+    });
     return button;
   }
 
@@ -2532,8 +2660,20 @@ function showApp() {
     try { hidden = localStorage.getItem("iremember-background-only") === "true"; } catch(ignore) {}
     setBackgroundOnly(hidden);
   }
-  attachDraggableFloat(document.getElementById("visibilitySwitch"), "iremember-visibility-switch-position", 14, 14);
+  var visibilitySwitch = document.getElementById("visibilitySwitch");
+  var visibilityPositionKey = "iremember-visibility-switch-position";
+  try {
+    if (localStorage.getItem("iremember-visibility-position-version") !== "original-position-v1") {
+      localStorage.removeItem(visibilityPositionKey);
+      localStorage.setItem("iremember-visibility-position-version", "original-position-v1");
+    }
+  } catch (ignore) {}
+  var visibilitySwitchBounds = visibilitySwitch.getBoundingClientRect();
+  attachDraggableFloat(visibilitySwitch, visibilityPositionKey, visibilitySwitchBounds.left, visibilitySwitchBounds.top);
   attachDraggableFloat(document.getElementById("radioLockButton"), "iremember-radio-lock-position", 14, 14);
+  var supportLaunch = document.getElementById("supportLaunch");
+  var supportLaunchTop = window.innerHeight - (window.innerWidth <= 520 ? 76 : 22) - 48;
+  attachDraggableFloat(supportLaunch, "iremember-support-launch-position", window.innerWidth <= 520 ? 14 : 18, Math.max(8, supportLaunchTop));
   restoreBackgroundOnly();
   window.addEventListener("pageshow", restoreBackgroundOnly);
   document.getElementById("visibilitySwitch").addEventListener("click", function() {
