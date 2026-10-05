@@ -871,8 +871,8 @@ function showApp() {
               rows.forEach(function(r) {
                 var url = urlByPath[r.storage_path] || null;
                 if (r.kind === "photo") entry.photos.push({ id: r.id, path: r.storage_path, url: url });
-                else if (r.kind === "video") entry.videos.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration });
-                else if (r.kind === "voice") entry.voices.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration, seed: r.seed });
+                else if (r.kind === "video") entry.videos.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration, created_at: r.created_at });
+                else if (r.kind === "voice") entry.voices.push({ id: r.id, path: r.storage_path, url: url, duration: r.duration, seed: r.seed, created_at: r.created_at });
                 else if (r.kind === "moment_front") entry.moments.front = { id: r.id, path: r.storage_path, url: url };
                 else if (r.kind === "moment_back") entry.moments.back = { id: r.id, path: r.storage_path, url: url };
               });
@@ -885,7 +885,7 @@ function showApp() {
   async function loadMediaRows(entryId) {
     var rows = [], offset = 0, pageSize = 1000;
     while (true) {
-      var page = await supabase.from("media").select("id, kind, storage_path, duration, seed, position")
+      var page = await supabase.from("media").select("id, kind, storage_path, duration, seed, position, created_at")
         .eq("entry_id", entryId).order("position", { ascending: true }).order("id", { ascending: true })
         .range(offset, offset + pageSize - 1);
       if (page.error) throw page.error;
@@ -1693,6 +1693,19 @@ function showApp() {
     if (!document.hidden && anyRecordingActive()) requestWakeLock();
   });
   function fmtDuration(seconds) { return LongRecording.formatDuration(seconds); }
+  function formatWallClock(dateValue) {
+    var date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+  }
+  function formatVideoMoment(group, playbackSeconds) {
+    var source = group && group.parts && group.parts.length ? group.parts[0].created_at : null;
+    if (!source) return "";
+    var date = new Date(source);
+    if (Number.isNaN(date.getTime())) return "";
+    if (Number.isFinite(playbackSeconds) && playbackSeconds > 0) date = new Date(date.getTime() + playbackSeconds * 1000);
+    return formatWallClock(date);
+  }
 
   function recordingId() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -1703,7 +1716,7 @@ function showApp() {
 
   async function uploadRecordingPart(part) {
     if (!currentUser || currentUser.id !== part.userId) throw new Error("Sign in to the recording's account to finish saving");
-    var existing = await supabase.from("media").select("id,storage_path").eq("id", part.id).maybeSingle();
+    var existing = await supabase.from("media").select("id,storage_path,created_at").eq("id", part.id).maybeSingle();
     if (existing.error) throw existing.error;
     if (existing.data && existing.data.storage_path !== part.path) throw new Error("Recording path mismatch");
     if (!existing.data) {
@@ -1712,15 +1725,18 @@ function showApp() {
       var inserted = await supabase.from("media").insert({
         id: part.id, entry_id: part.entryId, user_id: part.userId, kind: part.kind,
         storage_path: part.path, duration: part.duration
-      });
+      }).select("id,storage_path,created_at").single();
       if (inserted.error && inserted.error.code !== "23505") throw inserted.error;
       if (inserted.error) {
-        var check = await supabase.from("media").select("id,storage_path").eq("id", part.id).single();
+        var check = await supabase.from("media").select("id,storage_path,created_at").eq("id", part.id).single();
         if (check.error || check.data.storage_path !== part.path) throw check.error || new Error("Recording path mismatch");
+        if (check.data.created_at) existing.data = check.data;
+      } else {
+        existing.data = inserted.data;
       }
     }
     var urls = await signedUrlsFor([part.path]);
-    return { id: part.id, path: part.path, duration: part.duration, url: urls[part.path] || null };
+    return { id: part.id, path: part.path, duration: part.duration, url: urls[part.path] || null, created_at: (existing.data && existing.data.created_at) || new Date().toISOString() };
   }
 
   async function refreshRecordingSaveStatus() {
@@ -1825,7 +1841,7 @@ function showApp() {
           var current = fmtDuration(seconds);
           label.textContent = "Stop recording · " + current + " / 12:00:00";
           if (kind === "video" && videoTimerOverlay) {
-            videoTimerOverlay.textContent = current;
+            videoTimerOverlay.textContent = formatWallClock(new Date()) + " · " + current;
             videoTimerOverlay.hidden = false;
           }
         },
@@ -2008,9 +2024,18 @@ function showApp() {
     LongRecording.groupParts(activeEntry ? activeEntry.videos : []).forEach(function(group) {
       var item = document.createElement("div"); item.className = "video-item";
       var player = document.createElement("video"); player.controls = true; player.playsInline = true; player.preload = "metadata";
-      item.appendChild(player);
+      var timeOverlay = document.createElement("div"); timeOverlay.className = "video-timer-overlay"; timeOverlay.textContent = formatVideoMoment(group, 0) || "";
+      item.appendChild(player); item.appendChild(timeOverlay);
       var meta = document.createElement("div"); meta.className = "video-meta"; meta.style.flexWrap = "wrap"; meta.style.gap = "6px";
       recordingPlaylist(player, group, meta);
+      function syncSavedRecordingTime() {
+        if (!group || !group.parts || !group.parts.length) return;
+        var current = Number.isFinite(player.currentTime) ? player.currentTime : 0;
+        timeOverlay.textContent = formatVideoMoment(group, current) || "";
+      }
+      player.addEventListener("timeupdate", syncSavedRecordingTime);
+      player.addEventListener("loadedmetadata", syncSavedRecordingTime);
+      player.addEventListener("seeked", syncSavedRecordingTime);
       var del = document.createElement("button"); del.className = "del"; del.textContent = "✕ remove"; del.setAttribute("aria-label", "Delete complete recording");
       del.addEventListener("click", function() { deleteRecordingGroup(group, "video", del); });
       meta.appendChild(del); item.appendChild(meta); videoList.appendChild(item);
