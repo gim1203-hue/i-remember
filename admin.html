@@ -65,6 +65,14 @@
   .composer textarea { width: 100%; min-height: 80px; max-height: 180px; resize: vertical; padding: 11px 12px; border: 1px solid var(--line); background: #fbfcfa; outline-color: var(--green); line-height: 1.5; }
   .composer-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 8px; }
   .composer-hint { color: var(--muted); font-size: 11px; }
+  .composer-tools, .emoji-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .composer-tools .button { min-height: 34px; padding: 6px 10px; }
+  .emoji-picker button { width: 34px; height: 34px; border: 1px solid var(--line); background: var(--white); font-size: 18px; }
+  .attachment-preview { margin-top: 7px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .message a { color: var(--green); text-decoration: underline; text-underline-offset: 2px; }
+  .message-attachment { display: block; margin-top: 8px; }
+  .message-attachment img { display: block; max-width: min(320px, 100%); max-height: 320px; object-fit: contain; }
+  .inbox-alert { position: fixed; z-index: 20; top: 70px; right: 18px; max-width: min(390px, calc(100vw - 36px)); padding: 12px 16px; border: 1px solid #c7e0d0; background: #e4f1e9; color: #172c35; box-shadow: 0 8px 24px hsl(var(--shadow) / .18); }
   .notice { padding: 14px; color: var(--muted); line-height: 1.5; }
   @media (max-width: 720px) {
     .desk { grid-template-rows: 54px 1fr; }
@@ -125,11 +133,21 @@
       <div class="thread" id="thread" aria-live="polite"><div class="thread-empty"><strong>Your support inbox</strong>Choose a person to view their conversation or send a welcome message.</div></div>
       <form class="composer" id="messageForm">
         <textarea id="messageInput" maxlength="4000" placeholder="Write a helpful reply…" aria-label="Message" disabled required></textarea>
+        <div class="composer-tools">
+          <button class="button" id="emojiButton" type="button" aria-expanded="false" disabled>😊 Emoji</button>
+          <button class="button" id="attachButton" type="button" disabled>📎 File</button>
+          <button class="button" id="photoButton" type="button" disabled>📷 Take photo</button>
+          <input id="attachmentInput" type="file" hidden>
+          <input id="photoInput" type="file" accept="image/*" capture="environment" hidden>
+        </div>
+        <div class="emoji-picker" id="emojiPicker" hidden aria-label="Choose an emoji"></div>
+        <div class="attachment-preview" id="attachmentPreview" role="status" hidden></div>
         <div class="composer-foot"><span class="composer-hint">Private conversation with the selected member</span><button class="button button-primary" id="sendButton" type="submit" disabled>Send message</button></div>
       </form>
     </section>
   </div>
 </main>
+<div class="inbox-alert" id="inboxAlert" role="status" aria-live="polite" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
@@ -148,6 +166,9 @@
   var authCheck = null;
   var authorizationRun = 0;
   var refreshTimer = null;
+  var seenInboundIds = Object.create(null);
+  var inboxInitialized = false;
+  var selectedAttachment = null;
 
   function showAuth(message, restricted) {
     authScreen.hidden = false;
@@ -246,11 +267,17 @@
     document.getElementById("conversationMeta").textContent = (selectedUser.email || "No email") + " · Joined " + formatDate(selectedUser.created_at);
     document.getElementById("messageInput").disabled = false;
     document.getElementById("sendButton").disabled = false;
+    document.getElementById("emojiButton").disabled = false;
+    document.getElementById("attachButton").disabled = false;
+    document.getElementById("photoButton").disabled = false;
     document.getElementById("resetPinButton").hidden = false;
   }
 
   function selectUser(user) {
     selectedUser = user;
+    setSelectedAttachment(null);
+    document.getElementById("attachmentInput").value = "";
+    document.getElementById("photoInput").value = "";
     renderUsers();
     updateConversationHeader();
     document.getElementById("thread").innerHTML = '<div class="thread-empty">Loading conversation…</div>';
@@ -262,7 +289,7 @@
     if (!selectedUser) return Promise.resolve();
     var userId = selectedUser.id;
     return supabase.from("support_messages")
-      .select("id, sender_id, body, created_at")
+      .select("id, sender_id, body, created_at, attachment_path, attachment_name, attachment_type")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100)
@@ -285,10 +312,11 @@
             meta.className = "message-meta";
             meta.textContent = (message.sender_id === adminUser.id ? "You" : (selectedUser.full_name || "Member")) + " · " + formatTime(message.created_at);
             var body = document.createElement("span");
-            body.textContent = message.body;
+            appendMessageText(body, message.body);
             bubble.appendChild(meta);
             bubble.appendChild(body);
             thread.appendChild(bubble);
+            appendMessageAttachment(bubble, message).catch(function() {});
           });
         }
         var welcomed = messages.some(function(message) { return message.sender_id === adminUser.id; });
@@ -302,25 +330,120 @@
       });
   }
 
-  function sendMessage(body) {
-    if (!selectedUser || !body.trim() || !adminUser) return Promise.resolve();
+  function appendMessageText(container, value) {
+    var text = String(value || ""), linkPattern = /https?:\/\/[^\s<>"']+/gi, match, start = 0;
+    while ((match = linkPattern.exec(text))) {
+      var rawUrl = match[0], urlText = rawUrl.replace(/[),.!?;:]+$/, ""), punctuation = rawUrl.slice(urlText.length);
+      if (!urlText) continue;
+      container.appendChild(document.createTextNode(text.slice(start, match.index)));
+      try {
+        var url = new URL(urlText);
+        if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("Unsupported link");
+        var link = document.createElement("a");
+        link.href = url.href; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = urlText;
+        container.appendChild(link); container.appendChild(document.createTextNode(punctuation));
+        start = match.index + rawUrl.length;
+      } catch (error) {}
+    }
+    container.appendChild(document.createTextNode(text.slice(start)));
+  }
+
+  async function appendMessageAttachment(container, message) {
+    if (!message.attachment_path) return;
+    var result = await supabase.storage.from("support-attachments").createSignedUrl(message.attachment_path, 3600);
+    if (result.error || !result.data || !result.data.signedUrl) return;
+    var link = document.createElement("a");
+    link.className = "message-attachment"; link.href = result.data.signedUrl;
+    link.target = "_blank"; link.rel = "noopener noreferrer";
+    link.textContent = message.attachment_name || "Open attachment";
+    if (message.attachment_type && message.attachment_type.indexOf("image/") === 0) {
+      var image = document.createElement("img"); image.src = result.data.signedUrl;
+      image.alt = message.attachment_name || "Image attachment"; link.textContent = ""; link.appendChild(image);
+    }
+    container.appendChild(link);
+  }
+
+  function sendMessage(body, file) {
+    if (!selectedUser || (!body.trim() && !file) || !adminUser) return Promise.resolve();
     var targetId = selectedUser.id;
     document.getElementById("sendButton").disabled = true;
     document.getElementById("greetButton").disabled = true;
-    return supabase.from("support_messages").insert({
-      user_id: targetId,
-      sender_id: adminUser.id,
-      body: body.trim()
-    }).then(function(result) {
+    var attachmentPath = null;
+    return (async function() {
+      if (file) {
+        if (file.size > 10485760) throw new Error("File is larger than the 10 MB limit.");
+        var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-180) || "attachment";
+        var uploadId = window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2);
+        attachmentPath = targetId + "/" + uploadId + "/" + safeName;
+        var upload = await supabase.storage.from("support-attachments").upload(attachmentPath, file, { contentType: file.type || "application/octet-stream" });
+        if (upload.error) throw upload.error;
+      }
+      var result = await supabase.from("support_messages").insert({
+        user_id: targetId,
+        sender_id: adminUser.id,
+        body: body.trim() || (file ? "📎 " + file.name : ""),
+        attachment_path: attachmentPath,
+        attachment_name: file ? file.name.slice(0, 255) : null,
+        attachment_type: file ? (file.type || "application/octet-stream") : null
+      });
       if (result.error) throw result.error;
       if (selectedUser && selectedUser.id === targetId) document.getElementById("messageInput").value = "";
+      selectedAttachment = null;
+      document.getElementById("attachmentInput").value = "";
+      document.getElementById("photoInput").value = "";
+      document.getElementById("attachmentPreview").hidden = true;
       return loadThread();
-    }).catch(function() {
+    })().catch(function(error) {
+      if (attachmentPath) supabase.storage.from("support-attachments").remove([attachmentPath]).catch(function() {});
+      document.getElementById("attachmentPreview").textContent = error.message && error.message.indexOf("10 MB") >= 0
+        ? error.message : "Message couldn’t be sent. Check your connection and attachment setup.";
+      document.getElementById("attachmentPreview").hidden = false;
       document.getElementById("thread").textContent = "Message couldn’t be sent. Check your connection and try again.";
     }).finally(function() {
       document.getElementById("sendButton").disabled = !selectedUser;
       document.getElementById("greetButton").disabled = false;
     });
+  }
+
+  function setSelectedAttachment(file) {
+    selectedAttachment = file || null;
+    var preview = document.getElementById("attachmentPreview");
+    preview.textContent = file ? "Ready to send: " + file.name : "";
+    preview.hidden = !file;
+  }
+
+  function showInboxAlert(message) {
+    var sender = users.find(function(user) { return user.id === message.user_id; });
+    var title = "New message from " + (sender ? sender.full_name || sender.email : "a member");
+    var alert = document.getElementById("inboxAlert");
+    alert.textContent = title + (message.body ? ": " + message.body.slice(0, 120) : "");
+    alert.hidden = false;
+    window.clearTimeout(alert.hideTimer);
+    alert.hideTimer = window.setTimeout(function() { alert.hidden = true; }, 8000);
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title, { body: message.body || "Attachment received" });
+    }
+  }
+
+  function checkAdminInbox() {
+    if (!adminUser || window.top !== window) return;
+    var accountId = adminUser.id;
+    supabase.from("support_messages").select("id, sender_id, user_id, body")
+      .neq("sender_id", accountId).order("created_at", { ascending: false }).limit(50)
+      .then(function(result) {
+        if (result.error || !adminUser || adminUser.id !== accountId) return;
+        var messages = (result.data || []).reverse();
+        if (!inboxInitialized) {
+          messages.forEach(function(message) { seenInboundIds[message.id] = true; });
+          inboxInitialized = true;
+          return;
+        }
+        messages.forEach(function(message) {
+          if (seenInboundIds[message.id]) return;
+          seenInboundIds[message.id] = true;
+          showInboxAlert(message);
+        });
+      }).catch(function() {});
   }
 
   function authorizeUser(user) {
@@ -343,9 +466,13 @@
       return loadUsers().then(function() {
         if (authorizationRun !== run || activeUserId !== user.id) return;
         if (refreshTimer) window.clearInterval(refreshTimer);
+        seenInboundIds = Object.create(null);
+        inboxInitialized = false;
+        checkAdminInbox();
         refreshTimer = window.setInterval(function() {
           loadUsers();
           loadThread();
+          checkAdminInbox();
         }, 8000);
       });
     }).catch(function() {
@@ -371,6 +498,7 @@
   }
 
   document.getElementById("signInButton").addEventListener("click", function() {
+    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
     supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin + window.location.pathname }
@@ -395,7 +523,27 @@
   document.getElementById("newOnly").addEventListener("change", renderUsers);
   document.getElementById("messageForm").addEventListener("submit", function(event) {
     event.preventDefault();
-    sendMessage(document.getElementById("messageInput").value);
+    sendMessage(document.getElementById("messageInput").value, selectedAttachment);
+  });
+  document.getElementById("attachButton").addEventListener("click", function() { document.getElementById("attachmentInput").click(); });
+  document.getElementById("photoButton").addEventListener("click", function() { document.getElementById("photoInput").click(); });
+  ["attachmentInput", "photoInput"].forEach(function(id) {
+    document.getElementById(id).addEventListener("change", function(event) { setSelectedAttachment(event.target.files && event.target.files[0]); });
+  });
+  document.getElementById("emojiButton").addEventListener("click", function() {
+    var picker = document.getElementById("emojiPicker");
+    picker.hidden = !picker.hidden;
+    this.setAttribute("aria-expanded", String(!picker.hidden));
+  });
+  ["😊", "👋", "❤️", "🎉", "🙏", "✨", "🙂", "👍", "🌟", "💛", "📸", "🙌"].forEach(function(emoji) {
+    var option = document.createElement("button"); option.type = "button"; option.textContent = emoji;
+    option.setAttribute("aria-label", "Insert " + emoji);
+    option.addEventListener("click", function() {
+      var input = document.getElementById("messageInput"), start = input.selectionStart, end = input.selectionEnd;
+      input.value = input.value.slice(0, start) + emoji + input.value.slice(end);
+      input.focus(); input.setSelectionRange(start + emoji.length, start + emoji.length);
+    });
+    document.getElementById("emojiPicker").appendChild(option);
   });
   document.getElementById("greetButton").addEventListener("click", function() {
     sendMessage("Welcome to I Remember! We’re glad you’re here. If you need a hand getting started, reply here and we’ll help.");

@@ -369,8 +369,8 @@
   .support-launch:hover { filter: brightness(1.06); }
   .support-launch.dragging { cursor: grabbing; }
   .support-launch.has-new-message::after { content: "New"; position: absolute; top: -8px; right: -8px; padding: 3px 6px; border-radius: 10px; background: var(--mood-angry); color: #fff; font: 700 .58rem/1 "Work Sans", sans-serif; }
-  .support-launch.has-new-message, .account-bar #accountMessages.has-new-message { animation: support-message-pulse 1.3s ease-in-out infinite; }
-  @keyframes support-message-pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 30%, transparent); } }
+  .support-launch.has-new-message, .account-bar #accountMessages.has-new-message, .account-bar #adminLink.has-new-message { animation: support-message-pulse 1.3s ease-in-out infinite; }
+  @keyframes support-message-pulse { 50% { opacity: .35; box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 45%, transparent); } }
   .support-panel { position: fixed; left: 18px; bottom: 78px; z-index: 56; width: min(360px, calc(100vw - 36px)); height: min(480px, calc(100dvh - 110px)); display: flex; flex-direction: column; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 18px 50px hsl(var(--shadow) / .28); }
   .support-panel[hidden] { display: none; }
   .support-head { padding: 14px 16px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: grab; touch-action: none; user-select: none; }
@@ -381,7 +381,16 @@
   .support-message.mine { align-self: flex-end; background: var(--accent-wash); border-color: var(--accent-soft); }
   .support-message-meta { display: block; color: var(--ink-faint); font-size: .65rem; margin-bottom: 4px; }
   .support-compose { padding: 12px; border-top: 1px solid var(--border-soft); display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .support-tools, .support-emoji-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .support-emoji-row[hidden] { display: none; }
+  .support-emoji-row button { border: 0; background: none; font-size: 1.25rem; cursor: pointer; padding: 2px 4px; }
   .support-compose textarea { min-height: 42px; max-height: 100px; resize: vertical; font-size: .82rem; }
+  .admin-messages-overlay { position: fixed; inset: 0; z-index: 300; display: grid; grid-template-rows: 48px minmax(0, 1fr); background: var(--bg); }
+  .admin-messages-overlay[hidden] { display: none; }
+  .admin-messages-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 12px; background: var(--surface); border-bottom: 1px solid var(--border); font-weight: 600; }
+  .admin-messages-overlay iframe { display: block; width: 100%; height: 100%; border: 0; background: #f5f7f3; }
+  .support-attachment { display: block; max-width: 100%; margin-top: 8px; }
+  .support-attachment img { display: block; max-width: min(240px, 100%); max-height: 240px; object-fit: contain; }
   @media (max-width: 520px) { .support-launch { bottom: 76px; left: 14px; } .support-panel { left: 10px; bottom: 130px; width: calc(100vw - 20px); height: min(460px, calc(100dvh - 150px)); } }
   body.background-only > *:not(.visibility-switch):not(.radio-lock-button):not(#wallClock):not(#pinOverlay):not(#radioModal) { visibility: hidden !important; pointer-events: none !important; }
   body.background-only #radioModal, body.background-only #pinOverlay { visibility: visible !important; pointer-events: auto !important; }
@@ -438,7 +447,7 @@
   </header>
   <div class="account-bar">
     <span class="mono email" id="accountEmail"></span>
-    <a class="action-btn" id="adminLink" href="./admin.html" hidden>Admin · Member messages</a>
+    <button class="action-btn" id="adminLink" type="button" aria-controls="adminMessagesOverlay" hidden>Admin Messages</button>
     <button class="action-btn" id="accountMessages" type="button" aria-controls="supportPanel" aria-expanded="false">✉ Messages</button>
     <button class="signout-btn" id="signOutBtn">Sign out</button>
   </div>
@@ -470,8 +479,15 @@
 <section class="support-panel" id="supportPanel" role="dialog" aria-label="Support chat" hidden>
   <div class="support-head"><div><h2>Messages</h2><span class="item-meta">Your private conversation with I Remember support.</span></div><button class="close-btn" id="supportClose" type="button" aria-label="Close support chat">×</button></div>
   <div class="support-thread" id="supportThread" aria-live="polite"><div class="empty-note">Loading your conversation…</div></div>
-  <form class="support-compose" id="supportForm"><textarea id="supportInput" maxlength="4000" rows="2" placeholder="Write a message…" aria-label="Your message" required></textarea><button class="action-btn" type="submit" aria-label="Send message">Send</button></form>
+  <form class="support-compose" id="supportForm"><textarea id="supportInput" maxlength="4000" rows="2" placeholder="Write a message…" aria-label="Your message"></textarea><button class="action-btn" type="submit" aria-label="Send message">Send</button>
+    <div class="support-tools"><button class="action-btn" id="supportEmojiBtn" type="button" aria-label="Add emoji">😊</button><button class="action-btn" id="supportAttachBtn" type="button" aria-label="Attach photo or file">📎</button><span class="item-meta" id="supportFileName"></span><input id="supportFile" type="file" hidden></div>
+    <div class="support-emoji-row" id="supportEmojiRow" hidden></div>
+  </form>
 </section>
+<div class="admin-messages-overlay" id="adminMessagesOverlay" role="dialog" aria-modal="true" aria-label="Admin Messages" hidden>
+  <div class="admin-messages-toolbar"><span>Admin Messages</span><button class="action-btn" id="closeAdminMessages" type="button">Close</button></div>
+  <iframe id="adminMessagesFrame" title="Admin Messages"></iframe>
+</div>
 
 <div class="backdrop" id="backdrop"></div>
 <aside class="panel" id="panel" aria-hidden="true">
@@ -742,7 +758,10 @@
 
   function showAuthScreen(message) {
     setBackgroundOnly(false);
-    document.getElementById("adminLink").hidden = true;
+    setSupportAdminMode(false);
+    document.getElementById("adminMessagesOverlay").hidden = true;
+    document.getElementById("adminMessagesFrame").src = "about:blank";
+    stopAdminInboxPolling();
     document.getElementById("supportLaunch").hidden = true;
     clearSupportMessageAlert();
     document.getElementById("supportPanel").hidden = true;
@@ -769,11 +788,14 @@ function showApp() {
     ensureProfile();
     document.getElementById("supportLaunch").hidden = false;
     startSupportInboxPolling();
-    document.getElementById("adminLink").hidden = true;
+    setSupportAdminMode(false);
     var accountId = currentUser.id;
     supabase.rpc("is_support_admin").then(function(result) {
       if (currentUser && currentUser.id === accountId) {
-        document.getElementById("adminLink").hidden = !!result.error || result.data !== true;
+        var isAdmin = !result.error && result.data === true;
+        setSupportAdminMode(isAdmin);
+        if (isAdmin) startAdminInboxPolling();
+        else stopAdminInboxPolling();
       }
     }).catch(function() {});
 
@@ -791,6 +813,10 @@ function showApp() {
   var supportPollUserId = null;
   var supportInboxReady = false;
   var lastSupportInboundId = null;
+  var adminInboxTimer = null;
+  var adminInboxUserId = null;
+  var adminInboxReady = false;
+  var lastAdminInboundId = null;
   var supportPanelDragReady = false;
   var wallClock = document.getElementById("wallClock");
 
@@ -863,11 +889,45 @@ function showApp() {
     return new Date(value).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   }
 
+  function appendSupportText(container, value) {
+    var text = String(value || ""), linkPattern = /https?:\/\/[^\s<>"']+/gi, match, start = 0;
+    while ((match = linkPattern.exec(text))) {
+      var rawUrl = match[0], urlText = rawUrl.replace(/[),.!?;:]+$/, ""), punctuation = rawUrl.slice(urlText.length);
+      if (!urlText) continue;
+      container.appendChild(document.createTextNode(text.slice(start, match.index)));
+      try {
+        var url = new URL(urlText);
+        if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("Unsupported link");
+        var link = document.createElement("a");
+        link.href = url.href; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = urlText;
+        container.appendChild(link);
+        container.appendChild(document.createTextNode(punctuation));
+        start = match.index + rawUrl.length;
+      } catch (error) {}
+    }
+    container.appendChild(document.createTextNode(text.slice(start)));
+  }
+
+  async function appendSupportAttachment(container, message) {
+    if (!message.attachment_path) return;
+    var result = await supabase.storage.from("support-attachments").createSignedUrl(message.attachment_path, SIGNED_URL_TTL);
+    if (result.error || !result.data || !result.data.signedUrl) return;
+    var link = document.createElement("a");
+    link.className = "support-attachment"; link.href = result.data.signedUrl;
+    link.target = "_blank"; link.rel = "noopener noreferrer";
+    link.textContent = message.attachment_name || "Open attachment";
+    if (message.attachment_type && message.attachment_type.indexOf("image/") === 0) {
+      var image = document.createElement("img"); image.src = result.data.signedUrl; image.alt = message.attachment_name || "Image attachment";
+      link.textContent = ""; link.appendChild(image);
+    }
+    container.appendChild(link);
+  }
+
   function loadSupportMessages() {
     if (!currentUser) return Promise.resolve();
     var userId = currentUser.id;
     return supabase.from("support_messages")
-      .select("id, sender_id, body, created_at")
+      .select("id, sender_id, body, created_at, attachment_path, attachment_name, attachment_type")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100)
@@ -889,13 +949,22 @@ function showApp() {
           meta.className = "support-message-meta";
           meta.textContent = (message.sender_id === currentUser.id ? "You" : "I Remember support") + " · " + formatSupportTime(message.created_at);
           var body = document.createElement("span");
-          body.textContent = message.body;
+          appendSupportText(body, message.body);
           bubble.appendChild(meta);
           bubble.appendChild(body);
           supportThread.appendChild(bubble);
+          appendSupportAttachment(bubble, message).catch(function() {});
         });
         supportThread.scrollTop = supportThread.scrollHeight;
       });
+  }
+
+  var supportAdminMode = false;
+  function setSupportAdminMode(isAdmin) {
+    supportAdminMode = isAdmin;
+    document.getElementById("adminLink").hidden = !isAdmin;
+    document.getElementById("accountMessages").hidden = isAdmin;
+    document.getElementById("supportLaunch").textContent = isAdmin ? "✉ Admin Messages" : "✉ Messages";
   }
 
   function clearSupportMessageAlert() {
@@ -928,6 +997,48 @@ function showApp() {
       }).catch(function() {});
   }
 
+  function stopAdminInboxPolling() {
+    if (adminInboxTimer) window.clearInterval(adminInboxTimer);
+    adminInboxTimer = null;
+    adminInboxUserId = null;
+    adminInboxReady = false;
+    lastAdminInboundId = null;
+    document.getElementById("adminLink").classList.remove("has-new-message");
+    document.getElementById("supportLaunch").classList.remove("has-new-message");
+  }
+
+  function checkAdminInbox() {
+    if (!currentUser || !adminInboxUserId || currentUser.id !== adminInboxUserId) return;
+    var accountId = currentUser.id;
+    supabase.from("support_messages").select("id, sender_id, user_id, body")
+      .neq("sender_id", accountId).order("created_at", { ascending: false }).limit(1)
+      .then(function(result) {
+        if (result.error || !currentUser || currentUser.id !== accountId) return;
+        var latest = result.data && result.data[0];
+        if (!adminInboxReady) {
+          lastAdminInboundId = latest ? latest.id : null;
+          adminInboxReady = true;
+          return;
+        }
+        if (!latest || latest.id === lastAdminInboundId) return;
+        lastAdminInboundId = latest.id;
+        document.getElementById("adminLink").classList.add("has-new-message");
+        document.getElementById("supportLaunch").classList.add("has-new-message");
+        showToast("New member message waiting in Admin Messages.");
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("New I Remember message", { body: latest.body || "A member sent an attachment." });
+        }
+      }).catch(function() {});
+  }
+
+  function startAdminInboxPolling() {
+    if (!currentUser || (adminInboxTimer && adminInboxUserId === currentUser.id)) return;
+    stopAdminInboxPolling();
+    adminInboxUserId = currentUser.id;
+    checkAdminInbox();
+    adminInboxTimer = window.setInterval(checkAdminInbox, 10000);
+  }
+
   function startSupportInboxPolling() {
     if (!currentUser || (supportPollTimer && supportPollUserId === currentUser.id)) return;
     if (supportPollTimer) window.clearInterval(supportPollTimer);
@@ -958,25 +1069,91 @@ function showApp() {
     document.getElementById("supportLaunch").setAttribute("aria-expanded", "false");
   }
 
-  document.getElementById("supportLaunch").addEventListener("click", openSupportChat);
+  document.getElementById("supportLaunch").addEventListener("click", function() {
+    if (supportAdminMode) document.getElementById("adminLink").click();
+    else openSupportChat();
+  });
   document.getElementById("accountMessages").addEventListener("click", openSupportChat);
   document.getElementById("supportClose").addEventListener("click", closeSupportChat);
+  document.getElementById("adminLink").addEventListener("click", function() {
+    this.classList.remove("has-new-message");
+    document.getElementById("supportLaunch").classList.remove("has-new-message");
+    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+    var overlay = document.getElementById("adminMessagesOverlay");
+    overlay.hidden = false;
+    document.getElementById("adminMessagesFrame").src = "./admin.html?embedded=1";
+    document.getElementById("closeAdminMessages").focus();
+  });
+  document.getElementById("closeAdminMessages").addEventListener("click", function() {
+    document.getElementById("adminMessagesOverlay").hidden = true;
+    document.getElementById("adminMessagesFrame").src = "about:blank";
+    document.getElementById("adminLink").focus();
+  });
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape" && !document.getElementById("adminMessagesOverlay").hidden) {
+      document.getElementById("closeAdminMessages").click();
+    }
+  });
   document.getElementById("supportForm").addEventListener("submit", function(event) {
     event.preventDefault();
     var input = document.getElementById("supportInput");
     var body = input.value.trim();
-    if (!body || !currentUser) return;
+    var fileInput = document.getElementById("supportFile");
+    var file = fileInput.files[0] || null;
+    if ((!body && !file) || !currentUser) return;
+    if (file && file.size > 10485760) { showToast("Files must be 10 MB or smaller."); return; }
     var submit = event.currentTarget.querySelector("button[type=submit]");
     submit.disabled = true;
-    supabase.from("support_messages").insert({ user_id: currentUser.id, sender_id: currentUser.id, body: body })
-      .then(function(res) {
-        if (res.error) throw res.error;
-        input.value = "";
-        return loadSupportMessages();
+    var uid = currentUser.id;
+    var path = null;
+    (async function() {
+      if (file) {
+        var safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-180) || "attachment";
+        path = uid + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "/" + safe;
+        var up = await supabase.storage.from("support-attachments").upload(path, file, { contentType: file.type || "application/octet-stream" });
+        if (up.error) throw up.error;
+      }
+      var res = await supabase.from("support_messages").insert({
+        user_id: uid,
+        sender_id: uid,
+        body: body,
+        attachment_path: path,
+        attachment_name: file ? file.name.slice(0, 255) : null,
+        attachment_type: file ? (file.type || "application/octet-stream") : null
+      });
+      if (res.error) throw res.error;
+      input.value = "";
+      fileInput.value = "";
+      document.getElementById("supportFileName").textContent = "";
+      await loadSupportMessages();
+    })()
+      .catch(function() {
+        if (path) supabase.storage.from("support-attachments").remove([path]).catch(function() {});
+        showToast("Message couldn't be sent. Try again.");
       })
-      .catch(function() { showToast("Message couldn’t be sent. Try again."); })
-      .finally(function() { submit.disabled = false; input.focus(); });
+      .finally(function() {
+        submit.disabled = false;
+        input.focus();
+      });
   });
+
+  (function() {
+    var row = document.getElementById("supportEmojiRow");
+    "😀 😂 😍 🥰 😊 😎 😢 😡 👍 👎 🙏 👏 🎉 ❤️ 🔥 ✨ 💯 🤔 😮 🙌".split(" ").forEach(function(e) {
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = e; b.setAttribute("aria-label", "Insert " + e);
+      b.addEventListener("click", function() {
+        var i = document.getElementById("supportInput");
+        i.value += e; i.focus();
+      });
+      row.appendChild(b);
+    });
+    document.getElementById("supportEmojiBtn").addEventListener("click", function() { row.hidden = !row.hidden; });
+    document.getElementById("supportAttachBtn").addEventListener("click", function() { document.getElementById("supportFile").click(); });
+    document.getElementById("supportFile").addEventListener("change", function() {
+      document.getElementById("supportFileName").textContent = this.files[0] ? this.files[0].name : "";
+    });
+  })();
 
   document.getElementById("googleSignIn").addEventListener("click", function() {
     supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } })
