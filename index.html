@@ -144,9 +144,10 @@
   .capture-btn.recording { border-color: var(--mood-angry); color: var(--mood-angry); }
   .capture-btn:disabled { opacity: 0.55; cursor: not-allowed; }
   .video-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
-  .video-item { border-radius: 12px; background: var(--surface-raised); border: 1px solid var(--border-soft); overflow: hidden; }
+  .video-item { position: relative; border-radius: 12px; background: var(--surface-raised); border: 1px solid var(--border-soft); overflow: hidden; }
   .video-item video { width: 100%; max-height: 220px; display: block; background: #000; }
   .video-item .video-meta { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; font-size: 0.72rem; color: var(--ink-faint); }
+  .video-item .video-timer-overlay { position: absolute; top: 10px; right: 10px; min-width: 62px; padding: 5px 8px; border-radius: 999px; background: rgba(15, 18, 22, 0.72); color: #fff; font: 600 .72rem/1 "IBM Plex Mono", monospace; text-align: center; letter-spacing: .04em; box-shadow: 0 4px 18px rgba(0,0,0,.28); }
   .video-item .del { border: none; background: none; color: var(--ink-faint); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 4px; }
   .video-item .del:hover { color: var(--mood-angry); }
   .voice-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
@@ -319,8 +320,10 @@
   .recording-pill.on { display: block; }
   #recordingCameraView { margin-bottom: 10px; }
   #recordingCameraView[hidden] { display: none; }
-  .visibility-switch { position: fixed; top: 14px; right: 14px; z-index: 220; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; font-size: 1.35rem; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
-  .radio-lock-button { display: none; position: fixed; top: 14px; left: 14px; z-index: 220; width: 48px; height: 48px; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); }
+  .floating-control { position: fixed; z-index: 220; width: 48px; height: 48px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: grab; box-shadow: 0 4px 18px hsl(var(--shadow) / .2); touch-action: none; user-select: none; }
+  .floating-control.dragging { cursor: grabbing; }
+  .visibility-switch { top: 14px; right: 14px; font-size: 1.35rem; }
+  .radio-lock-button { display: none; top: 14px; left: 14px; place-items: center; }
   #radioModal { z-index: 210; }
   .pin-overlay { position: fixed; inset: 0; z-index: 240; display: grid; place-items: center; padding: 18px; background: rgba(20, 18, 16, .82); backdrop-filter: blur(5px); }
   .pin-overlay[hidden] { display: none; }
@@ -471,7 +474,7 @@
     <div class="section">
       <div class="section-label">Photos <span class="mono" data-photo-count style="text-transform:none; letter-spacing:0; font-size:0.68rem;">0 / 100</span></div>
       <div class="strip" id="photoStrip"></div>
-      <input type="file" id="photoInput" accept="image/*" multiple capture="environment" hidden>
+      <input type="file" id="photoInput" accept="image/*" multiple hidden>
     </div>
 
     <div class="section">
@@ -491,7 +494,7 @@
     <div class="section">
       <div class="section-label">Video recording <span class="mono" style="text-transform:none; letter-spacing:0; font-size:0.68rem;">saved to your account</span></div>
       <p class="moment-hint">Record video + audio for up to 12 hours. Compressed one-minute files save as one recording and play in order. The app's PIN lock hides the camera view while recording continues. Keep the device powered and this tab open; your phone's system lock can suspend the camera.</p>
-      <div class="video-item" id="recordingCameraView" hidden><video id="recordingCameraVideo" autoplay muted playsinline aria-label="Recording camera preview"></video><div class="video-meta" id="recordingCameraStatus" role="status"></div></div>
+      <div class="video-item" id="recordingCameraView" hidden><video id="recordingCameraVideo" autoplay muted playsinline aria-label="Recording camera preview"></video><div class="video-timer-overlay" id="videoTimerOverlay" aria-live="polite" hidden>00:00</div><div class="video-meta" id="recordingCameraStatus" role="status"></div></div>
       <div class="video-list" id="videoList"></div>
       <button class="capture-btn" id="recordVideo">
         <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="9" height="8" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 6.5l3.4-1.8v6.6l-3.4-1.8" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
@@ -1642,6 +1645,7 @@ function showApp() {
   var recordingCameraView = document.getElementById("recordingCameraView");
   var recordingCameraVideo = document.getElementById("recordingCameraVideo");
   var recordingCameraStatus = document.getElementById("recordingCameraStatus");
+  var videoTimerOverlay = document.getElementById("videoTimerOverlay");
   var captureCameraSelect = document.getElementById("captureCameraSelect");
   async function refreshCameraChoices() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
@@ -1807,6 +1811,7 @@ function showApp() {
       if (kind === "video") {
         label.textContent = "Starting camera…"; recordingCameraView.hidden = false;
         recordingCameraStatus.textContent = "Waiting for camera image…";
+        if (videoTimerOverlay) { videoTimerOverlay.textContent = "00:00"; videoTimerOverlay.hidden = false; }
         await LongRecording.waitForCamera(stream, recordingCameraVideo);
         if (!currentUser || currentUser.id !== userId) throw new Error("Account changed before recording started");
       }
@@ -1816,7 +1821,14 @@ function showApp() {
       var partsCaptured = 0;
       var session = new LongRecording.RecorderSession({
         stream: stream, mimeType: mimeType || (kind === "video" ? "video/webm" : "audio/webm"), recorderOptions: options,
-        onTick: function(seconds) { label.textContent = "Stop recording · " + fmtDuration(seconds) + " / 12:00:00"; },
+        onTick: function(seconds) {
+          var current = fmtDuration(seconds);
+          label.textContent = "Stop recording · " + current + " / 12:00:00";
+          if (kind === "video" && videoTimerOverlay) {
+            videoTimerOverlay.textContent = current;
+            videoTimerOverlay.hidden = false;
+          }
+        },
         onPart: async function(blob, part) {
           if (blob.size > MAX_RECORDING_BYTES) throw new Error("Browser produced an oversized recording part");
           await recordingQueue.enqueue({
@@ -1828,7 +1840,11 @@ function showApp() {
         },
         onStopping: function() {
           button.disabled = true; label.textContent = "Saving final part…"; button.classList.remove("recording");
-          if (kind === "video") { recordingCameraVideo.pause(); recordingCameraVideo.srcObject = null; recordingCameraView.hidden = true; captureCameraSelect.disabled = false; }
+          if (recordingQueue) recordingQueue.flush();
+          if (kind === "video") {
+            if (videoTimerOverlay) videoTimerOverlay.hidden = true;
+            recordingCameraVideo.pause(); recordingCameraVideo.srcObject = null; recordingCameraView.hidden = true; captureCameraSelect.disabled = false;
+          }
         },
         onError: function(error, blob, part) {
           if (blob) offerRecordingDownload(blob, part, kind);
@@ -1836,7 +1852,9 @@ function showApp() {
         },
         onFinish: function(reason) {
           button.disabled = false; label.textContent = defaultLabel; button.classList.remove("recording");
+          if (recordingQueue) recordingQueue.flush();
           if (!anyRecordingActive()) releaseWakeLock();
+          if (kind === "video" && videoTimerOverlay) videoTimerOverlay.hidden = true;
           if (reason === "time") showToast("12-hour recording finished. Its files are saved locally and upload automatically.");
           else if (reason === "lock" || reason === "device") showToast("Recording stopped when device access ended. Captured parts are kept.");
           else if (reason !== "storage" && reason !== "error") showToast(partsCaptured ? "Recording stopped. Finished parts upload automatically." : "Nothing was captured. Try recording again.");
@@ -2366,11 +2384,71 @@ function showApp() {
     });
   });
 
+  function attachDraggableFloat(button, key, fallbackLeft, fallbackTop) {
+    var state = { left: fallbackLeft, top: fallbackTop };
+    try {
+      var saved = JSON.parse(localStorage.getItem(key) || "null");
+      if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) state = saved;
+    } catch (ignore) {}
+    function clamp(value, min, max) { return Math.min(Math.max(value, min), max); }
+    function persist() {
+      try { localStorage.setItem(key, JSON.stringify({ left: parseFloat(button.style.left) || state.left, top: parseFloat(button.style.top) || state.top })); } catch (ignore) {}
+    }
+    function moveTo(left, top) {
+      var maxLeft = Math.max(8, window.innerWidth - (button.offsetWidth || 48) - 8);
+      var maxTop = Math.max(8, window.innerHeight - (button.offsetHeight || 48) - 8);
+      button.style.left = clamp(left, 8, maxLeft) + "px";
+      button.style.top = clamp(top, 8, maxTop) + "px";
+      button.style.right = "auto";
+      button.style.bottom = "auto";
+      persist();
+    }
+    button.__dragMoved = false;
+    button.style.left = state.left + "px";
+    button.style.top = state.top + "px";
+    button.style.right = "auto";
+    button.style.bottom = "auto";
+    var drag = null;
+    button.addEventListener("click", function(event) {
+      if (button.__dragMoved) {
+        button.__dragMoved = false;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    });
+    button.addEventListener("pointerdown", function(event) {
+      if (event.button !== 0 && event.pointerType !== "touch") return;
+      drag = { startX: event.clientX, startY: event.clientY, left: parseFloat(button.style.left) || state.left, top: parseFloat(button.style.top) || state.top };
+      button.classList.add("dragging");
+      button.setPointerCapture(event.pointerId);
+    });
+    button.addEventListener("pointermove", function(event) {
+      if (!drag) return;
+      var dx = event.clientX - drag.startX, dy = event.clientY - drag.startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) button.__dragMoved = true;
+      moveTo(drag.left + dx, drag.top + dy);
+    });
+    button.addEventListener("pointerup", function(event) {
+      if (drag) {
+        button.classList.remove("dragging");
+        drag = null;
+        if (button.hasPointerCapture && button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+      }
+    });
+    button.addEventListener("pointercancel", function() {
+      button.classList.remove("dragging");
+      drag = null;
+    });
+    return button;
+  }
+
   function restoreBackgroundOnly() {
     var hidden = false;
     try { hidden = localStorage.getItem("iremember-background-only") === "true"; } catch(ignore) {}
     setBackgroundOnly(hidden);
   }
+  attachDraggableFloat(document.getElementById("visibilitySwitch"), "iremember-visibility-switch-position", 14, 14);
+  attachDraggableFloat(document.getElementById("radioLockButton"), "iremember-radio-lock-position", 14, 14);
   restoreBackgroundOnly();
   window.addEventListener("pageshow", restoreBackgroundOnly);
   document.getElementById("visibilitySwitch").addEventListener("click", function() {
