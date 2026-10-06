@@ -526,7 +526,34 @@
     sendMessage(document.getElementById("messageInput").value, selectedAttachment);
   });
   document.getElementById("attachButton").addEventListener("click", function() { document.getElementById("attachmentInput").click(); });
-  document.getElementById("photoButton").addEventListener("click", function() { document.getElementById("photoInput").click(); });
+  document.getElementById("photoButton").addEventListener("click", function() {
+    var fallback = function() { document.getElementById("photoInput").click(); };
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { fallback(); return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false }).then(function(stream) {
+      var overlay = document.createElement("div");
+      overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px";
+      var video = document.createElement("video");
+      video.autoplay = true; video.playsInline = true; video.muted = true; video.srcObject = stream;
+      video.style.cssText = "max-width:100%;max-height:70vh;border-radius:12px;background:#000";
+      var row = document.createElement("div"); row.style.cssText = "display:flex;gap:10px";
+      var snap = document.createElement("button"); snap.type = "button"; snap.className = "button"; snap.textContent = "📸 Capture";
+      var cancel = document.createElement("button"); cancel.type = "button"; cancel.className = "button"; cancel.textContent = "Cancel";
+      var close = function() { stream.getTracks().forEach(function(t) { t.stop(); }); overlay.remove(); };
+      cancel.addEventListener("click", close);
+      snap.addEventListener("click", function() {
+        var canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+        canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function(blob) {
+          close();
+          if (blob) setSelectedAttachment(new File([blob], "photo-" + Date.now() + ".jpg", { type: "image/jpeg" }));
+        }, "image/jpeg", 0.9);
+      });
+      row.appendChild(snap); row.appendChild(cancel);
+      overlay.appendChild(video); overlay.appendChild(row);
+      document.body.appendChild(overlay);
+    }).catch(fallback);
+  });
   ["attachmentInput", "photoInput"].forEach(function(id) {
     document.getElementById(id).addEventListener("change", function(event) { setSelectedAttachment(event.target.files && event.target.files[0]); });
   });
